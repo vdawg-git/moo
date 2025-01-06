@@ -72,7 +72,7 @@ export abstract class Track {
 	/** Album title */
 	readonly album?: string
 	/** Release date */
-	readonly releasedate?: string
+	readonly releasedate?: number
 	readonly comment?: string
 	readonly genre?: string
 	/** Embedded album art */
@@ -194,3 +194,6 @@ interface TrackPicture {
 	/** Picture type */
 	readonly type?: string
 }
+
+export type TrackId = string & { __brand: "TrackId" }
+export type AlbumId = string & { __brand: "AlbumId" }

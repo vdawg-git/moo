@@ -18,15 +18,11 @@ const logsInput$ = new Subject<Log>()
 export const logs$: Observable<Log> = logsInput$.pipe(share())
 
 /**
- * Patches console.* to emit to {@link logs$} and to write them to a file.
- * Returns the unsubscription.
+ * Patches `console.*` to log to a file and to emit to {@link logs$}.
+ *
+ * Returns the unsubscription / cleanup.
  */
 export function patchLogs() {
-	// console.log = true
-	// console.log = (...data) => {
-	// 	logsInput$.next({ stream: "stdout", data: data.join(",") + "aiaiai" })
-	// }
-
 	const restore = patchConsole((stream, data) => {
 		logsInput$.next({ stream, data })
 	})
