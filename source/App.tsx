@@ -13,7 +13,7 @@ const App = () => {
 	return (
 		<FullScreen flexDirection="column">
 			<Box flexGrow={88}>
-				<Playlist tracks={tracks} onChange={(id) => console.log(id)} />
+				<Playlist tracks={tracks} onSelect={(id) => console.log(id)} />
 			</Box>
 
 			{IS_DEV && <LogView />}

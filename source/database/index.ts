@@ -1,6 +1,7 @@
-import type { Database, Track } from "./types.js"
+import { createLocalPlayer } from "../player/index.js"
+import { Track, type Database } from "./types.js"
 
-const data: readonly Track[] = [
+const data: readonly LocalTrack[] = [
 	{ id: "1", title: "Test", artist: "Test" },
 	{
 		id: "2",
@@ -32,7 +33,8 @@ const data: readonly Track[] = [
 		title: "Imagine",
 		artist: "John Lennon",
 	},
-]
+].map((data) => new LocalTrack(data))
+
 // use Drizzle later
 export async function connectDatabase(): Promise<Database> {
 	return database
@@ -51,6 +53,10 @@ const database: Database = {
 	search: async () => ({ tracks: [], albums: [], artists: [], playlists: [] }),
 }
 
-export function getTracks() {
-	return data
+const localPlayer = createLocalPlayer()
+
+export class LocalTrack extends Track {
+	constructor(properties: Partial<LocalTrack> & { id: string }) {
+		super(properties, localPlayer, "local")
+	}
 }
