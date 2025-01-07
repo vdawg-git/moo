@@ -1,6 +1,3 @@
-// To get polymorphism with streaming services,
-// providers need to also provide a player for the service
-
 import type { Observable } from "rxjs"
 import type { AsyncResult, Result } from "typescript-result"
 import type { PlayingState } from "../types/types"

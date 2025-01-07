@@ -1,6 +1,6 @@
-import packageJson from "#/../package.json"
-import envPaths from "env-paths"
 import path from "node:path"
+import envPaths from "env-paths"
+import packageJson from "#/../package.json"
 
 export const IS_DEV = process.env.NODE_ENV !== "production"
 

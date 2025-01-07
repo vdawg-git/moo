@@ -1,23 +1,39 @@
 import type { ICommonTagsResult, ILyricsTag } from "music-metadata"
 import type { Player } from "../player/types"
+import type { Except } from "type-fest"
+import type { Result } from "typescript-result"
+import type { FilePath } from "#/types/types"
 
 export interface Database {
-	getTrack: (id: string) => Promise<Track | undefined>
-	getTracks: (ids?: readonly string[]) => Promise<readonly Track[]>
-	getAlbum: (id: string) => Promise<Album | undefined>
-	getAlbums: (ids?: readonly string[]) => Promise<readonly Album[]>
+	getTrack: (id: string) => Promise<Result<Track | undefined, Error>>
+	getTracks: (
+		ids?: readonly string[],
+	) => Promise<Result<readonly Track[], Error>>
+
+	getAlbum: (id: string) => Promise<Result<Album | undefined, Error>>
+	getAlbums: (
+		ids?: readonly AlbumId[],
+	) => Promise<Result<readonly Album[], Error>>
+
 	getArtist: (id: string) => Promise<Artist | undefined>
-	getArtists: (ids?: readonly string[]) => Promise<readonly Artist[]>
-	getAllTracks: () => Promise<readonly Track[]>
-	getAllArtists: () => Promise<readonly Artist[]>
-	getAllAlbums: () => Promise<readonly Album[]>
+	getArtists: (
+		ids?: readonly string[],
+	) => Promise<Result<readonly Artist[], Error>>
+
 	/** Fuzzy search the database */
-	search: (input: string) => Promise<{
-		tracks: readonly Track[]
-		albums: readonly Album[]
-		artists: readonly Artist[]
-		playlists: readonly Playlist[]
-	}>
+	search: (input: string) => Promise<
+		Result<
+			{
+				tracks: readonly Track[]
+				albums: readonly Album[]
+				artists: readonly Artist[]
+				playlists: readonly Playlist[]
+			},
+			Error
+		>
+	>
+
+	addTracks: (tracks: readonly TrackData[]) => Promise<Result<void, Error>>
 }
 
 /**
@@ -75,8 +91,8 @@ export abstract class Track {
 	readonly releasedate?: number
 	readonly comment?: string
 	readonly genre?: string
-	/** Embedded album art */
-	readonly picture?: readonly TrackPicture[]
+	/** Filename of the cover image, like `<HASH>.jpg` */
+	readonly picture?: string
 	/** Track composer */
 	readonly composer?: string
 	/** Synchronized lyrics */
@@ -156,12 +172,14 @@ export abstract class Track {
 	readonly movement?: string
 	/** Movement Index/Total */
 	readonly movementIndex?: number
-	readonly movementIndexOf?: number
+	readonly movementIndexTotal?: number
 	/** Podcast Identifier */
 	readonly podcastId?: string
 	/** Show Movement */
 	readonly showMovement?: boolean
 }
+
+export type TrackData = Except<Track, "play" | "pause" | "status$">
 
 interface Artist {
 	/** Also the id in the database */
@@ -186,13 +204,6 @@ interface Album {
 	tracks: readonly string[]
 	/** Concat of albumartist and name */
 	id: string
-}
-
-interface TrackPicture {
-	/** The filepath of the picture */
-	readonly filepath: string
-	/** Picture type */
-	readonly type?: string
 }
 
 export type TrackId = string & { __brand: "TrackId" }

@@ -1,9 +1,9 @@
-import patchConsole from "patch-console"
-import { concatMap, type Observable, share, Subject } from "rxjs"
 import fs from "node:fs/promises"
 import os from "node:os"
-import { IS_DEV } from "./constants"
 import path from "node:path"
+import patchConsole from "patch-console"
+import { concatMap, type Observable, share, Subject } from "rxjs"
+import { IS_DEV } from "./constants"
 
 type Log = {
 	stream: "stdout" | "stderr"

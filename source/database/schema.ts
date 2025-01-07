@@ -3,8 +3,11 @@ import type { ILyricsTag } from "music-metadata"
 import type { AlbumId, TrackId } from "./types"
 import type { FilePath } from "#/types"
 
-export const tracks = sqliteTable("tracks", {
+export const tracksTable = sqliteTable("tracks", {
 	id: text().primaryKey().$type<TrackId>(),
+
+	/** What provides this track. Currently we only have `local` for local files.  */
+	sourceProvider: text().notNull(),
 
 	title: text(),
 	/** Track number in the album. See {@link trackNumberTotal} for the total number of tracks */
@@ -17,11 +20,13 @@ export const tracks = sqliteTable("tracks", {
 	year: integer(),
 	/** Track title */
 	/** Track, maybe several artists written in a single string. */
-	artist: text().references(() => artists.name, { onDelete: "cascade" }),
+	artist: text().references(() => artistsTable.name, { onDelete: "cascade" }),
 	/** Track album artists */
-	albumartist: text().references(() => artists.name, { onDelete: "cascade" }),
+	albumartist: text().references(() => artistsTable.name, {
+		onDelete: "cascade",
+	}),
 	/** Album title */
-	album: text().references(() => albums.id, { onDelete: "cascade" }),
+	album: text().references(() => albumsTable.id, { onDelete: "cascade" }),
 	comment: text(),
 	genre: text(),
 	/** Filepath to the artwork */
@@ -112,12 +117,12 @@ export const tracks = sqliteTable("tracks", {
 	podcastId: text(),
 })
 
-export const artists = sqliteTable("artists", {
+export const artistsTable = sqliteTable("artists", {
 	name: text().primaryKey(),
 	sort: text(),
 })
 
-export const albums = sqliteTable(
+export const albumsTable = sqliteTable(
 	"albums",
 	{
 		title: text("title"),
@@ -129,11 +134,11 @@ export const albums = sqliteTable(
 	(table) => [primaryKey({ name: "id", columns: [table.title, table.artist] })],
 )
 
-export const movements = sqliteTable("movements", {
+export const movementsTable = sqliteTable("movements", {
 	title: text().primaryKey(),
 })
 
-export const composers = sqliteTable("composers", {
+export const composersTable = sqliteTable("composers", {
 	name: text().primaryKey(),
 	sort: text(),
 })

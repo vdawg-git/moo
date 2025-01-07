@@ -1,7 +1,7 @@
-import { AudioContext, OscillatorNode, GainNode } from "node-web-audio-api"
-import type { Player } from "./types"
-import { BehaviorSubject, Subject, type Observable } from "rxjs"
+import { AudioContext } from "node-web-audio-api"
+import { type Observable, Subject } from "rxjs"
 import { Result } from "typescript-result"
+import type { Player } from "./types"
 
 export function createLocalPlayer(): Player {
 	const audioContext = new AudioContext()
