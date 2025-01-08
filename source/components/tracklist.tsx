@@ -3,10 +3,11 @@ import type { Track } from "../database/types"
 
 type PlaylistProps = {
 	tracks: readonly Track[]
-	onSelect: (index: number) => void
+	onChange: (index: number) => void
 }
 
-export function Playlist({ tracks, onSelect }: PlaylistProps) {
+/** Renders a list of tracks */
+export function Tracklist({ tracks, onChange }: PlaylistProps) {
 	return (
 		<Select
 			options={tracks.map((track, index) => ({
@@ -14,7 +15,7 @@ export function Playlist({ tracks, onSelect }: PlaylistProps) {
 				value: index.toString(),
 			}))}
 			visibleOptionCount={tracks.length}
-			onChange={(index) => onSelect(Number(index))}
+			onChange={(index) => onChange(Number(index))}
 			highlightText="Yooo >>"
 		/>
 	)

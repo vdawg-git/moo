@@ -7,8 +7,11 @@ import {
 	concat,
 	concatMap,
 	debounceTime,
+	distinctUntilChanged,
 	map,
+	merge,
 	Observable,
+	of,
 	share,
 	Subject,
 } from "rxjs"
@@ -34,20 +37,37 @@ const supportedFormats = ["flac", "mp3"]
  */
 const unsupportedFormats = ["m4a", "ogg"]
 
-type FileChanged = { filePath: FilePath; type: "change" | "rename" }
+type FileChanged = {
+	/** The absolute filepath which changed */
+	filePath: FilePath
+	type: "change" | "rename"
+}
+
+function createWatcher(toWatch: string): Observable<FileChanged> {
+	return new Observable<FileChanged>((subscriber) => {
+		const watcher = watch(toWatch, { recursive: true }, (type, filePath) => {
+			if (!filePath) return
+
+			subscriber.next({
+				type,
+				filePath: path.join(toWatch, filePath) as FilePath,
+			})
+		})
+
+		return () => watcher.close()
+	}).pipe(
+		distinctUntilChanged(
+			(previous, current) =>
+				JSON.stringify(previous) === JSON.stringify(current),
+		),
+		share(),
+	)
+}
 
 function createMusicDirectoriesWatcher(
 	directories: readonly FilePath[],
 ): Observable<FileChanged> {
-	return new Observable<FileChanged>((subscriber) => {
-		const watchers = directories.map((directory) =>
-			watch(directory, { recursive: true }, (type, filePath) => {
-				subscriber.next({ type, filePath: filePath as FilePath })
-			}),
-		)
-
-		return () => watchers.forEach((watcher) => watcher.close())
-	}).pipe(share())
+	return merge(...directories.map(createWatcher)).pipe(share())
 }
 
 export async function scanMusicDirectories(
@@ -67,7 +87,7 @@ export async function updateDatabase(
  * How long music directory changes are buffered in a debounced way
  * before they are released and processed together
  * */
-const bufferWatcherTime = 6_000
+const bufferWatcherTime = 4_000
 
 export async function watchAndUpdateDatabase(
 	musicDirectories: readonly FilePath[],
@@ -79,8 +99,17 @@ export async function watchAndUpdateDatabase(
 	const subscription = watcher$
 		.pipe(
 			buffer(watcherRelease$),
-			concatMap((changes) => {
-				const parsed = changes.map(({ filePath }) => {})
+			concatMap(async (changes) => {
+				// TODO notify on errors
+				const parsed: TrackData[] = []
+				for (const file of new Set(changes.map(({ filePath }) => filePath))) {
+					const resut = await parseMusicFile(file)
+					resut.onFailure(console.error).onSuccess((track) => {
+						parsed.push(track)
+					})
+				}
+
+				return parsed
 			}),
 		)
 		.subscribe((tracks) => database.addTracks(tracks))
@@ -97,7 +126,7 @@ async function parseMusicFile(
 	filePath: FilePath,
 ): Promise<Result<TrackData, Error>> {
 	return Result.fromAsyncCatching(parseBlob(Bun.file(filePath))).map(
-		({
+		async ({
 			common: {
 				track,
 				disk,
@@ -119,16 +148,18 @@ async function parseMusicFile(
 				undefined
 
 			const coverData = selectCover(picture)
-			const coverName =
+			let coverName =
 				coverData && `${Bun.hash(coverData.data)}.${coverData.type}`
 			// not so nice, but where would this side-effect make more sense
-			if (coverName) {
+			if (coverName && coverData) {
 				const coverPath = path.join(
 					DATA_DIRECTORY,
 					"pictures/tracks/local/",
 					coverName,
 				)
-				Bun.write(coverPath, coverData.data).catch((error) => {
+				// TODO put this somewhere else
+				await Bun.write(coverPath, coverData.data).catch((error) => {
+					coverName = null
 					console.group()
 					console.error(`Failed to save cover image of ${filePath}`)
 					console.error(error)

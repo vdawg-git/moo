@@ -1,4 +1,5 @@
-# react-curse-app
+Wip. Need a nice name. 
+
 
 To install dependencies:
 
