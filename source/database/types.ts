@@ -2,7 +2,7 @@ import type { ICommonTagsResult, ILyricsTag } from "music-metadata"
 import type { Player } from "../player/types"
 import type { Except } from "type-fest"
 import type { Result } from "typescript-result"
-import type { FilePath } from "#/types/types"
+import type { Observable } from "rxjs"
 
 export interface Database {
 	getTrack: (id: string) => Promise<Result<Track | undefined, Error>>
@@ -15,10 +15,15 @@ export interface Database {
 		ids?: readonly AlbumId[],
 	) => Promise<Result<readonly Album[], Error>>
 
-	getArtist: (id: string) => Promise<Artist | undefined>
+	getArtist: (id: string) => Promise<Result<Artist | undefined, Error>>
 	getArtists: (
 		ids?: readonly string[],
 	) => Promise<Result<readonly Artist[], Error>>
+
+	getPlaylist: (id: PlaylistId) => Promise<Result<Playlist | undefined, Error>>
+	getPlaylists: (
+		ids: readonly PlaylistId[],
+	) => Promise<Result<readonly Playlist[], Error>>
 
 	/** Fuzzy search the database */
 	search: (input: string) => Promise<
@@ -34,6 +39,9 @@ export interface Database {
 	>
 
 	addTracks: (tracks: readonly TrackData[]) => Promise<Result<void, Error>>
+
+	/** Emits when the database changes. */
+	changed$: Observable<string>
 }
 
 /**
@@ -46,7 +54,7 @@ export abstract class Track {
 	 * If it is a local track, the filepath.
 	 * Currently we only support local music
 	 */
-	readonly id: string
+	readonly id: TrackId
 	/** Manages the playing of the track (a local track is different than a streamed one)  */
 	private readonly player: Player
 	readonly status$: Player["status$"]
@@ -208,3 +216,5 @@ interface Album {
 
 export type TrackId = string & { __brand: "TrackId" }
 export type AlbumId = string & { __brand: "AlbumId" }
+export type ArtistId = string & { __brand: "ArtistId" }
+export type PlaylistId = string & { __brand: "PlaylistId" }

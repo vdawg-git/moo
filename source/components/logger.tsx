@@ -1,11 +1,10 @@
-import patchConsole from "patch-console"
 import { useEffect, useState } from "react"
-import { map, Observable, scan, share } from "rxjs"
+import { map, scan } from "rxjs"
 import { logs$ } from "../logs"
 import { Text, Box } from "ink"
 
 export function LogView() {
-	const [logs, setLogs] = useState<string>("ohoho")
+	const [logs, setLogs] = useState<string>("")
 
 	useEffect(() => {
 		const subscription = logs$

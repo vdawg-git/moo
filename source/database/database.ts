@@ -4,30 +4,39 @@ import { Track, type Database } from "./types.js"
 import { drizzle } from "drizzle-orm/bun-sqlite"
 import { DATA_DIRECTORY, databasePath, IS_DEV } from "#/constants.js"
 import { albumsTable, tracksTable } from "./schema.js"
+import { Result } from "typescript-result"
+import { Subject } from "rxjs"
 
-// use Drizzle later
-export async function connectDatabase(): Promise<Database> {
+export const database = await connectDatabase()
+
+async function connectDatabase(): Promise<Database> {
 	const db = drizzle({ connection: databasePath })
+	const changed$ = new Subject<string>()
 
 	const database: Database = {
-		getAlbums: async (ids = []) => [],
-		getArtists: async () => [],
-		getTracks: async (ids = []) => mockData(),
-		getAllAlbums: async () => [],
-		getAllArtists: async () => [],
-		getAllTracks: async () => [],
-		getAlbum: async () => undefined,
-		getArtist: async () => undefined,
-		getTrack: async () => undefined,
+		getAlbum: async () => Result.ok(undefined),
+		getAlbums: async (ids = []) => Result.ok([]),
 
-		search: async () => ({
-			tracks: [],
-			albums: [],
-			artists: [],
-			playlists: [],
-		}),
+		getArtist: async () => Result.ok(undefined),
+		getArtists: async () => Result.ok([]),
+
+		getTrack: async () => Result.ok(undefined),
+		getTracks: async (ids = []) => Result.ok(mockData()),
+
+		getPlaylist: async () => Result.ok(undefined),
+		getPlaylists: async () => Result.ok([]),
+
+		search: async () =>
+			Result.ok({
+				tracks: [],
+				albums: [],
+				artists: [],
+				playlists: [],
+			}),
 
 		addTracks: async (tracks) => {
+			changed$.next("")
+			return Result.ok()
 			// I need to create the foreign table entries first,
 			// which are `artist`, `album`, `movement`, `composer`.
 			// Then I can insert the tracks.
@@ -36,6 +45,8 @@ export async function connectDatabase(): Promise<Database> {
 			//
 			// return db.insert(tracksTable).values(tracks)
 		},
+
+		changed$,
 	}
 
 	return database

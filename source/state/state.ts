@@ -19,14 +19,14 @@ function createInitalState(): StoreContext {
 			isPlayingFromManualQueue: false,
 		},
 		view: {
-			currentPage: {
-				type: "home",
-			},
+			historyIndex: 0,
+			history: [{ route: "home" }],
 		},
+		notifications: [],
 	}
 }
 
-interface StoreContext {
+export interface StoreContext {
 	playback: {
 		queue: Queue | undefined
 		manuallyAdded: Track[]
@@ -36,9 +36,11 @@ interface StoreContext {
 		isShuffling: boolean
 		isPlayingFromManualQueue: boolean
 	}
+
 	/** This dictates the navigation */
 	view: {
-		currentPage: ViewPage
+		historyIndex: number
+		history: ViewPage[]
 	}
 
 	notifications: Notification[]
@@ -62,15 +64,22 @@ type Queue = {
 		| { type: "all" }
 }
 
-type ViewPage =
-	| {
-			// the homeview should be configurable via the config
-			type: "home"
-	  }
-	| {
-			type: "playlist"
-			playlistId: string
-	  }
-	| {
-			type: "search"
-	  }
+/**
+ * This dictates the navigation
+ * Each key is a route. The value is the data that is passed to the page
+ * */
+// We use an interface because it is extensible (for plugins),
+// and it is easier to make a union type of the keys than making
+// an interface out of an union type
+export interface ViewPages {
+	// the homeview should be configurable via the config
+	home: undefined
+	playlist: { id: string }
+	search: undefined
+}
+
+export type ViewPage = {
+	[Route in keyof ViewPages]: ViewPages[Route] extends undefined
+		? { route: Route; parameter?: undefined }
+		: { route: Route; parameter: ViewPages[Route] }
+}[keyof ViewPages]

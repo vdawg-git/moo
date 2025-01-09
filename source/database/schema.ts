@@ -1,13 +1,16 @@
 import { sqliteTable, primaryKey, integer, text } from "drizzle-orm/sqlite-core"
 import type { ILyricsTag } from "music-metadata"
-import type { AlbumId, TrackId } from "./types"
-import type { FilePath } from "#/types"
+import type { AlbumId, ArtistId, PlaylistId, TrackId } from "./types"
+import type { FilePath } from "#/types/types"
 
 export const tracksTable = sqliteTable("tracks", {
 	id: text().primaryKey().$type<TrackId>(),
 
 	/** What provides this track. Currently we only have `local` for local files.  */
 	sourceProvider: text().notNull(),
+
+	/** In milliseconds */
+	duration: integer(),
 
 	title: text(),
 	/** Track number in the album. See {@link trackNumberTotal} for the total number of tracks */
@@ -118,7 +121,7 @@ export const tracksTable = sqliteTable("tracks", {
 })
 
 export const artistsTable = sqliteTable("artists", {
-	name: text().primaryKey(),
+	name: text().primaryKey().$type<ArtistId>(),
 	sort: text(),
 })
 
@@ -142,3 +145,30 @@ export const composersTable = sqliteTable("composers", {
 	name: text().primaryKey(),
 	sort: text(),
 })
+
+export const playlistsTable = sqliteTable("playlists", {
+	// We use an auto-incrementing integer as the primary key,
+	// as plugins could add playlists with the same name from for example Spotify
+	id: integer().primaryKey({ autoIncrement: true }).$type<PlaylistId>(),
+	name: text(),
+})
+
+/** Links a track to a playlist */
+export const playlistTracksTable = sqliteTable(
+	"playlistTracks",
+	{
+		playlistId: integer()
+			.notNull()
+			.references(() => playlistsTable.id),
+		trackId: text()
+			.notNull()
+			.references(() => tracksTable.id),
+		position: integer().notNull(),
+	},
+	(table) => [
+		primaryKey({
+			name: "id",
+			columns: [table.playlistId, table.trackId, table.position],
+		}),
+	],
+)
