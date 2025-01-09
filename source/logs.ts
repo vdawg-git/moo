@@ -1,9 +1,8 @@
 import fs from "node:fs/promises"
-import os from "node:os"
 import path from "node:path"
 import patchConsole from "patch-console"
 import { concatMap, type Observable, share, Subject } from "rxjs"
-import { IS_DEV } from "./constants"
+import { IS_DEV, LOGS_DIRECTORY } from "./constants"
 
 type Log = {
 	stream: "stdout" | "stderr"
@@ -11,7 +10,7 @@ type Log = {
 }
 const logsPath = IS_DEV
 	? path.join(process.cwd(), "logs.txt")
-	: path.join(os.homedir(), ".local/share/plx/logs.txt")
+	: path.join(LOGS_DIRECTORY, "logs.txt")
 
 const logsInput$ = new Subject<Log>()
 /** Logs need to be patched via {@link patchLogs} for this to emit something */
