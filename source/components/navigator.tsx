@@ -2,10 +2,11 @@ import { state, type ViewPage, type ViewPages } from "../state/state"
 import { useSelector } from "@xstate/store/react"
 import { Playlist } from "#/views/playlist"
 import { Text } from "ink"
+import { All } from "#/views/all"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
 const routes: Routes = {
-	home: () => <Text>Home</Text>,
+	home: () => <All />,
 	playlist: ({ id }) => <Playlist id={id} />,
 	search: () => <Text>Search</Text>,
 }

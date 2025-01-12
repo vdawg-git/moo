@@ -29,7 +29,9 @@ export function LogView() {
 			borderTop
 			borderTopDimColor
 			height={9}
+			borderColor={"white"}
 		>
+			<Text dimColor>Logs:</Text>
 			<Text>{logs}</Text>
 		</Box>
 	)

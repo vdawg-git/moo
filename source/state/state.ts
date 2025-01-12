@@ -1,6 +1,8 @@
 import { createStore } from "@xstate/store"
 import type { Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
+import type { ReactNode } from "react"
+import type { Except } from "type-fest"
 
 export const state = createStore({
 	context: createInitalState(),
@@ -23,6 +25,7 @@ function createInitalState(): StoreContext {
 			history: [{ route: "home" }],
 		},
 		notifications: [],
+		modals: [],
 	}
 }
 
@@ -44,12 +47,17 @@ export interface StoreContext {
 	}
 
 	notifications: Notification[]
+	modals: ReactNode[]
 }
 
 type Notification = {
 	type: "error" | "success" | "default"
-	message: string
+	/** The message to display. Can be JSX. */
+	message: ReactNode
+	id: string
 }
+type NotificationAdd = Except<Notification, "id">
+
 type Queue = {
 	tracks: Track[]
 	source:

@@ -1,5 +1,5 @@
-import { getConfig } from "#/config/config"
-import type { Database, Track, TrackData } from "#/database/types"
+import { config } from "#/config/config"
+import type { Database, Track, TrackData, TrackId } from "#/database/types"
 import type { FilePath } from "#/types/types"
 import parseDate from "any-date-parser"
 import {
@@ -8,6 +8,8 @@ import {
 	concatMap,
 	debounceTime,
 	distinctUntilChanged,
+	distinctUntilKeyChanged,
+	filter,
 	map,
 	merge,
 	Observable,
@@ -15,13 +17,13 @@ import {
 	share,
 	Subject,
 } from "rxjs"
-import { Result } from "typescript-result"
+import { Result, type AsyncResult } from "typescript-result"
 import { watch } from "node:fs"
-import { parseBlob, selectCover } from "music-metadata"
+import { parseBlob as parseTagsFromBlob, selectCover } from "music-metadata"
 import { DATA_DIRECTORY } from "#/constants"
 import path from "node:path"
-
-const config = getConfig()
+import {} from "remeda"
+import { readdir } from "node:fs/promises"
 
 // needs to scan all music directories and parse the music files.
 //
@@ -30,12 +32,14 @@ const config = getConfig()
 
 // TODO figure out what can be played back and parsed
 /** The files which can be parsed and played back */
-const supportedFormats = ["flac", "mp3"]
+const supportedFormats = [".flac", ".mp3"]
 /**
  * Files with those formats should generate a warning.
  * Files not in here and {@link supportedFormats} should be ignored.
+ *
+ * Not used yet.
  */
-const unsupportedFormats = ["m4a", "ogg"]
+const _unsupportedFormats = ["m4a", "ogg"]
 
 type FileChanged = {
 	/** The absolute filepath which changed */
@@ -66,20 +70,60 @@ function createWatcher(toWatch: string): Observable<FileChanged> {
 
 function createMusicDirectoriesWatcher(
 	directories: readonly FilePath[],
-): Observable<FileChanged> {
-	return merge(...directories.map(createWatcher)).pipe(share())
+): Observable<FilePath> {
+	return merge(...directories.map(createWatcher)).pipe(
+		map(({ filePath }) => filePath),
+		distinctUntilChanged(),
+		filter(isSupportedFile),
+		share(),
+	)
 }
 
 export async function scanMusicDirectories(
 	directories: readonly FilePath[],
-): Promise<Result<readonly TrackData[], Error>> {}
+): Promise<readonly Result<TrackData, Error>[]> {
+	const files = (await Promise.all(directories.map(scanMusicDirectory))).flat()
+
+	return files
+}
+
+async function scanMusicDirectory(
+	directory: FilePath,
+): Promise<readonly Result<TrackData, Error>[]> {
+	return Result.fromAsyncCatching(readdir(directory, { recursive: true }))
+		.map((paths) =>
+			(paths as FilePath[])
+				.filter(isSupportedFile)
+				.map((relativePath) => path.join(directory, relativePath) as FilePath)
+				.map(parseMusicFile),
+		)
+		.fold(
+			(ok) => Promise.all(ok),
+			(error) => [Result.error(error)],
+		)
+}
 
 export async function updateDatabase(
 	musicDirectories: readonly FilePath[],
 	database: Database,
 ): Promise<Result<void, Error>> {
 	return Result.fromAsync(scanMusicDirectories(musicDirectories)).map(
-		(tracks) => database.addTracks(tracks),
+		(trackResults) => {
+			const { tracks, errors } = trackResults
+				.map((track) => track.toTuple())
+				.reduce(
+					(accumulator, [track, error]) => {
+						track && accumulator.tracks.push(track)
+						error && accumulator.errors.push(track)
+
+						return accumulator
+					},
+					{ tracks: [] as TrackData[], errors: [] as unknown[] },
+				)
+
+			// TODO notify errors
+			return database.addTracks(tracks)
+		},
 	)
 }
 
@@ -87,12 +131,12 @@ export async function updateDatabase(
  * How long music directory changes are buffered in a debounced way
  * before they are released and processed together
  * */
-const bufferWatcherTime = 4_000
+const bufferWatcherTime = 6_000
 
-export async function watchAndUpdateDatabase(
+export function watchAndUpdateDatabase(
 	musicDirectories: readonly FilePath[],
 	database: Database,
-): Promise<() => void> {
+): () => void {
 	const watcher$ = createMusicDirectoriesWatcher(musicDirectories)
 	const watcherRelease$ = watcher$.pipe(debounceTime(bufferWatcherTime))
 
@@ -102,9 +146,9 @@ export async function watchAndUpdateDatabase(
 			concatMap(async (changes) => {
 				// TODO notify on errors
 				const parsed: TrackData[] = []
-				for (const file of new Set(changes.map(({ filePath }) => filePath))) {
-					const resut = await parseMusicFile(file)
-					resut.onFailure(console.error).onSuccess((track) => {
+				for (const file of new Set(changes)) {
+					const result = await parseMusicFile(file)
+					result.onFailure(console.error).onSuccess((track) => {
 						parsed.push(track)
 					})
 				}
@@ -125,7 +169,9 @@ export async function watchAndUpdateDatabase(
 async function parseMusicFile(
 	filePath: FilePath,
 ): Promise<Result<TrackData, Error>> {
-	return Result.fromAsyncCatching(parseBlob(Bun.file(filePath))).map(
+	return Result.fromAsyncCatching(
+		parseTagsFromBlob(Bun.file(filePath), { duration: true }),
+	).map(
 		async ({
 			common: {
 				track,
@@ -142,6 +188,7 @@ async function parseMusicFile(
 				movementIndex,
 				...tags
 			},
+			format: { duration, bitrate, codec },
 		}) => {
 			const releasedate =
 				(tags.releasedate && parseDate.fromString(tags.releasedate)) ||
@@ -170,10 +217,12 @@ async function parseMusicFile(
 			return {
 				...tags,
 
-				id: filePath,
+				id: filePath as unknown as TrackId,
 				type: "local",
 
 				releasedate: releasedate?.valueOf(),
+
+				duration: duration ?? 0,
 
 				comment: comment?.join(" "),
 				genre: genre?.join(" "),
@@ -195,7 +244,15 @@ async function parseMusicFile(
 				diskOf: disk?.of ?? undefined,
 				movementIndex: movementIndex.no ?? undefined,
 				movementIndexTotal: movementIndex.of ?? undefined,
+
+				bitrate,
+				codec,
 			}
 		},
 	)
+}
+
+function isSupportedFile(filepath: FilePath): boolean {
+	const extension = path.extname(filepath)
+	return extension === "" ? false : supportedFormats.includes(extension)
 }

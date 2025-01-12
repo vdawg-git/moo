@@ -118,6 +118,10 @@ export const tracksTable = sqliteTable("tracks", {
 	movementIndexOf: integer(),
 	/** Podcast Identifier */
 	podcastId: text(),
+
+	// extra
+	bitrate: integer(),
+	codec: text(),
 })
 
 export const artistsTable = sqliteTable("artists", {

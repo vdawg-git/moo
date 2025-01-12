@@ -29,7 +29,10 @@ export function patchLogs() {
 	const subscription = logsInput$
 		.pipe(
 			concatMap(({ stream, data }) =>
-				fs.appendFile(logsPath, `${stream}: ${data}\n`),
+				fs.appendFile(
+					logsPath,
+					`${new Date().toISOString()} ${stream}: ${data}\n`,
+				),
 			),
 		)
 		.subscribe()

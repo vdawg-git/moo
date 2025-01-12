@@ -1,18 +1,32 @@
-import { Tracklist } from "./components/tracklist"
-import { LogView } from "./components/logger"
 import { patchLogs } from "./logs"
-import { Box, render } from "ink"
+import { render, useApp, useInput } from "ink"
 import { FullScreen } from "./components/fullscreen"
-import { IS_DEV } from "./constants"
 import { Navigator } from "./components/navigator"
+import { ErrorBoundary } from "react-error-boundary"
+import { ErrorScreen } from "./components/errorScreen"
+import { watchAndUpdateDatabase } from "./localFiles/localFiles"
+import { config } from "./config/config"
+import { database } from "./database/database"
 
 const App = () => {
-	return (
-		<FullScreen flexDirection="column">
-			<Navigator />
+	const { exit } = useApp()
+	useInput((input, key) => {
+		if (key.ctrl && input.toLowerCase() === "c") {
+			exit()
+		}
+	})
 
-			{IS_DEV && <LogView />}
-		</FullScreen>
+	return (
+		<ErrorBoundary
+			fallbackRender={({ error }) => <ErrorScreen error={error} />}
+			onError={console.error}
+		>
+			<FullScreen flexDirection="column">
+				<Navigator />
+
+				{/* {IS_DEV && <LogView />} */}
+			</FullScreen>
+		</ErrorBoundary>
 	)
 }
 
@@ -26,6 +40,10 @@ export async function startApp() {
 	// updateDatabase(database).catch(console.error)
 
 	patchLogs()
+
+	if (config.watchDirectories) {
+		watchAndUpdateDatabase(config.musicDirectories, database)
+	}
 
 	// toggle fullscreen / different buffer
 	await writeToStdout("\x1b[?1049h")

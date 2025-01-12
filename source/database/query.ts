@@ -30,7 +30,6 @@ export function useQuery<T>(
 ): QueryResult<T>
 export function useQuery<T>(
 	key: string | string[],
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	query: () => Promise<T>,
 ): QueryResult<T>
 export function useQuery<T>(
@@ -64,12 +63,14 @@ function observeQuery<T>(
 	const query$ = refresh$.pipe(switchMap(() => query().catch(Result.error)))
 	const stream$ = merge(
 		query$,
-		isNullish(initialCacheValue) ? EMPTY : of(initialCacheValue),
+		isNullish(initialCacheValue)
+			? from(query().catch(Result.error))
+			: of(initialCacheValue),
 	)
 
 	return stream$.pipe(
-		map((data) =>
-			Result.isResult(data)
+		map((data) => {
+			return Result.isResult(data)
 				? {
 						data: data as Result<T, unknown>,
 						isFetching: false as const,
@@ -79,8 +80,8 @@ function observeQuery<T>(
 						data: Result.ok(data),
 						isFetching: false,
 						isLoading: false as const,
-					},
-		),
+					}
+		}),
 		tap(({ data }) =>
 			data.onSuccess(() => {
 				cache[cacheKey] = data
@@ -96,7 +97,7 @@ function observeQuery<T>(
 						isLoading: false as const,
 					},
 		),
-		shareReplay({ refCount: true }),
+		// shareReplay({ refCount: true }),
 	)
 }
 

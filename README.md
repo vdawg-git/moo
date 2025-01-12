@@ -1,4 +1,14 @@
-Wip. Need a nice name. 
+Wip, not working atm.
+
+<div align="center">
+
+<h1 color="red">Moo</h1>
+<b> <span color="red">Sick</span> terminal music player </b>
+</br>
+
+</div>
+
+
 
 
 To install dependencies:

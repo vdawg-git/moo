@@ -1,5 +1,6 @@
 import { Select } from "@inkjs/ui"
 import type { Track } from "../database/types"
+import { Text } from "ink"
 
 type PlaylistProps = {
 	tracks: readonly Track[]
@@ -8,7 +9,7 @@ type PlaylistProps = {
 
 /** Renders a list of tracks */
 export function Tracklist({ tracks, onChange }: PlaylistProps) {
-	return (
+	return tracks.length > 0 ? (
 		<Select
 			options={tracks.map((track, index) => ({
 				label: track.title ?? track.id,
@@ -18,5 +19,7 @@ export function Tracklist({ tracks, onChange }: PlaylistProps) {
 			onChange={(index) => onChange(Number(index))}
 			highlightText="Yooo >>"
 		/>
+	) : (
+		<Text>No tracks</Text>
 	)
 }

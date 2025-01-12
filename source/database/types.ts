@@ -59,6 +59,7 @@ export abstract class Track {
 	private readonly player: Player
 	readonly status$: Player["status$"]
 	readonly type: string
+	readonly duration: number
 
 	constructor(
 		properties: Partial<Track> & { id: string },
@@ -69,6 +70,7 @@ export abstract class Track {
 		this.id = properties.id
 		this.player = player
 		this.status$ = this.player.status$
+		this.duration = properties.duration ?? 0
 		this.type = type
 	}
 
