@@ -8,13 +8,13 @@ type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
 const routes: Routes = {
 	home: () => <All />,
 	playlist: ({ id }) => <Playlist id={id} />,
-	search: () => <Text>Search</Text>,
+	search: () => <Text>Search</Text>
 }
 
 export function Navigator() {
 	const view = useSelector(
 		state,
-		({ context: { view } }) => view.history[view.historyIndex],
+		({ context: { view } }) => view.history[view.historyIndex]
 	)
 
 	return renderRoute(view)

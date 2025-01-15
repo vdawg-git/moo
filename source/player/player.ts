@@ -17,6 +17,6 @@ export function createLocalPlayer(): Player {
 			console.log("pause", id)
 			return Result.ok("paused")
 		},
-		status$,
+		status$
 	}
 }

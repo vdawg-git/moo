@@ -14,7 +14,7 @@ import {
 	startWith,
 	switchMap,
 	tap,
-	type Observable,
+	type Observable
 } from "rxjs"
 import { isNullish } from "remeda"
 import { useEffect, useState } from "react"
@@ -26,21 +26,21 @@ const refresh$ = database.changed$
 export function useQuery<T>(
 	key: string | string[],
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	query: () => Promise<Result<T, any>>,
+	query: () => Promise<Result<T, any>>
 ): QueryResult<T>
 export function useQuery<T>(
 	key: string | string[],
-	query: () => Promise<T>,
+	query: () => Promise<T>
 ): QueryResult<T>
 export function useQuery<T>(
 	key: string | string[],
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	query: () => Promise<T> | Promise<Result<T, any>>,
+	query: () => Promise<T> | Promise<Result<T, any>>
 ): QueryResult<T> {
 	const [state, setState] = useState<QueryResult<T>>({
 		data: undefined,
 		isLoading: true as const,
-		isFetching: true,
+		isFetching: true
 	})
 
 	useEffect(() => {
@@ -55,7 +55,7 @@ export function useQuery<T>(
 function observeQuery<T>(
 	key: string | string[],
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	query: () => Promise<T> | Promise<Result<T, any>>,
+	query: () => Promise<T> | Promise<Result<T, any>>
 ): Observable<QueryResult<T>> {
 	const cacheKey = Array.isArray(key) ? key.join(".") : key
 	const initialCacheValue = cache[cacheKey] as T
@@ -65,7 +65,7 @@ function observeQuery<T>(
 		query$,
 		isNullish(initialCacheValue)
 			? from(query().catch(Result.error))
-			: of(initialCacheValue),
+			: of(initialCacheValue)
 	)
 
 	return stream$.pipe(
@@ -74,18 +74,18 @@ function observeQuery<T>(
 				? {
 						data: data as Result<T, unknown>,
 						isFetching: false as const,
-						isLoading: false as const,
+						isLoading: false as const
 					}
 				: {
 						data: Result.ok(data),
 						isFetching: false,
-						isLoading: false as const,
+						isLoading: false as const
 					}
 		}),
 		tap(({ data }) =>
 			data.onSuccess(() => {
 				cache[cacheKey] = data
-			}),
+			})
 		),
 		startWith(
 			isNullish(initialCacheValue)
@@ -94,9 +94,9 @@ function observeQuery<T>(
 					{
 						data: Result.ok(initialCacheValue),
 						isFetching: false,
-						isLoading: false as const,
-					},
-		),
+						isLoading: false as const
+					}
+		)
 		// shareReplay({ refCount: true }),
 	)
 }

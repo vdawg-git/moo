@@ -9,7 +9,7 @@ export const cowGlasses = {
 	rounded2: "●-●¬",
 	stars: "★-★¬",
 	diamonds: "◆-◆¬",
-	triangles: "▼-▼¬",
+	triangles: "▼-▼¬"
 }
 
 type CowSayProps = { children: string } & Omit<CowOptions, "text">

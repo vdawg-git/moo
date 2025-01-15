@@ -13,7 +13,7 @@ export function Tracklist({ tracks, onChange }: PlaylistProps) {
 		<Select
 			options={tracks.map((track, index) => ({
 				label: track.title ?? track.id,
-				value: index.toString(),
+				value: index.toString()
 			}))}
 			visibleOptionCount={tracks.length}
 			onChange={(index) => onChange(Number(index))}

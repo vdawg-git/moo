@@ -19,7 +19,7 @@ export function Runner(props: RunnerProps) {
 	const items = props.items
 	const [activeIndex, dispatchIndexChange] = useReducer(
 		handleUpDown(0, items.length - 1),
-		0,
+		0
 	)
 
 	useInput((input, key) => {

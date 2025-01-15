@@ -11,9 +11,9 @@ export function LogView() {
 			.pipe(
 				map(
 					({ stream, data }) =>
-						`${stream === "stdout" ? "log" : "err"}: ${data}`,
+						`${stream === "stdout" ? "log" : "err"}: ${data}`
 				),
-				scan((accumulator, current) => `${accumulator}${current}`),
+				scan((accumulator, current) => `${accumulator}${current}`)
 			)
 			.subscribe((data) => {
 				setLogs(data)

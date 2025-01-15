@@ -23,10 +23,10 @@
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false,
-		
+
 		"paths": {
 			"#/*": ["./source/*"],
-			"#components/*": ["./source/components/*"],
+			"#components/*": ["./source/components/*"]
 		}
 	}
 }

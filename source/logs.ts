@@ -31,9 +31,9 @@ export function patchLogs() {
 			concatMap(({ stream, data }) =>
 				fs.appendFile(
 					logsPath,
-					`${new Date().toISOString()} ${stream}: ${data}\n`,
-				),
-			),
+					`${new Date().toISOString()} ${stream}: ${data}\n`
+				)
+			)
 		)
 		.subscribe()
 

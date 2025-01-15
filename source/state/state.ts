@@ -24,8 +24,8 @@ export const state = createStoreWithProducer(produce, {
 		navigateForward: (context) => {
 			if (context.view.historyIndex + 1 >= context.view.history.length) return
 			context.view.historyIndex += 1
-		},
-	},
+		}
+	}
 })
 
 function createInitalState(): AppState {
@@ -37,14 +37,14 @@ function createInitalState(): AppState {
 			playState: "paused",
 			loopState: "none",
 			isShuffling: false,
-			isPlayingFromManualQueue: false,
+			isPlayingFromManualQueue: false
 		},
 		view: {
 			historyIndex: 0,
-			history: [{ route: "home" }],
+			history: [{ route: "home" }]
 		},
 		notifications: [],
-		modals: [],
+		modals: []
 	}
 }
 

@@ -13,7 +13,7 @@ export function All() {
 			) : (
 				response.data.fold(
 					(tracks) => <Tracklist tracks={tracks} onChange={console.log} />,
-					(error) => <Text color={"red"}>Error: {String(error)}</Text>,
+					(error) => <Text color={"red"}>Error: {String(error)}</Text>
 				)
 			)}
 		</Box>
