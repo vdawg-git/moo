@@ -15,14 +15,19 @@ import {
 	Observable,
 	of,
 	share,
-	Subject,
+	Subject
 } from "rxjs"
 import { Result, type AsyncResult } from "typescript-result"
 import { watch } from "node:fs"
-import { parseBlob as parseTagsFromBlob, selectCover } from "music-metadata"
+import {
+	parseBlob as parseTagsFromBlob,
+	parseWebStream,
+	parseBuffer,
+	selectCover
+} from "music-metadata"
 import { DATA_DIRECTORY } from "#/constants"
 import path from "node:path"
-import {} from "remeda"
+import { mapValues } from "remeda"
 import { readdir } from "node:fs/promises"
 
 // needs to scan all music directories and parse the music files.
@@ -54,7 +59,7 @@ function createWatcher(toWatch: string): Observable<FileChanged> {
 
 			subscriber.next({
 				type,
-				filePath: path.join(toWatch, filePath) as FilePath,
+				filePath: path.join(toWatch, filePath) as FilePath
 			})
 		})
 
@@ -62,25 +67,25 @@ function createWatcher(toWatch: string): Observable<FileChanged> {
 	}).pipe(
 		distinctUntilChanged(
 			(previous, current) =>
-				JSON.stringify(previous) === JSON.stringify(current),
+				JSON.stringify(previous) === JSON.stringify(current)
 		),
-		share(),
+		share()
 	)
 }
 
 function createMusicDirectoriesWatcher(
-	directories: readonly FilePath[],
+	directories: readonly FilePath[]
 ): Observable<FilePath> {
 	return merge(...directories.map(createWatcher)).pipe(
 		map(({ filePath }) => filePath),
 		distinctUntilChanged(),
 		filter(isSupportedFile),
-		share(),
+		share()
 	)
 }
 
 export async function scanMusicDirectories(
-	directories: readonly FilePath[],
+	directories: readonly FilePath[]
 ): Promise<readonly Result<TrackData, Error>[]> {
 	const files = (await Promise.all(directories.map(scanMusicDirectory))).flat()
 
@@ -88,24 +93,24 @@ export async function scanMusicDirectories(
 }
 
 async function scanMusicDirectory(
-	directory: FilePath,
+	directory: FilePath
 ): Promise<readonly Result<TrackData, Error>[]> {
 	return Result.fromAsyncCatching(readdir(directory, { recursive: true }))
 		.map((paths) =>
 			(paths as FilePath[])
 				.filter(isSupportedFile)
 				.map((relativePath) => path.join(directory, relativePath) as FilePath)
-				.map(parseMusicFile),
+				.map(parseMusicFile)
 		)
 		.fold(
 			(ok) => Promise.all(ok),
-			(error) => [Result.error(error)],
+			(error) => [Result.error(error)]
 		)
 }
 
 export async function updateDatabase(
 	musicDirectories: readonly FilePath[],
-	database: Database,
+	database: Database
 ): Promise<Result<void, Error>> {
 	return Result.fromAsync(scanMusicDirectories(musicDirectories)).map(
 		(trackResults) => {
@@ -113,17 +118,26 @@ export async function updateDatabase(
 				.map((track) => track.toTuple())
 				.reduce(
 					(accumulator, [track, error]) => {
-						track && accumulator.tracks.push(track)
-						error && accumulator.errors.push(track)
+						if (track) {
+							accumulator.tracks.push(track)
+						}
+						if (error) {
+							accumulator.errors.push(error)
+						}
 
 						return accumulator
 					},
-					{ tracks: [] as TrackData[], errors: [] as unknown[] },
+					{ tracks: [] as TrackData[], errors: [] as Error[] }
 				)
 
-			// TODO notify errors
-			return database.addTracks(tracks)
-		},
+			if (errors.length > 0) {
+				// TODO notify errors
+				console.error("Errors adding tracks:", errors)
+			}
+			console.log(`Adding ${tracks.length} tracks to db...`)
+
+			return tracks.length > 0 ? database.addTracks(tracks) : undefined
+		}
 	)
 }
 
@@ -135,7 +149,7 @@ const bufferWatcherTime = 6_000
 
 export function watchAndUpdateDatabase(
 	musicDirectories: readonly FilePath[],
-	database: Database,
+	database: Database
 ): () => void {
 	const watcher$ = createMusicDirectoriesWatcher(musicDirectories)
 	const watcherRelease$ = watcher$.pipe(debounceTime(bufferWatcherTime))
@@ -154,7 +168,7 @@ export function watchAndUpdateDatabase(
 				}
 
 				return parsed
-			}),
+			})
 		)
 		.subscribe((tracks) => database.addTracks(tracks))
 
@@ -167,28 +181,19 @@ export function watchAndUpdateDatabase(
  * Also saves the cover art to the data directory. Errors for that just get ignored.
  */
 async function parseMusicFile(
-	filePath: FilePath,
+	filePath: FilePath
 ): Promise<Result<TrackData, Error>> {
 	return Result.fromAsyncCatching(
-		parseTagsFromBlob(Bun.file(filePath), { duration: true }),
+		Bun.file(filePath)
+			.arrayBuffer()
+			.then((buffer) => new Uint8Array(buffer))
+			.then((buffer) =>
+				parseBuffer(buffer, { path: filePath }, { duration: true })
+			)
 	).map(
 		async ({
-			common: {
-				track,
-				disk,
-				comment,
-				genre,
-				picture,
-				composer,
-				mixer,
-				technician,
-				label,
-				rating,
-				category,
-				movementIndex,
-				...tags
-			},
-			format: { duration, bitrate, codec },
+			common: { track, picture, ...tags },
+			format: { duration, bitrate, codec }
 		}) => {
 			const releasedate =
 				(tags.releasedate && parseDate.fromString(tags.releasedate)) ||
@@ -202,7 +207,7 @@ async function parseMusicFile(
 				const coverPath = path.join(
 					DATA_DIRECTORY,
 					"pictures/tracks/local/",
-					coverName,
+					coverName
 				)
 				// TODO put this somewhere else
 				await Bun.write(coverPath, coverData.data).catch((error) => {
@@ -214,41 +219,62 @@ async function parseMusicFile(
 				})
 			}
 
+			const joinedTags = mapValues(
+				{
+					comment: tags.comment,
+					genre: tags.genre,
+					composer: tags.composer,
+					mixer: tags.mixer,
+					technician: tags.technician,
+					label: tags.label,
+					category: tags.category,
+					djmixer: tags.djmixer,
+					writer: tags.writer,
+					remixer: tags.remixer,
+					arranger: tags.arranger,
+					engineer: tags.engineer,
+					publisher: tags.publisher,
+					catalognumber: tags.catalognumber,
+					releasetype: tags.releasetype,
+					isrc: tags.isrc,
+					performerInstrument: tags["performer:instrument"],
+					lyricist: tags.lyricist,
+					conductor: tags.conductor,
+					producer: tags.producer,
+					keywords: tags.keywords
+				} satisfies Partial<Record<keyof TrackData, unknown>>,
+				(value) => value?.join(", ")
+			)
+
 			return {
 				...tags,
 
 				id: filePath as unknown as TrackId,
-				type: "local",
+				sourceProvider: "local",
 
-				releasedate: releasedate?.valueOf(),
+				releasedate: releasedate?.isValid() ? releasedate : undefined,
 
 				duration: duration ?? 0,
 
-				comment: comment?.join(" "),
-				genre: genre?.join(" "),
-				composer: composer?.join(" "),
-				mixer: mixer?.join(" "),
-				technician: technician?.join(" "),
-				label: label?.join(" "),
-				category: category?.join(" "),
+				...joinedTags,
 
-				rating: rating
+				rating: tags.rating
 					?.map((r) => r.rating ?? 0)
 					.reduce((previous, current) => Math.max(previous, current)),
 
-				picture: coverName ?? undefined,
+				picture: (coverName as FilePath | null) ?? undefined,
 
 				trackNumber: track?.no ?? undefined,
 				trackNumberTotal: track?.of ?? undefined,
-				disk: disk?.no ?? undefined,
-				diskOf: disk?.of ?? undefined,
-				movementIndex: movementIndex.no ?? undefined,
-				movementIndexTotal: movementIndex.of ?? undefined,
+				disk: tags.disk?.no ?? undefined,
+				diskOf: tags.disk?.of ?? undefined,
+				movementIndex: tags.movementIndex.no ?? undefined,
+				movementIndexTotal: tags.movementIndex.of ?? undefined,
 
 				bitrate,
-				codec,
-			}
-		},
+				codec
+			} satisfies TrackData
+		}
 	)
 }
 

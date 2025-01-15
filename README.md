@@ -1,9 +1,10 @@
-Wip, not working atm.
+> [!IMPORTANT]
+> Wip, not working atm.
 
 <div align="center">
 
 <h1 color="red">Moo</h1>
-<b> <span color="red">Sick</span> terminal music player </b>
+<b>Sick terminal music player </b>
 </br>
 
 </div>

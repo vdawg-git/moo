@@ -4,9 +4,10 @@ import { FullScreen } from "./components/fullscreen"
 import { Navigator } from "./components/navigator"
 import { ErrorBoundary } from "react-error-boundary"
 import { ErrorScreen } from "./components/errorScreen"
-import { watchAndUpdateDatabase } from "./localFiles/localFiles"
+import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { config } from "./config/config"
 import { database } from "./database/database"
+import { Result } from "typescript-result"
 
 const App = () => {
 	const { exit } = useApp()
@@ -40,6 +41,7 @@ export async function startApp() {
 	// updateDatabase(database).catch(console.error)
 
 	patchLogs()
+	console.log("Starting app..")
 
 	if (config.watchDirectories) {
 		watchAndUpdateDatabase(config.musicDirectories, database)
@@ -47,6 +49,12 @@ export async function startApp() {
 
 	// toggle fullscreen / different buffer
 	await writeToStdout("\x1b[?1049h")
+
+	Result.fromAsync(updateDatabase(config.musicDirectories, database))
+		.onFailure((error) =>
+			console.error("Failed to update db at startup", error)
+		)
+		.onSuccess(() => console.log("Updated db"))
 
 	const instance = render(<App />, { patchConsole: false })
 	await instance.waitUntilExit()

@@ -3,26 +3,27 @@ import type { Player } from "../player/types"
 import type { Except } from "type-fest"
 import type { Result } from "typescript-result"
 import type { Observable } from "rxjs"
+import type { FilePath } from "#/types/types"
 
 export interface Database {
-	getTrack: (id: string) => Promise<Result<Track | undefined, Error>>
+	getTrack: (id: TrackId) => Promise<Result<Track | undefined, Error>>
 	getTracks: (
-		ids?: readonly string[],
+		ids?: readonly TrackId[]
 	) => Promise<Result<readonly Track[], Error>>
 
-	getAlbum: (id: string) => Promise<Result<Album | undefined, Error>>
+	getAlbum: (id: AlbumId) => Promise<Result<Album | undefined, Error>>
 	getAlbums: (
-		ids?: readonly AlbumId[],
+		ids?: readonly AlbumId[]
 	) => Promise<Result<readonly Album[], Error>>
 
-	getArtist: (id: string) => Promise<Result<Artist | undefined, Error>>
+	getArtist: (id: ArtistId) => Promise<Result<Artist | undefined, Error>>
 	getArtists: (
-		ids?: readonly string[],
+		ids?: readonly ArtistId[]
 	) => Promise<Result<readonly Artist[], Error>>
 
 	getPlaylist: (id: PlaylistId) => Promise<Result<Playlist | undefined, Error>>
 	getPlaylists: (
-		ids: readonly PlaylistId[],
+		ids: readonly PlaylistId[]
 	) => Promise<Result<readonly Playlist[], Error>>
 
 	/** Fuzzy search the database */
@@ -58,20 +59,20 @@ export abstract class Track {
 	/** Manages the playing of the track (a local track is different than a streamed one)  */
 	private readonly player: Player
 	readonly status$: Player["status$"]
-	readonly type: string
+	readonly sourceProvider: string
 	readonly duration: number
 
 	constructor(
 		properties: Partial<Track> & { id: string },
 		player: Player,
-		type: string,
+		sourceProvider: string
 	) {
 		Object.assign(this, properties)
 		this.id = properties.id
 		this.player = player
 		this.status$ = this.player.status$
 		this.duration = properties.duration ?? 0
-		this.type = type
+		this.sourceProvider = sourceProvider
 	}
 
 	play() {
@@ -97,12 +98,12 @@ export abstract class Track {
 	readonly albumartist?: string
 	/** Album title */
 	readonly album?: string
-	/** Release date */
-	readonly releasedate?: number
+	/** Release date. A timestamp */
+	readonly releasedate?: Date
 	readonly comment?: string
 	readonly genre?: string
 	/** Filename of the cover image, like `<HASH>.jpg` */
-	readonly picture?: string
+	readonly picture?: FilePath
 	/** Track composer */
 	readonly composer?: string
 	/** Synchronized lyrics */
@@ -120,23 +121,23 @@ export abstract class Track {
 	/** Composer, formatted for alphabetic ordering */
 	readonly composersort?: string
 	/** Lyricist(s) */
-	readonly lyricist?: readonly string[]
+	readonly lyricist?: string
 	/** Writer(s) */
-	readonly writer?: readonly string[]
+	readonly writer?: string
 	/** Conductor(s) */
-	readonly conductor?: readonly string[]
+	readonly conductor?: string
 	/** Remixer(s) */
-	readonly remixer?: readonly string[]
+	readonly remixer?: string
 	/** Arranger(s) */
-	readonly arranger?: readonly string[]
+	readonly arranger?: string
 	/** Engineer(s) */
-	readonly engineer?: readonly string[]
+	readonly engineer?: string
 	/** Publisher(s) */
-	readonly publisher?: readonly string[]
+	readonly publisher?: string
 	/** Producer(s) */
-	readonly producer?: readonly string[]
+	readonly producer?: string
 	/** Mix-DJ(s) */
-	readonly djmixer?: readonly string[]
+	readonly djmixer?: string
 	/** Mixed by */
 	readonly mixer?: string
 	readonly technician?: string
@@ -153,18 +154,18 @@ export abstract class Track {
 	/** Release format, e.g. 'CD' */
 	readonly media?: string
 	/** Release catalog number(s) */
-	readonly catalognumber?: readonly string[]
+	readonly catalognumber?: string
 	readonly podcast?: boolean
 	readonly podcasturl?: string
 	readonly releasestatus?: string
-	readonly releasetype?: readonly string[]
+	readonly releasetype?: string
 	readonly releasecountry?: string
 	readonly script?: string
 	readonly language?: string
 	readonly gapless?: boolean
-	readonly isrc?: readonly string[]
+	readonly isrc?: string
 	readonly asin?: string
-	readonly "performer:instrument"?: readonly string[]
+	readonly performerInstrument?: string
 	readonly averageLevel?: number
 	readonly peakLevel?: number
 	readonly originalalbum?: string
@@ -177,7 +178,7 @@ export abstract class Track {
 	/** Podcast Category */
 	readonly category?: string
 	/** Podcast Keywords */
-	readonly keywords?: readonly string[]
+	readonly keywords?: string
 	/** Movement */
 	readonly movement?: string
 	/** Movement Index/Total */
@@ -187,9 +188,15 @@ export abstract class Track {
 	readonly podcastId?: string
 	/** Show Movement */
 	readonly showMovement?: boolean
+	readonly bitrate?: number
+	readonly codec?: string
 }
 
-export type TrackData = Except<Track, "play" | "pause" | "status$">
+/** Raw track data to be fed into the database */
+export type TrackData = Except<Track, "play" | "pause" | "status$"> & {
+	/** The source of the track. Currently only `local` for local music is supported. */
+	sourceProvider: string
+}
 
 interface Artist {
 	/** Also the id in the database */

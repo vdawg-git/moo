@@ -1,15 +1,34 @@
-import { createStore } from "@xstate/store"
+import { createStore, createStoreWithProducer } from "@xstate/store"
 import type { Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 import type { ReactNode } from "react"
 import type { Except } from "type-fest"
+import { produce } from "immer"
+import { deepEquals } from "bun"
 
-export const state = createStore({
+export const state = createStoreWithProducer(produce, {
 	context: createInitalState(),
-	on: {},
+	on: {
+		navigateTo: (context, goTo: ViewPage) => {
+			const index = context.view.historyIndex
+			const currentView = context.view.history[index]
+			if (deepEquals(currentView, goTo)) return
+
+			context.view.history.splice(index, Number.POSITIVE_INFINITY, goTo)
+			context.view.historyIndex += 1
+		},
+		navigateBack: (context) => {
+			if (context.view.historyIndex <= 0) return
+			context.view.historyIndex -= 1
+		},
+		navigateForward: (context) => {
+			if (context.view.historyIndex + 1 >= context.view.history.length) return
+			context.view.historyIndex += 1
+		},
+	},
 })
 
-function createInitalState(): StoreContext {
+function createInitalState(): AppState {
 	return {
 		playback: {
 			queue: undefined,
@@ -29,7 +48,7 @@ function createInitalState(): StoreContext {
 	}
 }
 
-export interface StoreContext {
+export interface AppState {
 	playback: {
 		queue: Queue | undefined
 		manuallyAdded: Track[]

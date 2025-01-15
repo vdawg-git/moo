@@ -20,13 +20,20 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
-			"complexity": { "noForEach": "off" }
+			"complexity": { "noForEach": "off" },
+			"style": {
+				"noDefaultExport": "error",
+				"noYodaExpression": "error",
+				"useCollapsedElseIf": "error",
+				"useFilenamingConvention": "error"
+			}
 		}
 	},
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double",
-			"semicolons": "asNeeded"
+			"semicolons": "asNeeded",
+			"trailingCommas": "none"
 		}
 	}
 }

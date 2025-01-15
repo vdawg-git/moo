@@ -26,7 +26,7 @@ export const tracksTable = sqliteTable("tracks", {
 	artist: text().references(() => artistsTable.name, { onDelete: "cascade" }),
 	/** Track album artists */
 	albumartist: text().references(() => artistsTable.name, {
-		onDelete: "cascade",
+		onDelete: "cascade"
 	}),
 	/** Album title */
 	album: text().references(() => albumsTable.id, { onDelete: "cascade" }),
@@ -37,7 +37,7 @@ export const tracksTable = sqliteTable("tracks", {
 	/** Track composer */
 	composer: text(),
 	/** Synchronized lyrics */
-	lyrics: text({ mode: "json" }).$type<ILyricsTag[]>(),
+	lyrics: text({ mode: "json" }).$type<readonly ILyricsTag[]>(),
 	/** Album title, formatted for alphabetic ordering */
 	albumsort: text(),
 	/** Track title, formatted for alphabetic ordering */
@@ -89,7 +89,7 @@ export const tracksTable = sqliteTable("tracks", {
 	/** Release format, e.g. 'CD' */
 	media: text(),
 	/** Release catalog number(s) */
-	catalognumber: text({ mode: "json" }).$type<string[]>(),
+	catalognumber: text(),
 	podcast: integer({ mode: "boolean" }),
 	podcasturl: text(),
 	releasestatus: text(),
@@ -98,7 +98,7 @@ export const tracksTable = sqliteTable("tracks", {
 	script: text(),
 	language: text(),
 	releasedate: integer({ mode: "timestamp" }),
-	"performer:instrument": text({ mode: "json" }).$type<string[]>(),
+	performerInstrument: text(),
 
 	averageLevel: integer(),
 	peakLevel: integer(),
@@ -110,7 +110,7 @@ export const tracksTable = sqliteTable("tracks", {
 	/** Podcast Category */
 	category: text(),
 	/** Podcast Keywords */
-	keywords: text({ mode: "json" }).$type<string[]>(),
+	keywords: text(),
 	/** Movement */
 	movement: text(),
 	/** Movement Index/Total */
@@ -121,43 +121,42 @@ export const tracksTable = sqliteTable("tracks", {
 
 	// extra
 	bitrate: integer(),
-	codec: text(),
+	codec: text()
 })
 
 export const artistsTable = sqliteTable("artists", {
 	name: text().primaryKey().$type<ArtistId>(),
-	sort: text(),
+	sort: text()
 })
 
 export const albumsTable = sqliteTable(
 	"albums",
 	{
-		title: text("title"),
-		artist: text("artist"),
+		title: text("title").notNull(),
+		artist: text("artist").references(() => artistsTable.name),
 		sort: text("sort"),
-		// added so that id can be accessed from foreign keys
-		id: text().notNull().$type<AlbumId>(),
+		id: text().notNull().unique()
 	},
-	(table) => [primaryKey({ name: "id", columns: [table.title, table.artist] })],
+	(table) => [primaryKey({ name: "id", columns: [table.title, table.artist] })]
 )
 
 export const movementsTable = sqliteTable("movements", {
-	title: text().primaryKey(),
+	title: text().primaryKey()
 })
 
 export const composersTable = sqliteTable("composers", {
 	name: text().primaryKey(),
-	sort: text(),
+	sort: text()
 })
 
 export const playlistsTable = sqliteTable("playlists", {
 	// We use an auto-incrementing integer as the primary key,
 	// as plugins could add playlists with the same name from for example Spotify
 	id: integer().primaryKey({ autoIncrement: true }).$type<PlaylistId>(),
-	name: text(),
+	name: text()
 })
 
-/** Links a track to a playlist */
+/** Links tracks to playlists */
 export const playlistTracksTable = sqliteTable(
 	"playlistTracks",
 	{
@@ -167,12 +166,12 @@ export const playlistTracksTable = sqliteTable(
 		trackId: text()
 			.notNull()
 			.references(() => tracksTable.id),
-		position: integer().notNull(),
+		position: integer().notNull()
 	},
 	(table) => [
 		primaryKey({
 			name: "id",
-			columns: [table.playlistId, table.trackId, table.position],
-		}),
-	],
+			columns: [table.playlistId, table.trackId, table.position]
+		})
+	]
 )
