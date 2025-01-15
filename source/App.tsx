@@ -8,6 +8,7 @@ import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { config } from "./config/config"
 import { database } from "./database/database"
 import { Result } from "typescript-result"
+import { Playbar } from "./components/playbar"
 
 const App = () => {
 	const { exit } = useApp()
@@ -25,7 +26,7 @@ const App = () => {
 			<FullScreen flexDirection="column">
 				<Navigator />
 
-				{/* {IS_DEV && <LogView />} */}
+				<Playbar />
 			</FullScreen>
 		</ErrorBoundary>
 	)

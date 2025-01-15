@@ -210,8 +210,8 @@ interface Playlist {
 	/** Also the id in the database */
 	name: string
 	// For smart playlist it is the same, as those will just get updated on start/file change. The definition of the smart playlist is saved in the dotfiles.
-	tracks: readonly string[]
-	id: string
+	tracks: readonly Track[]
+	id: PlaylistId
 }
 
 interface Album {

@@ -6,6 +6,7 @@ import untildify from "untildify"
 import { z } from "zod"
 import { CONFIG_DIRECTORY, IS_DEV } from "#/constants"
 import type { FilePath } from "#/types/types"
+import { icons } from "./icons"
 
 // biome-ignore lint/suspicious/noExplicitAny: .
 const zFilePath: z.Schema<FilePath> = z.string() as any
@@ -24,12 +25,14 @@ const schema = z.object({
 		.readonly()
 		.describe(
 			"Wether to watch the musicDirectories for changes and update the music library then."
-		)
+		),
+
+	icons
 })
 
 type Config = Readonly<z.infer<typeof schema>>
 
-const defaultConfig: Config = {
+const defaultConfig: Partial<Config> = {
 	musicDirectories: [],
 	watchDirectories: true
 }
@@ -50,7 +53,7 @@ async function parseConfig(file: BunFile): Promise<Result<Config, unknown>> {
 async function writeDefaultConfig(): Promise<Result<Config, Error>> {
 	return Result.fromAsync(
 		Bun.write(defaultConfigPath, stringifyJson5(defaultConfig, undefined, 4))
-	).map(() => defaultConfig)
+	).map(() => schema.parse(defaultConfig))
 }
 
 /**

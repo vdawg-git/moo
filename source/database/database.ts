@@ -207,13 +207,12 @@ export function conflictUpdateAllExcept<T extends SQLiteTable>(table: T) {
 	const columns = Object.entries(getTableColumns(table))
 	const updateColumns = columns.filter(([_, { primary }]) => !primary)
 
-	return updateColumns.reduce(
-		(acc, [columnName, column]) => ({
-			...acc,
-			[columnName]: sql.raw(`excluded.${column.name}`)
-		}),
-		{}
-	) as Omit<Record<keyof typeof table.$inferInsert, SQL>, E[number]>
+	return updateColumns.reduce((acc, [columnName, column]) => {
+		//@ts-expect-error
+		acc[columnName] = sql.raw(`excluded.${column.name}`)
+
+		return acc
+	}, {}) as Partial<Record<keyof typeof table.$inferInsert, SQL>>
 }
 
 /* function conflictUpdateAllExcept<

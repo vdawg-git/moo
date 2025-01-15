@@ -1,8 +1,8 @@
-import { state, type ViewPage, type ViewPages } from "../state/state"
+import { appState, type ViewPage, type ViewPages } from "../state/state"
 import { useSelector } from "@xstate/store/react"
-import { Playlist } from "#/views/playlist"
+import { Playlist } from "#/pages/playlist"
 import { Text } from "ink"
-import { All } from "#/views/all"
+import { All } from "#/pages/all"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
 const routes: Routes = {
@@ -13,7 +13,7 @@ const routes: Routes = {
 
 export function Navigator() {
 	const view = useSelector(
-		state,
+		appState,
 		({ context: { view } }) => view.history[view.historyIndex]
 	)
 
