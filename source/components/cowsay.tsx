@@ -1,5 +1,5 @@
 import cowsay, { type IOptions as CowOptions } from "cowsay"
-import { Text } from "ink"
+import { Text } from "tuir"
 import type { FunctionComponent } from "react"
 
 export const cowGlasses = {

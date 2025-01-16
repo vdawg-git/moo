@@ -1,7 +1,7 @@
 import { appState, type ViewPage, type ViewPages } from "../state/state"
 import { useSelector } from "@xstate/store/react"
 import { Playlist } from "#/pages/playlist"
-import { Text } from "ink"
+import { Text } from "tuir"
 import { All } from "#/pages/all"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }

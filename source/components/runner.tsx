@@ -1,4 +1,4 @@
-import { Box, Text, useInput } from "ink"
+import { Box, Text, useInput } from "tuir"
 import React, { useReducer, useState } from "react"
 
 // Currently only used to switch playlists,

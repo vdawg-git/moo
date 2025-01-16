@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { map, scan } from "rxjs"
 import { logs$ } from "../logs"
-import { Text, Box } from "ink"
+import { Text, Box } from "tuir"
 
 export function LogView() {
 	const [logs, setLogs] = useState<string>("")

@@ -9,14 +9,12 @@
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",
-		"@inkjs/ui": "^2.0.0",
 		"@xstate/store": "^2.6.2",
 		"any-date-parser": "^2.0.1",
 		"cowsay": "^1.6.0",
 		"drizzle-orm": "^0.38.3",
 		"env-paths": "^3.0.0",
 		"immer": "^10.1.1",
-		"ink": "5.1.0",
 		"json5": "^2.2.3",
 		"music-metadata": "^10.6.5",
 		"node-web-audio-api": "1.0.0",
@@ -28,6 +26,7 @@
 		"rxjs": "^7.8.1",
 		"speaker": "^0.5.5",
 		"ts-pattern": "^5.6.0",
+		"tuir": "^1.0.1",
 		"typescript-result": "^3.1.1",
 		"untildify": "^5.0.0",
 		"zod": "^3.24.1"

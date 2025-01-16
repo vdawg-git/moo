@@ -2,10 +2,12 @@ import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/query"
 import { appState, playNewPlayback } from "#/state/state"
-import { Box, Text } from "ink"
+import { usePlayingIndex } from "#/state/useSelectors"
+import { Box, Text } from "tuir"
 
 export function All() {
 	const response = useQuery("all", database.getTracks)
+	const playingIndex = usePlayingIndex({ type: "all" })
 
 	return (
 		<Box>
@@ -22,6 +24,7 @@ export function All() {
 									index
 								})
 							}
+							playingIndex={playingIndex}
 						/>
 					),
 					(error) => <Text color={"red"}>Error: {String(error)}</Text>

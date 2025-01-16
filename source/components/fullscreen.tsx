@@ -1,4 +1,4 @@
-import { Box, type BoxProps } from "ink"
+import { Box, type BoxProps } from "tuir"
 import { useEffect, useState, type PropsWithChildren } from "react"
 
 export function useStdoutDimensions(): [number, number] {

@@ -1,11 +1,11 @@
-import { Select } from "@inkjs/ui"
-import type { Track } from "../database/types"
+import type { PlaylistId } from "../database/types"
 import { Tracklist } from "#/components/tracklist"
-import { Box } from "ink"
+import { Box } from "tuir"
 import { database } from "#/database/database"
+import { useQuery } from "#/database/query"
 
 type PlaylistProps = {
-	id: string
+	id: PlaylistId
 }
 
 export function Playlist({ id }: PlaylistProps) {

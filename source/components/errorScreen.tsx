@@ -1,4 +1,4 @@
-import { Box, Text } from "ink"
+import { Box, Text } from "tuir"
 import { CowSay } from "./cowsay"
 
 export function ErrorScreen({ error }: { error: Error | string }) {

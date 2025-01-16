@@ -1,22 +1,19 @@
 import { patchLogs } from "./logs"
-import { render, useApp, useInput } from "ink"
+import { render, useApp, useKeymap } from "tuir"
 import { FullScreen } from "./components/fullscreen"
 import { Navigator } from "./components/navigator"
 import { ErrorBoundary } from "react-error-boundary"
 import { ErrorScreen } from "./components/errorScreen"
 import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
-import { config } from "./config/config"
+import { appConfig } from "./config/config"
 import { database } from "./database/database"
 import { Result } from "typescript-result"
 import { Playbar } from "./components/playbar"
+import { IS_DEV } from "./constants"
+import { useGlobalKeybindings } from "./globalKeybindings"
 
 const App = () => {
-	const { exit } = useApp()
-	useInput((input, key) => {
-		if (key.ctrl && input.toLowerCase() === "c") {
-			exit()
-		}
-	})
+	useGlobalKeybindings()
 
 	return (
 		<ErrorBoundary
@@ -44,18 +41,20 @@ export async function startApp() {
 	patchLogs()
 	console.log("Starting app..")
 
-	if (config.watchDirectories) {
-		watchAndUpdateDatabase(config.musicDirectories, database)
+	if (appConfig.watchDirectories) {
+		watchAndUpdateDatabase(appConfig.musicDirectories, database)
 	}
 
 	// toggle fullscreen / different buffer
 	await writeToStdout("\x1b[?1049h")
 
-	Result.fromAsync(updateDatabase(config.musicDirectories, database))
-		.onFailure((error) =>
-			console.error("Failed to update db at startup", error)
-		)
-		.onSuccess(() => console.log("Updated db"))
+	if (!IS_DEV) {
+		Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
+			.onFailure((error) =>
+				console.error("Failed to update db at startup", error)
+			)
+			.onSuccess(() => console.log("Updated db"))
+	}
 
 	const instance = render(<App />, { patchConsole: false })
 	await instance.waitUntilExit()

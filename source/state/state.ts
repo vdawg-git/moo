@@ -74,6 +74,17 @@ export const appState = createStoreWithProducer(produce, {
 			context.playback.index -= 1
 		},
 
+		togglePlayback: (context) => {
+			const playState = context.playback.playState
+
+			console.log("toggling", context.playback.playState)
+
+			if (!context.playback.queue) return
+
+			context.playback.playState =
+				playState === "playing" ? "paused" : "playing"
+		},
+
 		// notifications
 
 		addNotification: (
@@ -112,7 +123,7 @@ function createInitalState(): AppState {
 			queue: undefined,
 			manuallyAdded: [],
 			index: 0,
-			playState: "paused",
+			playState: "stopped",
 			loopState: "none",
 			isShuffling: false,
 			isPlayingFromManualQueue: false
@@ -196,7 +207,7 @@ export type PlaybackSource =
 export interface ViewPages {
 	// the homeview should be configurable via the config
 	home: undefined
-	playlist: { id: string }
+	playlist: { id: PlaylistId }
 	search: undefined
 }
 
@@ -224,8 +235,17 @@ export async function playNewPlayback({
 	source,
 	index
 }: { source: PlaybackSource; index?: number }) {
+	const state = appState.getSnapshot().context.playback
+
+	const isSamePlayback =
+		index === state.index && source.type === state.queue?.source.type
+	if (isSamePlayback) {
+		// appState.send({ type: "togglePlayback" })
+		return
+	}
+
 	const data = await fetchPlaybackSource(source)
-	console.log({ data })
+
 	data
 		.onSuccess((tracks) => {
 			appState.send({

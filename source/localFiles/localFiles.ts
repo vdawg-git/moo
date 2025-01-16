@@ -1,4 +1,4 @@
-import { config } from "#/config/config"
+import { appConfig } from "#/config/config"
 import type { Database, Track, TrackData, TrackId } from "#/database/types"
 import type { FilePath } from "#/types/types"
 import parseDate from "any-date-parser"

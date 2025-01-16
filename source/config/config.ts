@@ -7,28 +7,32 @@ import { z } from "zod"
 import { CONFIG_DIRECTORY, IS_DEV } from "#/constants"
 import type { FilePath } from "#/types/types"
 import { icons } from "./icons"
+import { keybindings } from "./keybindings"
 
 // biome-ignore lint/suspicious/noExplicitAny: .
 const zFilePath: z.Schema<FilePath> = z.string() as any
-const schema = z.object({
-	musicDirectories: z
-		.array(zFilePath)
-		.transform(
-			(directories) =>
-				directories.map(untildify) as unknown as readonly FilePath[]
-		)
-		.describe("Directories to recursivly scan music files from."),
+const schema = z
+	.object({
+		musicDirectories: z
+			.array(zFilePath)
+			.transform(
+				(directories) =>
+					directories.map(untildify) as unknown as readonly FilePath[]
+			)
+			.describe("Directories to recursivly scan music files from."),
 
-	watchDirectories: z
-		.boolean()
-		.default(true)
-		.readonly()
-		.describe(
-			"Wether to watch the musicDirectories for changes and update the music library then."
-		),
+		watchDirectories: z
+			.boolean()
+			.default(true)
+			.readonly()
+			.describe(
+				"Wether to watch the musicDirectories for changes and update the music library then."
+			),
 
-	icons
-})
+		icons,
+		keybindings
+	})
+	.strict()
 
 type Config = Readonly<z.infer<typeof schema>>
 
@@ -72,4 +76,4 @@ async function getConfig(): Promise<Config> {
 		.getOrThrow()
 }
 
-export const config = await getConfig()
+export const appConfig = await getConfig()
