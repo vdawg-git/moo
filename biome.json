@@ -25,7 +25,8 @@
 				"noDefaultExport": "error",
 				"noYodaExpression": "error",
 				"useCollapsedElseIf": "error",
-				"useFilenamingConvention": "error"
+				"useFilenamingConvention": "error",
+				"useTemplate": "off"
 			}
 		}
 	},

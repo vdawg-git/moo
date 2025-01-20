@@ -17,7 +17,6 @@
 		"immer": "^10.1.1",
 		"json5": "^2.2.3",
 		"music-metadata": "^10.6.5",
-		"node-web-audio-api": "1.0.0",
 		"patch-console": "^2.0.0",
 		"pino": "^9.6.0",
 		"react": "18.2.0",

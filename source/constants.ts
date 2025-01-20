@@ -10,6 +10,7 @@ const appPaths = envPaths(APP_NAME, { suffix: "" })
 export const CONFIG_DIRECTORY = appPaths.config
 export const DATA_DIRECTORY = appPaths.data
 export const LOGS_DIRECTORY = appPaths.log
+export const TEMP_DIRECTORY = appPaths.temp
 
 export const databasePath = IS_DEV
 	? path.join(process.cwd(), "db.db")

@@ -1,5 +1,5 @@
 import { patchLogs } from "./logs"
-import { render, useApp, useKeymap } from "tuir"
+import { render, setMouseReporting } from "tuir"
 import { FullScreen } from "./components/fullscreen"
 import { Navigator } from "./components/navigator"
 import { ErrorBoundary } from "react-error-boundary"
@@ -11,9 +11,20 @@ import { Result } from "typescript-result"
 import { Playbar } from "./components/playbar"
 import { IS_DEV } from "./constants"
 import { useGlobalKeybindings } from "./globalKeybindings"
+import { registerAudioPlayback } from "./audio/audio"
+import { useEffect } from "react"
 
 const App = () => {
 	useGlobalKeybindings()
+	// setMouseReporting(true)
+	useEffect(() => {
+		const subscribers = [registerAudioPlayback()]
+
+		return () => {
+			setMouseReporting(false)
+			subscribers.forEach((subscriber) => subscriber.unsubscribe())
+		}
+	}, [])
 
 	return (
 		<ErrorBoundary

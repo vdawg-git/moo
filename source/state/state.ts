@@ -9,6 +9,7 @@ import { Result } from "typescript-result"
 import { database } from "#/database/database"
 import type { PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
+import { Observable, shareReplay } from "rxjs"
 
 export const appState = createStoreWithProducer(produce, {
 	context: createInitalState(),
@@ -277,3 +278,13 @@ async function fetchPlaybackSource(
 		)
 		.exhaustive()
 }
+
+export const appState$: Observable<AppState> = new Observable<AppState>(
+	(subscriber) => {
+		const subscription = appState.subscribe((snapshot) =>
+			subscriber.next(snapshot.context)
+		)
+
+		return () => subscription.unsubscribe()
+	}
+).pipe(shareReplay({ refCount: true }))

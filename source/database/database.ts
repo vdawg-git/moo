@@ -120,7 +120,6 @@ const addTracks: (database: BunSQLiteDatabase) => Database["addTracks"] = (
 					: []
 		)
 		const artistsToAdd = mergeDepuplicate([...artists, ...albumArtists], "name")
-		console.log({ artistsToAdd })
 
 		const albums: (typeof albumsTable.$inferInsert)[] = tracks.flatMap(
 			(track) =>
@@ -215,25 +214,6 @@ export function conflictUpdateAllExcept<T extends SQLiteTable>(table: T) {
 	}, {}) as Partial<Record<keyof typeof table.$inferInsert, SQL>>
 }
 
-/* function conflictUpdateAllExcept<
-	T extends SQLiteTable,
-	E extends (keyof T["$inferInsert"])[]
->(table: T, except: E) {
-	const columns = getTableColumns(table)
-	const updateColumns = Object.keys(columns).filter(
-		(column) => !except.includes(column as keyof typeof table.$inferInsert)
-	)
-
-	return updateColumns.reduce(
-		(acc, [columnName, table]) => {
-			// @ts-ignore
-			acc[columnName] = sql.raw(`excluded.${columnName}`)
-			return acc
-		},
-		{} as Omit<Record<keyof typeof table.$inferInsert, SQL>, E[number]>
-	)
-} */
-
 /**
  * Takes an array of objects and removes all duplicates based on the provided property key.
  *
@@ -259,17 +239,4 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
 
 	// @ts-expect-error
 	return Object.values(sum)
-}
-
-function getPrimaryKey(table: SQLiteTable): PrimaryKey {
-	const tableConfig = getTableConfig(table)
-	const primaryKey =
-		tableConfig.primaryKeys[0] ??
-		tableConfig.columns.find((column) => column.primary.valueOf())
-
-	if (!primaryKey) {
-		throw new Error(`Table ${tableConfig.name} has no primary key!`)
-	}
-
-	return primaryKey
 }

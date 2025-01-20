@@ -20,7 +20,7 @@ export function Playbar() {
 				{currentTrack && <TrackDisplay track={currentTrack} />}
 			</Box>
 
-			{/* <MediaControl /> */}
+			<MediaControl />
 		</Box>
 	)
 }

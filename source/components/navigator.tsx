@@ -1,8 +1,8 @@
-import { appState, type ViewPage, type ViewPages } from "../state/state"
-import { useSelector } from "@xstate/store/react"
-import { Playlist } from "#/pages/playlist"
-import { Text } from "tuir"
 import { All } from "#/pages/all"
+import { Playlist } from "#/pages/playlist"
+import { type ViewPage, type ViewPages, appState } from "#/state/state"
+import { useSelector } from "@xstate/store/react"
+import { Text } from "tuir"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
 const routes: Routes = {

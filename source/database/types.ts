@@ -1,9 +1,10 @@
 import type { ICommonTagsResult, ILyricsTag } from "music-metadata"
 import type { Player } from "../player/types"
 import type { Except } from "type-fest"
-import type { Result } from "typescript-result"
+import { Result } from "typescript-result"
 import type { Observable } from "rxjs"
 import type { FilePath } from "#/types/types"
+import { addErrorNotification } from "#/state/state"
 
 export interface Database {
 	getTrack: (id: TrackId) => Promise<Result<Track | undefined, Error>>
@@ -58,7 +59,7 @@ export abstract class Track {
 	readonly id: TrackId
 	/** Manages the playing of the track (a local track is different than a streamed one)  */
 	private readonly player: Player
-	readonly status$: Player["status$"]
+	readonly status$: Player["events$"]
 	readonly sourceProvider: string
 	readonly duration: number
 
@@ -70,16 +71,35 @@ export abstract class Track {
 		Object.assign(this, properties)
 		this.id = properties.id
 		this.player = player
-		this.status$ = this.player.status$
+		this.status$ = this.player.events$
 		this.duration = properties.duration ?? 0
 		this.sourceProvider = sourceProvider
 	}
 
 	play() {
-		this.player.play(this.id)
+		Result.fromAsync(this.player.play(this.id)).onFailure((error) =>
+			addErrorNotification(
+				`Failed to play track ${this.title ?? this.id}`,
+				error
+			)
+		)
 	}
 	pause() {
-		this.player.pause(this.id)
+		Result.fromAsync(this.player.pause(this.id)) //
+			.onFailure((error) =>
+				addErrorNotification(
+					`Failed to pause track ${this.title ?? this.id}`,
+					error
+				)
+			)
+	}
+	clear() {
+		Result.fromAsync(this.player.clear()).onFailure((error) =>
+			addErrorNotification(
+				`Failed to clear old track ${this.title ?? this.id}`,
+				error
+			)
+		)
 	}
 
 	/** Track number in the album. See {@link trackNumberTotal} for the total number of tracks */
@@ -193,7 +213,10 @@ export abstract class Track {
 }
 
 /** Raw track data to be fed into the database */
-export type TrackData = Except<Track, "play" | "pause" | "status$"> & {
+export type TrackData = Except<
+	Track,
+	"play" | "pause" | "status$" | "clear"
+> & {
 	/** The source of the track. Currently only `local` for local music is supported. */
 	sourceProvider: string
 }
