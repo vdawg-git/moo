@@ -34,8 +34,6 @@ const App = () => {
 		>
 			<FullScreen flexDirection="column">
 				<Navigator />
-
-				<Playbar />
 			</FullScreen>
 		</ErrorBoundary>
 	)

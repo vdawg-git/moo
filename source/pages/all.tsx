@@ -1,3 +1,4 @@
+import { Playbar } from "#/components/playbar"
 import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/query"
@@ -10,26 +11,29 @@ export function All() {
 	const playingIndex = usePlayingIndex({ type: "all" })
 
 	return (
-		<Box>
-			{response.isLoading ? (
-				<Text>Loading...</Text>
-			) : (
-				response.data.fold(
-					(tracks) => (
-						<Tracklist
-							tracks={tracks}
-							onChange={(index) =>
-								playNewPlayback({
-									source: { type: "all" },
-									index
-								})
-							}
-							playingIndex={playingIndex}
-						/>
-					),
-					(error) => <Text color={"red"}>Error: {String(error)}</Text>
-				)
-			)}
-		</Box>
+		<>
+			<Box flexGrow={1}>
+				{response.isLoading ? (
+					<Text>Loading...</Text>
+				) : (
+					response.data.fold(
+						(tracks) => (
+							<Tracklist
+								tracks={tracks}
+								onChange={(index) =>
+									playNewPlayback({
+										source: { type: "all" },
+										index
+									})
+								}
+								playingIndex={playingIndex}
+							/>
+						),
+						(error) => <Text color={"red"}>Error: {String(error)}</Text>
+					)
+				)}
+			</Box>
+			<Playbar />
+		</>
 	)
 }

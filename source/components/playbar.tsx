@@ -11,16 +11,14 @@ export function Playbar() {
 		<Box
 			flexDirection="column"
 			width={"100%"}
-			borderColor={"gray"}
 			borderStyle={"round"}
-			justifyContent="center"
-			alignItems="center"
+			borderDimColor={!currentTrack}
 		>
-			<Box height={3}>
-				{currentTrack && <TrackDisplay track={currentTrack} />}
+			<Box>
+				{currentTrack ? <TrackDisplay track={currentTrack} /> : <Text> </Text>}
 			</Box>
 
-			<MediaControl />
+			{/* <MediaControl /> */}
 		</Box>
 	)
 }
@@ -31,13 +29,13 @@ function MediaControl() {
 
 	return (
 		<Box>
-			<Box padding={1} onClick={() => appState.send({ type: "previousTrack" })}>
+			<Box padding={2} onClick={() => appState.send({ type: "previousTrack" })}>
 				<Text dimColor={!hasPlayback}>{appConfig.icons.previous}</Text>
 			</Box>
 
 			<Box
-				padding={2}
 				onClick={() => appState.send({ type: "togglePlayback" })}
+				padding={2}
 			>
 				<Text dimColor={!hasPlayback}>
 					{playbackState === "playing"
@@ -46,7 +44,7 @@ function MediaControl() {
 				</Text>
 			</Box>
 
-			<Box padding={1} onClick={() => appState.send({ type: "nextTrack" })}>
+			<Box padding={2} onClick={() => appState.send({ type: "nextTrack" })}>
 				<Text dimColor={!hasPlayback}>{appConfig.icons.next}</Text>
 			</Box>
 		</Box>
