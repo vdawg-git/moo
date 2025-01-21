@@ -23,6 +23,7 @@ import { isNonNullish, isPromise } from "remeda"
 import { match } from "ts-pattern"
 import { addErrorNotification } from "#/state/state"
 import { logg } from "#/logs"
+import { sleep, type Subprocess } from "bun"
 
 const socketPath = path.join(TEMP_DIRECTORY, "mpv.sock")
 
@@ -64,7 +65,7 @@ export function createMpvPlayer(): Player {
 }
 
 function socketToPlayerEvents(
-	socket: Promise<Socket$> | Socket$
+	socket: Promise<Socket$<JsonValue[]>> | Socket$<JsonValue[]>
 ): Observable<PlayerEvent> {
 	return (isPromise(socket) ? from(socket) : of(socket)).pipe(
 		concatMap((socket) => socket.events$),
@@ -75,15 +76,16 @@ function socketToPlayerEvents(
 				addErrorNotification("Failed to listen to progress updates", error)
 			)
 		),
-		map((event) =>
+		concatMap((event) =>
 			match(event) //
-				.with({ type: "data" }, (dataEvent) => {
-					const event = mpvEvent.safeParse(dataEvent.data.toString()).data
-					if (!event) return
-
-					return parseEvent(event)
-				})
-				.otherwise(() => undefined)
+				.with({ type: "data" }, ({ data }) =>
+					data
+						.map((toParse) => mpvEvent.safeParse(toParse))
+						.filter((zod) => zod.success)
+						.map((zod) => parseEvent(zod.data))
+						.filter(isNonNullish)
+				)
+				.otherwise(() => of(undefined))
 		),
 		filter(isNonNullish)
 	)
@@ -108,11 +110,12 @@ function parseEvent(event: z.infer<typeof mpvEvent>): PlayerEvent | undefined {
 async function runCommand(
 	command: string,
 	args: JsonValue[],
-	socket: Promise<Socket$> | Socket$
+	socket: Promise<Socket$<JsonValue[]>> | Socket$<JsonValue[]>
 ): Promise<Result<void, Error>> {
 	const { client, events$ } = await socket
 	const { payload, id: requestId } = createPayload(command, args)
 
+	logg.debug(`COMMAND ${command}\n`, { requestId })
 	client.write(payload)
 
 	const waitForCommand: Promise<void> = new Promise((resolve, reject) => {
@@ -123,25 +126,23 @@ async function runCommand(
 
 		const subscription = events$
 			.pipe(
-				switchMap((event) => {
-					if (event.type !== "data") return undefined
-
-					try {
-						return mpvReply.parse(event.data.toJSON())
-					} catch {
-						return undefined
-					}
-				}),
-				filter(isNonNullish),
-				filter(({ request_id }) => request_id === requestId),
+				filter((event) => event.type === "data"),
+				concatMap(({ data }) =>
+					Promise.all(
+						data.map((toTry) =>
+							mpvReply
+								.safeParseAsync(toTry)
+								.then((parsed) =>
+									parsed.success ? parsed.data.request_id === requestId : false
+								)
+						)
+					).then((results) => results.some(Boolean))
+				),
+				filter((result) => result === true),
 				take(1)
 			)
-			.subscribe((data) => {
+			.subscribe(() => {
 				clearTimeout(timeoutId)
-
-				if (data.error) {
-					reject(data.error)
-				}
 
 				resolve(undefined)
 			})
@@ -162,7 +163,7 @@ function createPayload(
 	return { payload: JSON.stringify(payload) + "\n", id }
 }
 
-async function spawnMpv() {
+async function spawnMpv(): Promise<Socket$<JsonValue[]>> {
 	await mkdir(path.dirname(socketPath), { recursive: true })
 
 	const mpvFlags = [
@@ -174,38 +175,60 @@ async function spawnMpv() {
 	]
 
 	// TODO handle restarting mpv on crash
-	const mpv = spawn("mpv", mpvFlags)
-	mpv.on("error", (error) => {
-		throw error
+	const mpv = Bun.spawn(["mpv", ...mpvFlags], {
+		onExit: (subprocess) => subprocess.kill()
 	})
-	mpv.stderr.on("data", (stderr) => logg.error("mpv stderr", stderr))
-	mpv.on("message", (message) => logg.debug("mpvMessage", String(message)))
 
 	process.on("exit", () => {
 		mpv.kill()
 	})
 
 	// Socket connection wont work unless mpv has finished starting up
-	const socket = await waitForInit(mpv).then(() =>
-		createSocketClient(socketPath)
+	const socket = sleep(500).then(() =>
+		createSocketClient(socketPath, {
+			onData: (data) =>
+				data
+					.toString()
+					.split("\n")
+					.filter((string) => string !== "")
+					.map((string) => {
+						try {
+							return JSON.parse(string) as JsonValue
+						} catch (error) {
+							logg.warn("Failed to parse mpv json", { error, string })
+							return undefined
+						}
+					})
+					.filter(isNonNullish)
+		})
 	)
+
 	return socket
 }
 
-async function waitForInit(
-	mpvInstance: ChildProcessWithoutNullStreams
+/* async function waitForInit(
+	mpvInstance: Subprocess<"ignore", "pipe", "inherit">
 ): Promise<void> {
-	return new Promise((resolve, reject) => {
-		setTimeout(() => resolve(), 1500)
-		// const timeoutId = setTimeout(
-		// 	() => reject(new Error("Starting Mpv player timed out.")),
-		// 	2500
-		// )
+	return Promise.resolve()
+	return await mpvInstance.stdout
+		.values()
+		.next()
+		.then((data) => {
+			logg.debug(String(data))
+		})
+	// setTimeout(() => {
+	// 	resolve()
+	// 	// reject(new Error("Starting mpv timed out"))
+	// }, 1500)
 
-		// mpvInstance.stdout.prependOnceListener("data", (event) => {
-		// 	clearTimeout(timeoutId)
-		// 	logg.debug({ socket: event?.toString() })
-		// 	resolve()
-		// })
-	})
-}
+	// const timeoutId = setTimeout(
+	// 	() => reject(new Error("Starting Mpv player timed out.")),
+	// 	2500
+	// )
+
+	// mpvInstance.stdout.prependOnceListener("data", (event) => {
+	// 	clearTimeout(timeoutId)
+	// 	logg.debug({ socket: event?.toString() })
+	// 	resolve()
+	// })
+} */
