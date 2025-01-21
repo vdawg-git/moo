@@ -91,7 +91,7 @@ export const appState = createStoreWithProducer(produce, {
 			context,
 			{ notification }: { notification: Notification }
 		) => {
-			return context.notifications.push(notification)
+			context.notifications.push(notification)
 		},
 
 		// navigation
@@ -218,7 +218,7 @@ export type ViewPage = {
 }[keyof ViewPages]
 
 export function addErrorNotification(message: string, error?: Error | unknown) {
-	logg.error(message, error)
+	logg.error(message, { error })
 	addNotification({ message, type: "error" })
 }
 
