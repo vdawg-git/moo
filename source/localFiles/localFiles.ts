@@ -29,6 +29,8 @@ import { DATA_DIRECTORY } from "#/constants"
 import path from "node:path"
 import { mapValues } from "remeda"
 import { readdir } from "node:fs/promises"
+import { logg } from "#/logs"
+import { addErrorNotification } from "#/state/state"
 
 // needs to scan all music directories and parse the music files.
 //
@@ -131,10 +133,9 @@ export async function updateDatabase(
 				)
 
 			if (errors.length > 0) {
-				// TODO notify errors
-				console.error("Errors adding tracks:", errors)
+				addErrorNotification("Errors adding tracks:", { errors })
 			}
-			console.log(`Adding ${tracks.length} tracks to db...`)
+			logg.debug(`Adding ${tracks.length} tracks to db...`)
 
 			return tracks.length > 0 ? database.addTracks(tracks) : undefined
 		}
@@ -158,13 +159,16 @@ export function watchAndUpdateDatabase(
 		.pipe(
 			buffer(watcherRelease$),
 			concatMap(async (changes) => {
-				// TODO notify on errors
 				const parsed: TrackData[] = []
 				for (const file of new Set(changes)) {
 					const result = await parseMusicFile(file)
-					result.onFailure(console.error).onSuccess((track) => {
-						parsed.push(track)
-					})
+					result
+						.onSuccess((track) => {
+							parsed.push(track)
+						})
+						.onFailure((error) =>
+							addErrorNotification(`Failed to parse track: ${file}`, error)
+						)
 				}
 
 				return parsed
@@ -212,10 +216,7 @@ async function parseMusicFile(
 				// TODO put this somewhere else
 				await Bun.write(coverPath, coverData.data).catch((error) => {
 					coverName = null
-					console.group()
-					console.error(`Failed to save cover image of ${filePath}`)
-					console.error(error)
-					console.groupEnd()
+					logg.error(`Failed to save cover image of ${filePath}`, error)
 				})
 			}
 

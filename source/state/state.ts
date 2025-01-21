@@ -10,6 +10,7 @@ import { database } from "#/database/database"
 import type { PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 import { Observable, shareReplay } from "rxjs"
+import { logg } from "#/logs"
 
 export const appState = createStoreWithProducer(produce, {
 	context: createInitalState(),
@@ -77,8 +78,6 @@ export const appState = createStoreWithProducer(produce, {
 
 		togglePlayback: (context) => {
 			const playState = context.playback.playState
-
-			console.log("toggling", context.playback.playState)
 
 			if (!context.playback.queue) return
 
@@ -219,7 +218,7 @@ export type ViewPage = {
 }[keyof ViewPages]
 
 export function addErrorNotification(message: string, error?: Error | unknown) {
-	console.error(message, error)
+	logg.error(message, error)
 	addNotification({ message, type: "error" })
 }
 

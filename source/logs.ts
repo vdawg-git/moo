@@ -1,44 +1,32 @@
-import fs from "node:fs/promises"
 import path from "node:path"
-import patchConsole from "patch-console"
-import { concatMap, type Observable, share, Subject } from "rxjs"
 import { IS_DEV, LOGS_DIRECTORY } from "./constants"
+import { createLogger, format, transports } from "winston"
 
-type Log = {
-	stream: "stdout" | "stderr"
-	data: string
-}
 const logsPath = IS_DEV
-	? path.join(process.cwd(), "logs.txt")
-	: path.join(LOGS_DIRECTORY, "logs.txt")
+	? path.join(process.cwd(), "moo_logs")
+	: path.join(LOGS_DIRECTORY, "moo_logs")
 
-const logsInput$ = new Subject<Log>()
-/** Logs need to be patched via {@link patchLogs} for this to emit something */
-export const logs$: Observable<Log> = logsInput$.pipe(share())
+const logLevel = IS_DEV ? "debug" : process.env.LOG_LEVEL || "info"
 
-/**
- * Patches `console.*` to log to a file and to emit to {@link logs$}.
- *
- * Returns the unsubscription / cleanup.
- */
-export function patchLogs() {
-	const restore = patchConsole((stream, data) => {
-		logsInput$.next({ stream, data })
-	})
+const addTimestamp = format((info) => {
+	info.timestamp ??= Date.now()
+	return info
+})
 
-	const subscription = logsInput$
-		.pipe(
-			concatMap(({ stream, data }) =>
-				fs.appendFile(
-					logsPath,
-					`${new Date().toISOString()} ${stream}: ${data}\n`
-				)
-			)
-		)
-		.subscribe()
+const transportFile = new transports.File({
+	filename: logsPath,
+	level: logLevel,
+	format: format.combine(addTimestamp(), format.json())
+})
+const transportConsole = new transports.Console({
+	handleExceptions: true,
+	handleRejections: true,
+	forceConsole: true
+})
 
-	return () => {
-		restore()
-		subscription.unsubscribe()
-	}
-}
+export const logg = createLogger({
+	transports: [transportFile],
+	exceptionHandlers: [transportConsole, transportFile],
+	rejectionHandlers: [transportConsole, transportFile],
+	exitOnError: true
+})

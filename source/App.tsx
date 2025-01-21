@@ -1,4 +1,4 @@
-import { patchLogs } from "./logs"
+import { logg } from "./logs"
 import { render, setMouseReporting } from "tuir"
 import { FullScreen } from "./components/fullscreen"
 import { Navigator } from "./components/navigator"
@@ -13,6 +13,7 @@ import { IS_DEV } from "./constants"
 import { useGlobalKeybindings } from "./globalKeybindings"
 import { registerAudioPlayback } from "./audio/audio"
 import { useEffect } from "react"
+import { log } from "winston"
 
 const App = () => {
 	useGlobalKeybindings()
@@ -29,7 +30,7 @@ const App = () => {
 	return (
 		<ErrorBoundary
 			fallbackRender={({ error }) => <ErrorScreen error={error} />}
-			onError={console.error}
+			onError={logg.error}
 		>
 			<FullScreen flexDirection="column">
 				<Navigator />
@@ -49,8 +50,7 @@ export async function startApp() {
 	// Lets also figure out a way to handle notifications nicely
 	// updateDatabase(database).catch(console.error)
 
-	patchLogs()
-	console.log("Starting app..")
+	logg.debug("Starting app..")
 
 	if (appConfig.watchDirectories) {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)
@@ -61,10 +61,12 @@ export async function startApp() {
 
 	if (!IS_DEV) {
 		Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
-			.onFailure((error) =>
-				console.error("Failed to update db at startup", error)
-			)
-			.onSuccess(() => console.log("Updated db"))
+			.onFailure((error) => {
+				logg.error("Failed to update db at startup", { error })
+			})
+			.onSuccess(() => {
+				logg.debug("Updated db")
+			})
 	}
 
 	const instance = render(<App />, { patchConsole: false })

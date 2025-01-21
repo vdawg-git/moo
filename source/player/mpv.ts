@@ -21,6 +21,7 @@ import { z } from "zod"
 import { isNonNullish, isPromise } from "remeda"
 import { match } from "ts-pattern"
 import { addErrorNotification } from "#/state/state"
+import { logg } from "#/logs"
 
 const socketPath = path.join(TEMP_DIRECTORY, "mpv.sock")
 
@@ -161,16 +162,14 @@ function createPayload(
 }
 
 async function spawnMpv() {
-	console.log({ socketPath })
+	logg.debug({ socketPath })
 	const mpvFlags = ["--no-config", "--idle", `--input-ipc-server=${socketPath}`]
 	// TODO handle restarting mpv on crash
 	const mpv = spawn("mpv", mpvFlags)
 	mpv.on("error", (error) => {
 		throw error
 	})
-	mpv.stdout.on("data", (data: unknown) =>
-		console.log("mpv data", String(data))
-	)
+	mpv.stdout.on("data", (data: unknown) => logg.debug("mpv data", String(data)))
 
 	// Socket connection wont work unless mpv has finished starting up
 	const socket = await waitForInit(mpv).then(() =>
@@ -190,7 +189,7 @@ async function waitForInit(
 
 		mpvInstance.stdout.prependOnceListener("data", (event) => {
 			clearTimeout(timeoutId)
-			console.log({ socket: event?.toString() })
+			logg.debug({ socket: event?.toString() })
 			resolve()
 		})
 	})
