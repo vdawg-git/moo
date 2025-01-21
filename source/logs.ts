@@ -3,8 +3,8 @@ import { IS_DEV, LOGS_DIRECTORY } from "./constants"
 import { createLogger, format, transports } from "winston"
 
 const logsPath = IS_DEV
-	? path.join(process.cwd(), "moo_logs")
-	: path.join(LOGS_DIRECTORY, "moo_logs")
+	? path.join(process.cwd(), "moo.log")
+	: path.join(LOGS_DIRECTORY, "moo.log")
 
 const logLevel = IS_DEV ? "debug" : process.env.LOG_LEVEL || "info"
 
@@ -28,5 +28,5 @@ export const logg = createLogger({
 	transports: [transportFile],
 	exceptionHandlers: [transportConsole, transportFile],
 	rejectionHandlers: [transportConsole, transportFile],
-	exitOnError: true
+	exitOnError: false
 })

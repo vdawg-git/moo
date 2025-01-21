@@ -50,7 +50,7 @@ export async function startApp() {
 	// Lets also figure out a way to handle notifications nicely
 	// updateDatabase(database).catch(console.error)
 
-	logg.debug("Starting app..")
+	logg.info("Starting app..")
 
 	if (appConfig.watchDirectories) {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)

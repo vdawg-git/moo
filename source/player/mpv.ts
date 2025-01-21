@@ -4,6 +4,7 @@ import path from "node:path"
 import { TEMP_DIRECTORY } from "#/constants"
 import type { JsonValue } from "type-fest"
 import { randomInt } from "node:crypto"
+import { mkdir } from "node:fs/promises"
 import { Result } from "typescript-result"
 import { createSocketClient, type Socket$ } from "./socket"
 import {
@@ -118,7 +119,7 @@ async function runCommand(
 		const timeoutId = setTimeout(() => {
 			subscription.unsubscribe()
 			reject(`Timeout: ${payload}`)
-		})
+		}, 1000)
 
 		const subscription = events$
 			.pipe(
@@ -162,14 +163,27 @@ function createPayload(
 }
 
 async function spawnMpv() {
-	logg.debug({ socketPath })
-	const mpvFlags = ["--no-config", "--idle", `--input-ipc-server=${socketPath}`]
+	await mkdir(path.dirname(socketPath), { recursive: true })
+
+	const mpvFlags = [
+		"--no-config",
+		"--idle",
+		`--input-ipc-server=${socketPath}`,
+		"--vo=null",
+		"--no-video"
+	]
+
 	// TODO handle restarting mpv on crash
 	const mpv = spawn("mpv", mpvFlags)
 	mpv.on("error", (error) => {
 		throw error
 	})
-	mpv.stdout.on("data", (data: unknown) => logg.debug("mpv data", String(data)))
+	mpv.stderr.on("data", (stderr) => logg.error("mpv stderr", stderr))
+	mpv.on("message", (message) => logg.debug("mpvMessage", String(message)))
+
+	process.on("exit", () => {
+		mpv.kill()
+	})
 
 	// Socket connection wont work unless mpv has finished starting up
 	const socket = await waitForInit(mpv).then(() =>
@@ -182,15 +196,16 @@ async function waitForInit(
 	mpvInstance: ChildProcessWithoutNullStreams
 ): Promise<void> {
 	return new Promise((resolve, reject) => {
-		const timeoutId = setTimeout(
-			() => reject("Starting Mpv player timed out."),
-			88500
-		)
+		setTimeout(() => resolve(), 1500)
+		// const timeoutId = setTimeout(
+		// 	() => reject(new Error("Starting Mpv player timed out.")),
+		// 	2500
+		// )
 
-		mpvInstance.stdout.prependOnceListener("data", (event) => {
-			clearTimeout(timeoutId)
-			logg.debug({ socket: event?.toString() })
-			resolve()
-		})
+		// mpvInstance.stdout.prependOnceListener("data", (event) => {
+		// 	clearTimeout(timeoutId)
+		// 	logg.debug({ socket: event?.toString() })
+		// 	resolve()
+		// })
 	})
 }

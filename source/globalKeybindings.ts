@@ -1,6 +1,7 @@
 import { useApp, useKeymap } from "tuir"
 import { appConfig } from "./config/config"
 import { appState } from "./state/state"
+import { logg } from "./logs"
 
 export function useGlobalKeybindings() {
 	const { exit } = useApp()
@@ -16,6 +17,5 @@ export function useGlobalKeybindings() {
 	useEvent("togglePlayback", () => appState.send({ type: "togglePlayback" }))
 	useEvent("exit", () => {
 		exit()
-		process.exit(0)
 	})
 }
