@@ -85,6 +85,10 @@ export const appState = createStoreWithProducer(produce, {
 				playState === "playing" ? "paused" : "playing"
 		},
 
+		setPlayProgress: (context, { newTime }: { newTime: number }) => {
+			context.playback.progress = newTime
+		},
+
 		// notifications
 
 		addNotification: (
@@ -126,7 +130,8 @@ function createInitalState(): AppState {
 			playState: "stopped",
 			loopState: "none",
 			isShuffling: false,
-			isPlayingFromManualQueue: false
+			isPlayingFromManualQueue: false,
+			progress: 0
 		},
 		view: {
 			historyIndex: 0,
@@ -154,6 +159,8 @@ export interface AppState {
 		loopState: LoopState
 		isShuffling: boolean
 		isPlayingFromManualQueue: boolean
+		/** Time in seconds */
+		progress: number
 	}
 
 	/** This dictates the navigation */

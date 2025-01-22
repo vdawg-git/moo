@@ -1,52 +1,27 @@
-import { appConfig } from "#/config/config"
-import type { Database, Track, TrackData, TrackId } from "#/database/types"
-import type { FilePath } from "#/types/types"
+import { watch } from "node:fs"
+import { readdir } from "node:fs/promises"
+import path from "node:path"
 import parseDate from "any-date-parser"
+import { parseBuffer, selectCover } from "music-metadata"
+import { mapValues } from "remeda"
 import {
 	buffer,
-	concat,
+	Observable,
 	concatMap,
 	debounceTime,
 	distinctUntilChanged,
-	distinctUntilKeyChanged,
 	filter,
 	map,
 	merge,
-	Observable,
-	of,
-	share,
-	Subject
+	share
 } from "rxjs"
-import { Result, type AsyncResult } from "typescript-result"
-import { watch } from "node:fs"
-import {
-	parseBlob as parseTagsFromBlob,
-	parseWebStream,
-	parseBuffer,
-	selectCover
-} from "music-metadata"
+import { Result } from "typescript-result"
 import { DATA_DIRECTORY } from "#/constants"
-import path from "node:path"
-import { mapValues } from "remeda"
-import { readdir } from "node:fs/promises"
+import type { Database, TrackData, TrackId } from "#/database/types"
 import { logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
-
-// needs to scan all music directories and parse the music files.
-//
-// Parsing:
-// Rename properties: track, trackOf etc
-
-// TODO figure out what can be played back and parsed
-/** The files which can be parsed and played back */
-const supportedFormats = [".flac", ".mp3"]
-/**
- * Files with those formats should generate a warning.
- * Files not in here and {@link supportedFormats} should be ignored.
- *
- * Not used yet.
- */
-const _unsupportedFormats = ["m4a", "ogg"]
+import type { FilePath } from "#/types/types"
+import { supportedFormats } from "./formats"
 
 type FileChanged = {
 	/** The absolute filepath which changed */
@@ -143,8 +118,10 @@ export async function updateDatabase(
 }
 
 /**
- * How long music directory changes are buffered in a debounced way
- * before they are released and processed together
+ * How long music directory changes are buffered
+ * before they are released and processed together.
+ *
+ * The time is debounced.
  * */
 const bufferWatcherTime = 6_000
 

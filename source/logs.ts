@@ -1,32 +1,41 @@
 import path from "node:path"
-import { IS_DEV, LOGS_DIRECTORY } from "./constants"
+import { APP_ROOT, IS_DEV, LOGS_DIRECTORY } from "./constants"
 import { createLogger, format, transports } from "winston"
 
 const logsPath = IS_DEV
-	? path.join(process.cwd(), "moo.log")
+	? path.join(APP_ROOT, "moo.log")
 	: path.join(LOGS_DIRECTORY, "moo.log")
 
-const logLevel = IS_DEV ? "debug" : process.env.LOG_LEVEL || "info"
-
-const addTimestamp = format((info) => {
-	info.timestamp ??= Date.now()
-	return info
-})
+const logLevel = IS_DEV ? "silly" : process.env.LOG_LEVEL || "info"
 
 const transportFile = new transports.File({
 	filename: logsPath,
 	level: logLevel,
-	format: format.combine(addTimestamp(), format.json())
+	handleExceptions: true,
+	handleRejections: true,
+	format: format.combine(
+		format.errors({ stack: true }),
+		format.timestamp(),
+		format.json()
+	)
 })
 const transportConsole = new transports.Console({
 	handleExceptions: true,
-	handleRejections: true,
-	forceConsole: true
+	handleRejections: true
 })
 
 export const logg = createLogger({
 	transports: [transportFile],
 	exceptionHandlers: [transportConsole, transportFile],
 	rejectionHandlers: [transportConsole, transportFile],
-	exitOnError: false
+	exitOnError: true
 })
+
+export function enumarateError(error: Error) {
+	return {
+		name: error.name,
+		stack: error.stack,
+		message: error.message,
+		cause: error.cause
+	}
+}

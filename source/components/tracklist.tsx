@@ -1,5 +1,6 @@
 import { appConfig } from "#/config/config"
 import { appState, playNewPlayback } from "#/state/state"
+import path from "path"
 import type { Track } from "../database/types"
 import { Box, List, Text, useKeymap, useList, useListItem } from "tuir"
 
@@ -41,6 +42,7 @@ type TrackItemProps = {
 function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
 	const { isFocus, item: track } = useListItem<Track[]>()
 	const color = isFocus ? "blue" : undefined
+	const titleDisplay = track.title ?? path.basename(track.id)
 
 	const { useEvent } = useKeymap({ submit: { key: "return" } })
 	useEvent("submit", onSelect)
@@ -53,7 +55,7 @@ function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
 				<Text> </Text>
 			)}
 
-			<Text wrap="truncate-end">{track.title}</Text>
+			<Text wrap="truncate-end">{titleDisplay}</Text>
 		</Box>
 	)
 }

@@ -59,7 +59,8 @@ export abstract class Track {
 	readonly id: TrackId
 	/** Manages the playing of the track (a local track is different than a streamed one)  */
 	private readonly player: Player
-	readonly status$: Player["events$"]
+	/** The events for the playback of this track */
+	readonly events$: Player["events$"]
 	readonly sourceProvider: string
 	readonly duration: number
 
@@ -71,7 +72,7 @@ export abstract class Track {
 		Object.assign(this, properties)
 		this.id = properties.id
 		this.player = player
-		this.status$ = this.player.events$
+		this.events$ = this.player.events$
 		this.duration = properties.duration ?? 0
 		this.sourceProvider = sourceProvider
 	}
@@ -215,7 +216,7 @@ export abstract class Track {
 /** Raw track data to be fed into the database */
 export type TrackData = Except<
 	Track,
-	"play" | "pause" | "status$" | "clear"
+	"play" | "pause" | "events$" | "clear"
 > & {
 	/** The source of the track. Currently only `local` for local music is supported. */
 	sourceProvider: string

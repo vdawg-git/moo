@@ -1,4 +1,4 @@
-import { logg } from "./logs"
+import { enumarateError, logg } from "./logs"
 import { render, setMouseReporting } from "tuir"
 import { FullScreen } from "./components/fullscreen"
 import { Navigator } from "./components/navigator"
@@ -8,12 +8,10 @@ import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { appConfig } from "./config/config"
 import { database } from "./database/database"
 import { Result } from "typescript-result"
-import { Playbar } from "./components/playbar"
 import { IS_DEV } from "./constants"
 import { useGlobalKeybindings } from "./globalKeybindings"
 import { registerAudioPlayback } from "./audio/audio"
 import { useEffect } from "react"
-import { log } from "winston"
 
 const App = () => {
 	useGlobalKeybindings()
@@ -30,7 +28,9 @@ const App = () => {
 	return (
 		<ErrorBoundary
 			fallbackRender={({ error }) => <ErrorScreen error={error} />}
-			onError={logg.error}
+			onError={(error) => {
+				logg.error("react error", enumarateError(error))
+			}}
 		>
 			<FullScreen flexDirection="column">
 				<Navigator />
@@ -46,7 +46,9 @@ export async function startApp() {
 	// lets figure out a nice way of structuring the code
 	// if this throws, it throws for now.
 	// Lets also figure out a way to handle notifications nicely
-	// updateDatabase(database).catch(console.error)
+	if (!IS_DEV) {
+		updateDatabase(appConfig.musicDirectories, database)
+	}
 
 	logg.info("Starting app..")
 

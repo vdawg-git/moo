@@ -2,20 +2,29 @@ import { appConfig } from "#/config/config"
 import type { Track } from "#/database/types"
 import { appState } from "#/state/state"
 import { useCurrentTrack, usePlaybackState } from "#/state/useSelectors"
+import { match } from "ts-pattern"
 import { Box, Text } from "tuir"
 
 export function Playbar() {
 	const currentTrack = useCurrentTrack()
+	const playbackState = usePlaybackState()
 
 	return (
-		<Box
-			flexDirection="column"
-			width={"100%"}
-			borderStyle={"round"}
-			borderDimColor={!currentTrack}
-		>
-			<Box>
-				{currentTrack ? <TrackDisplay track={currentTrack} /> : <Text> </Text>}
+		<Box flexDirection="column" width={"100%"}>
+			<Box borderStyle={"round"} borderDimColor paddingX={1}>
+				<Box flexGrow={1}>
+					{currentTrack ? (
+						<TrackDisplay track={currentTrack} />
+					) : (
+						<Box alignSelf="center">
+							<Text dimColor color={"gray"} italic>
+								Moo
+							</Text>
+						</Box>
+					)}
+				</Box>
+
+				<Text dimColor={playbackState !== "playing"}>[ {playbackState} ]</Text>
 			</Box>
 
 			{/* <MediaControl /> */}
@@ -55,7 +64,7 @@ function TrackDisplay({ track }: { track: Track }) {
 	const artist = track.artist ?? track.albumartist
 
 	return (
-		<Box flexDirection="column">
+		<Box paddingLeft={1} flexDirection="column">
 			<Text>{track.title ?? track.id}</Text>
 			<Text dimColor>{artist ?? "Unknown"}</Text>
 		</Box>
