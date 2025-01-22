@@ -48,6 +48,7 @@ function connectDatabase(): Database {
 				db
 					.select()
 					.from(tracksTable)
+					.orderBy(tracksTable.title, tracksTable.artist, tracksTable.album)
 					.where(
 						ids.length > 0
 							? inArray(tracksTable.id, ids as TrackId[])
