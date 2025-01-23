@@ -1,33 +1,26 @@
+import { type SQL, getTableColumns, inArray, sql } from "drizzle-orm"
+import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
+import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
+import { isNonNullish } from "remeda"
+import { Subject } from "rxjs"
+import { Result } from "typescript-result"
+import { databasePath } from "#/constants.js"
+import { nullsToUndefined } from "#/helpers.js"
 import { createLocalPlayer } from "../player/player.js"
 import {
-	Track,
-	type AlbumId,
-	type ArtistId,
-	type Database,
-	type TrackId
-} from "./types.js"
-import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
-import { databasePath } from "#/constants.js"
-import { AsyncResult, Result } from "typescript-result"
-import { Subject, type Observable } from "rxjs"
-import {
-	artistsTable,
-	movementsTable,
 	albumsTable,
+	artistsTable,
 	composersTable,
+	movementsTable,
 	tracksTable
 } from "./schema.js"
 import {
-	getTableConfig,
-	type PrimaryKey,
-	type SQLiteTable,
-	type SQLiteTransaction,
-	type SQLiteUpdateSetSource
-} from "drizzle-orm/sqlite-core"
-import { getTableColumns, inArray, sql, type SQL } from "drizzle-orm"
-import { isNonNullish, mapValues } from "remeda"
-import type { NullToUndefined } from "#/types/utillities.js"
-import { nullsToUndefined } from "#/helpers.js"
+	type AlbumId,
+	type ArtistId,
+	type Database,
+	Track,
+	type TrackId
+} from "./types.js"
 
 export const database = connectDatabase()
 
@@ -48,7 +41,16 @@ function connectDatabase(): Database {
 				db
 					.select()
 					.from(tracksTable)
-					.orderBy(tracksTable.title, tracksTable.artist, tracksTable.album)
+					.orderBy(
+						tracksTable.titlesort,
+						tracksTable.title,
+						tracksTable.artistsort,
+						tracksTable.artist,
+						tracksTable.albumartistsort,
+						tracksTable.albumartist,
+						tracksTable.albumsort,
+						tracksTable.album
+					)
 					.where(
 						ids.length > 0
 							? inArray(tracksTable.id, ids as TrackId[])
