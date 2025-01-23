@@ -1,30 +1,26 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process"
-import type { Player, PlayerEvent } from "./types"
-import path from "node:path"
-import { TEMP_DIRECTORY } from "#/constants"
-import type { JsonValue } from "type-fest"
 import { randomInt } from "node:crypto"
 import { mkdir } from "node:fs/promises"
-import { Result } from "typescript-result"
-import { createSocketClient, type Socket$ } from "./socket"
-import {
-	filter,
-	map as switchMap,
-	type Observable,
-	take,
-	map,
-	tap,
-	from,
-	concatMap,
-	of,
-	distinctUntilChanged
-} from "rxjs"
-import { z } from "zod"
+import path from "node:path"
+import { deepEquals, sleep } from "bun"
 import { isNonNullish, isPromise } from "remeda"
+import {
+	type Observable,
+	concatMap,
+	distinctUntilChanged,
+	filter,
+	from,
+	of,
+	take
+} from "rxjs"
 import { match } from "ts-pattern"
-import { addErrorNotification } from "#/state/state"
+import type { JsonValue } from "type-fest"
+import { Result } from "typescript-result"
+import { z } from "zod"
+import { TEMP_DIRECTORY } from "#/constants"
 import { logg } from "#/logs"
-import { deepEquals, sleep, type Subprocess } from "bun"
+import { addErrorNotification } from "#/state/state"
+import { type Socket$, createSocketClient } from "./socket"
+import type { Player, PlayerEvent } from "./types"
 
 const socketPath = path.join(TEMP_DIRECTORY, "mpv.sock")
 
@@ -101,16 +97,13 @@ function socketToPlayerEvents(
 		concatMap((socket) => socket.events$),
 		concatMap((event) =>
 			match(event)
-				.with({ type: "data" }, ({ data }) => {
-					const f = data.filter((e) => e?.name !== "playback-time")
-					f.length > 0 && logg.debug("socket data event", f)
-
-					return data
+				.with({ type: "data" }, ({ data }) =>
+					data
 						.map((toParse) => mpvEvent.safeParse(toParse))
 						.filter((zod) => zod.success)
 						.map((zod) => parseEvent(zod.data))
 						.filter(isNonNullish)
-				})
+				)
 				.otherwise(() => of(undefined))
 		),
 
@@ -237,6 +230,7 @@ async function spawnMpv(): Promise<Socket$<JsonValue[]>> {
 	})
 
 	// Socket connection wont work unless mpv has finished starting up
+	// TODO find a nice way to know when the socket is available
 	const socket = sleep(500).then(() =>
 		createSocketClient(socketPath, {
 			onData: (data) =>
