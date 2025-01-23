@@ -1,6 +1,5 @@
 import { enumarateError, logg } from "./logs"
-import { render, setMouseReporting } from "tuir"
-import { FullScreen } from "./components/fullscreen"
+import { preserveScreen, render, setMouseReporting, Viewport } from "tuir"
 import { Navigator } from "./components/navigator"
 import { ErrorBoundary } from "react-error-boundary"
 import { ErrorScreen } from "./components/errorScreen"
@@ -15,13 +14,14 @@ import { useEffect } from "react"
 
 const App = () => {
 	useGlobalKeybindings()
-	// setMouseReporting(true)
+
 	useEffect(() => {
-		const subscribers = [registerAudioPlayback()]
+		const unsubscribe = registerAudioPlayback()
+		setMouseReporting(true)
 
 		return () => {
 			setMouseReporting(false)
-			subscribers.forEach((subscriber) => subscriber.unsubscribe())
+			unsubscribe()
 		}
 	}, [])
 
@@ -32,9 +32,9 @@ const App = () => {
 				logg.error("react error", enumarateError(error))
 			}}
 		>
-			<FullScreen flexDirection="column">
+			<Viewport flexDirection="column">
 				<Navigator />
-			</FullScreen>
+			</Viewport>
 		</ErrorBoundary>
 	)
 }
@@ -69,6 +69,7 @@ export async function startApp() {
 			})
 	}
 
+	preserveScreen()
 	const instance = render(<App />, { patchConsole: false })
 	await instance.waitUntilExit()
 
