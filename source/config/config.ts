@@ -6,8 +6,8 @@ import untildify from "untildify"
 import { z } from "zod"
 import { CONFIG_DIRECTORY, IS_DEV } from "#/constants"
 import type { FilePath } from "#/types/types"
-import { icons } from "./icons"
-import { keybindings } from "./keybindings"
+import { iconsSchema } from "./icons"
+import { keybindingsSchema } from "./keybindings"
 
 // biome-ignore lint/suspicious/noExplicitAny: .
 const zFilePath: z.Schema<FilePath> = z.string() as any
@@ -29,10 +29,13 @@ const schema = z
 				"Wether to watch the musicDirectories for changes and update the music library then."
 			),
 
-		icons,
-		keybindings
+		/** The icons used by the app. */
+		icons: iconsSchema,
+
+		/** All keybindings. Defaults and those overriden by the user. */
+		keybindings: keybindingsSchema
 	})
-	.strict()
+	.strict("Unknown properties found in the config!")
 
 type Config = Readonly<z.infer<typeof schema>>
 

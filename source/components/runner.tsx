@@ -1,13 +1,23 @@
-import { Box, Text, useInput } from "tuir"
-import React, { useReducer, useState } from "react"
+import { Box, List, Text, useKeymap, useList, useListItem } from "tuir"
+import { appCommands } from "#/commands/commands"
+import { appState } from "#/state/state"
 
-// Currently only used to switch playlists,
+const runnerId = Symbol("runner")
 
-type RunnerProps = {
-	items: readonly RunnerItem[]
+export function openRunner() {
+	const items: RunnerItem[] = appCommands.map(({ label, callback, id }) => ({
+		id,
+		label,
+		onSelect: callback
+	}))
+
+	appState.send({
+		type: "addModal",
+		modal: { node: Runner({ items }), id: runnerId }
+	})
 }
 
-type RunnerItem = {
+export type RunnerItem = {
 	/** This gets displayed */
 	label: string
 	/** Must be unique */
@@ -15,42 +25,41 @@ type RunnerItem = {
 	onSelect: (item: RunnerItem) => void
 }
 
-export function Runner(props: RunnerProps) {
-	const items = props.items
-	const [activeIndex, dispatchIndexChange] = useReducer(
-		handleUpDown(0, items.length - 1),
-		0
-	)
+type RunnerProps = {
+	items: readonly RunnerItem[]
+}
 
-	useInput((input, key) => {
-		if (input === "down") {
-			dispatchIndexChange(-1)
-		}
-		if (input === "up") {
-			dispatchIndexChange(1)
-		}
+function Runner({ items: runnerItems }: RunnerProps) {
+	const { listView, items } = useList(runnerItems, {
+		windowSize: "fit",
+		unitSize: 1,
+		navigation: "vi-vertical",
+		centerScroll: false,
+		fallthrough: false
 	})
 
 	return (
 		<Box>
-			{items.map((item, index) => (
-				<Box key={item.id}>
-					<Text color={"white"} dimColor={index !== activeIndex}>
-						{item.label}
-					</Text>
-				</Box>
-			))}
+			<List listView={listView}>
+				{items.map((item, index) => (
+					<RunnerItem key={item.id} />
+				))}
+			</List>
 		</Box>
 	)
 }
 
-function handleUpDown(minIndex: number, maxIndex: number) {
-	return (previousIndex: number, change: -1 | 1): number => {
-		const newValue = previousIndex + change
+function RunnerItem(): React.ReactNode {
+	const { isFocus, item } = useListItem<RunnerItem[]>()
+	const { label, onSelect } = item
+	const color = isFocus ? "blue" : undefined
 
-		if (newValue < minIndex) return maxIndex
-		if (newValue > maxIndex) return minIndex
+	const { useEvent } = useKeymap({ submit: { key: "return" } })
+	useEvent("submit", () => onSelect(item))
 
-		return newValue
-	}
+	return (
+		<Box width="100" backgroundColor={color} onClick={() => onSelect(item)}>
+			<Text wrap="truncate-end">{label}</Text>
+		</Box>
+	)
 }

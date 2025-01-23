@@ -11,6 +11,7 @@ import type { PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 import { Observable, shareReplay } from "rxjs"
 import { logg } from "#/logs"
+import { Modal } from "tuir"
 
 export const appState = createStoreWithProducer(produce, {
 	context: createInitalState(),
@@ -117,6 +118,20 @@ export const appState = createStoreWithProducer(produce, {
 		navigateForward: (context) => {
 			if (context.view.historyIndex + 1 >= context.view.history.length) return
 			context.view.historyIndex += 1
+		},
+
+		addModal: (context, { modal }: { modal: Modal }) => {
+			if (context.modals.find(({ id }) => modal.id === id)) {
+				return
+			}
+
+			context.modals.push(modal)
+		},
+
+		closeModal: (context, { id }: { id: Modal["id"] }) => {
+			context.modals = context.modals.filter(
+				({ id: toClose }) => id !== toClose
+			)
 		}
 	}
 })
@@ -170,8 +185,14 @@ export interface AppState {
 	}
 
 	notifications: Notification[]
-	modals: ReactNode[]
+	modals: Modal[]
 }
+
+type Modal = Readonly<{
+	node: ReactNode
+	/** Unique ID to discern the different modals */
+	id: number | symbol | string
+}>
 
 type Notification = {
 	type: "error" | "success" | "default"

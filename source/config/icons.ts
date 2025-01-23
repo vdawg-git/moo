@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const icons = z
+export const iconsSchema = z
 	.object({
 		play: z
 			.string()

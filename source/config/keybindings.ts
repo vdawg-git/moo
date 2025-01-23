@@ -1,69 +1,44 @@
+import { appCommands, type AppCommand } from "#/commands/commands"
 import { z } from "zod"
+import { displayKeybinding, shortcutSchema } from "./shortcutParser"
 
-const specialKeys = [
-	"backspace",
-	"delete",
-	"esc",
-	"insert",
-	"return",
-	"sigint",
-	"tab",
-	"up",
-	"down",
-	"right",
-	"left",
-	"f1",
-	"f2",
-	"f3",
-	"f4",
-	"f5",
-	"f6",
-	"f7",
-	"f8",
-	"f9",
-	"f10",
-	"f11",
-	"f12"
-] as const
+const keybinds = appCommands.map(({ id, description, keybinding }) =>
+	z
+		.object({ id: z.literal(id), key: shortcutSchema.nullable() })
+		.describe(
+			description + "\n" + `Default: "${displayKeybinding(keybinding)}"`
+		)
+)
+const toUnionize = [keybinds[0], keybinds[1], ...keybinds.slice(2)] as const
 
-const specialKey = z.enum(specialKeys)
-const regularKey = z
-	.string()
-	.toLowerCase()
-	.min(1, "Empty keybindings do not work.")
-	.max(
-		1,
-		`A keybinding can only have one letter. Or be one of the special keys: ${specialKeys.map((key) => `\`${key}\``).join(",")}`
-	)
-
-const key = z.union([specialKey, regularKey])
-
-export const keybindings = z
-	.object({
-		playPrevious: key
-			.default("h")
-			.describe("Global keybinding. Plays the previous track in the queue."),
-
-		playNext: key
-			.default("l")
-			.describe("Global keybinding. Plays the next track in the queue."),
-
-		togglePlayback: key
-			.default(" ")
-			.describe(
-				"Global keybinding. Toggles the playback from pause to play and vice versa."
-			)
-	})
-	.default({})
+export const keybindingsSchema = z
+	.array(z.union(toUnionize))
 	.describe(
-		"Override default keybindings. Setting this will not override all, but only those specified."
+		'The keybindings of the app. If a keybinding is not set its default value will be used, so you dont have to set any. You can unset a keybind by setting it to "null". Setting it to "" will not work.'
 	)
+	.default([])
+	.transform((userBinds, ctx) => {
+		const userSetCommandIds = userBinds.map(({ id }) => id)
+		// Commands set by the user should be overriden (thus the default removed)
+		const defaultCommands = appCommands.filter(
+			({ id }) => !userSetCommandIds.includes(id)
+		)
 
-/* const modifier = [
-	"shift",
-	"left_shift",
-	"right_shift",
-	"control",
-	"left_control",
-	"right_control"
-] */
+		const userSetCommands: AppCommand[] = userBinds.flatMap((userBind) => {
+			if (!userBind.key) return []
+
+			const matchingCommand = appCommands.find(({ id }) => id === userBind.id)
+			if (!matchingCommand) {
+				// should not happen, as the IDs get checked during parsing
+				ctx.addIssue({
+					message: "Invalid ID passed. This is a bug. Please report it.",
+					code: z.ZodIssueCode.custom
+				})
+				return []
+			}
+
+			return { ...matchingCommand, ...userBind }
+		})
+
+		return [...defaultCommands, ...userSetCommands]
+	})

@@ -8,12 +8,12 @@ import { appConfig } from "./config/config"
 import { database } from "./database/database"
 import { Result } from "typescript-result"
 import { IS_DEV } from "./constants"
-import { useGlobalKeybindings } from "./globalKeybindings"
+import { manageKeybinds } from "./keybindingManagger"
 import { registerAudioPlayback } from "./audio/audio"
 import { useEffect } from "react"
 
 const App = () => {
-	useGlobalKeybindings()
+	manageKeybinds()
 
 	useEffect(() => {
 		const unsubscribe = registerAudioPlayback()
