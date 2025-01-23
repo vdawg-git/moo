@@ -15,7 +15,8 @@ export function All() {
 		<>
 			<Box flexGrow={1} flexDirection="column">
 				<Text color={"magenta"} bold>
-					All tracks {amount ? `(${amount} tracks)` : ""}
+					All tracks{" "}
+					<Text color={"gray"}>{amount ? `(${amount} tracks)` : ""}</Text>
 				</Text>
 
 				{response.isLoading ? (
