@@ -1,5 +1,5 @@
 import { openRunner } from "#/components/runner"
-import type { Keybinding } from "#/config/shortcutParser"
+import type { KeyInput } from "#/config/shortcutParser"
 import { appState, type AppState } from "#/state/state"
 
 /**
@@ -11,9 +11,9 @@ export type AppCommand = Readonly<{
 	 * */
 	id: string
 	/**
-	 * It is an array to support chording.
+	 * It is an array to support sequencing keys.
 	 */
-	keybinding: readonly Keybinding[]
+	keybinding: readonly KeyInput[]
 	/**
 	 * The description of the command.
 	 * Should be used in the config schema and the docs.
@@ -28,7 +28,7 @@ export type AppCommand = Readonly<{
 	/**
 	 * The function to execute when the command gets executed.
 	 */
-	callback: (state: AppState) => void
+	callback: () => void
 
 	// would be cool to later support the where property, too
 	// where?: string

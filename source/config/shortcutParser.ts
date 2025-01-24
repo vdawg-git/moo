@@ -4,10 +4,10 @@ import { pipe } from "remeda"
 import { Result } from "typescript-result"
 
 /**
- * A single keybind chord.
- * Should be used as an array as keybindings are chorded.
+ * A single key input with its modifiers.
+ * Should be used as an array as keybindings are sequenced.
  */
-export type Keybinding = { key: string; modifiers: KeyModifier[] }
+export type KeyInput = { key: string; modifiers: KeyModifier[] }
 /**
  * Shift wont get registered.
  * Instead only the uppercase letters get send from the terminal.
@@ -51,14 +51,14 @@ const tooManyPlusRg = /\+{3,}/
 export const shortcutSchema = z
 	.string()
 	.min(1)
-	.transform<Keybinding[]>((toParse, ctx) => {
-		const chords = pipe(toParse, removeDuplicateWhitespace, (rawKeybinding) =>
+	.transform<KeyInput[]>((toParse, ctx) => {
+		const inputs = pipe(toParse, removeDuplicateWhitespace, (rawKeybinding) =>
 			rawKeybinding.split(" ").filter((string) => string !== "")
 		)
 
-		const parsed: Keybinding[] = []
-		for (const chord of chords) {
-			const result = parseChord(chord)
+		const parsed: KeyInput[] = []
+		for (const input of inputs) {
+			const result = parseInput(input)
 			if (result.isError()) {
 				ctx.addIssue({
 					message: result.error,
@@ -72,19 +72,19 @@ export const shortcutSchema = z
 		return parsed
 	})
 	.describe(
-		'A keybinding. You can add modifiers like this `<modifier>+key`. You can also chord keys by seperating them with a space like this "a b c"'
+		'A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this "a b c"'
 	)
 
 /**
- * This parses a chord of a keybinding (most keybindings will consist of only one chord),
+ * This parses an input of a keybinding sequence (most keybindings will consist of only one part so they are not actually a sequence),
  */
-function parseChord(chord: string): Result<Keybinding, string> {
-	if (tooManyPlusRg.test(chord)) {
+function parseInput(input: string): Result<KeyInput, string> {
+	if (tooManyPlusRg.test(input)) {
 		return Result.error("Invalid amount of pluses")
 	}
 
 	// The parts of the keybinding, with leading modifiers if there are some
-	const parts = splitOnPlus(chord)
+	const parts = splitOnPlus(input)
 	const { key, modifiers } =
 		parts.length > 1
 			? { modifiers: parts.slice(0, -1), key: parts.at(-1) }
@@ -140,17 +140,10 @@ function splitOnPlus(text: string): string[] {
  *
  * Can then be parsed by {@link shortcutSchema}.
  */
-export function displayKeybinding(chords: readonly Keybinding[]): string {
-	return chords
+export function displayKeybinding(keySequence: readonly KeyInput[]): string {
+	return keySequence
 		.map(({ key, modifiers }) =>
 			modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key
 		)
 		.join(" ")
 }
-
-/* {
-		message: stringIndent(`Invalid keybinding. 
-			Supported keybindings look like "<modifier>+<key>, where the modifier is optional. 
-			Keys can also be chored together.
-			For example: "x", "x a" (a chord), "shift+x" and "ctrl+shift+x" (multiple modifiers) are all valid keybindings. `)
-	} */
