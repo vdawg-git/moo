@@ -1,5 +1,12 @@
 import { enumarateError, logg } from "./logs"
-import { preserveScreen, render, setMouseReporting, Viewport } from "tuir"
+import {
+	preserveScreen,
+	render,
+	setMouseReporting,
+	Text,
+	useInput,
+	Viewport
+} from "tuir"
 import { Navigator } from "./components/navigator"
 import { ErrorBoundary } from "react-error-boundary"
 import { ErrorScreen } from "./components/errorScreen"
@@ -8,20 +15,20 @@ import { appConfig } from "./config/config"
 import { database } from "./database/database"
 import { Result } from "typescript-result"
 import { IS_DEV } from "./constants"
-import { manageKeybinds } from "./keybindingManagger"
 import { registerAudioPlayback } from "./audio/audio"
 import { useEffect } from "react"
+import { reactToState } from "./state/stateReact"
+import { ModalManager } from "./components/modalManager"
+import { appState } from "./state/state"
 
 const App = () => {
-	manageKeybinds()
-
 	useEffect(() => {
-		const unsubscribe = registerAudioPlayback()
+		const unsubscribes = [registerAudioPlayback(), reactToState()]
 		setMouseReporting(true)
 
 		return () => {
 			setMouseReporting(false)
-			unsubscribe()
+			unsubscribes.forEach((unsubscribe) => unsubscribe())
 		}
 	}, [])
 
@@ -34,15 +41,14 @@ const App = () => {
 		>
 			<Viewport flexDirection="column">
 				<Navigator />
+
+				<ModalManager />
 			</Viewport>
 		</ErrorBoundary>
 	)
 }
 
 export async function startApp() {
-	// Optional, but should help to keep the app open
-	process.stdin.resume()
-
 	// lets figure out a nice way of structuring the code
 	// if this throws, it throws for now.
 	// Lets also figure out a way to handle notifications nicely

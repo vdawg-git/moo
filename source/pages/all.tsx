@@ -4,7 +4,7 @@ import { database } from "#/database/database"
 import { useQuery } from "#/database/query"
 import { playNewPlayback } from "#/state/state"
 import { usePlayingIndex } from "#/state/useSelectors"
-import { Box, Text } from "tuir"
+import { Box, Text, useFocus } from "tuir"
 
 export function All() {
 	const response = useQuery("all", database.getTracks)

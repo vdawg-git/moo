@@ -2,7 +2,7 @@ import { Box, List, Text, useKeymap, useList, useListItem } from "tuir"
 import { appCommands } from "#/commands/commands"
 import { appState } from "#/state/state"
 
-const runnerId = Symbol("runner")
+const runnerId = "_runner"
 
 export function openRunner() {
 	const items: RunnerItem[] = appCommands.map(({ label, callback, id }) => ({
@@ -13,7 +13,7 @@ export function openRunner() {
 
 	appState.send({
 		type: "addModal",
-		modal: { node: Runner({ items }), id: runnerId }
+		modal: { Content: () => Runner({ items }), id: runnerId }
 	})
 }
 

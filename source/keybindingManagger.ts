@@ -1,8 +1,8 @@
-import { useApp, useInput, type Key } from "tuir"
+import { useApp, useFocus, useInput, type Key } from "tuir"
 import { appConfig } from "./config/config"
 import { logg } from "./logs"
 import { useEffect, useState } from "react"
-import { filter, map, scan, Subject } from "rxjs"
+import { filter, map, scan, Subject, tap } from "rxjs"
 import { isNonNullish, isTruthy, omitBy, pickBy } from "remeda"
 import type { KeyInput } from "./config/shortcutParser"
 import type { AppCommand } from "./commands/commands"
@@ -33,6 +33,7 @@ export function manageKeybinds() {
 	const [nextUpCommands, setNextUpCommands] = useState<readonly AppCommand[]>(
 		[]
 	)
+
 	useInput((key, specialKeys) => inputs$.next({ key, specialKeys }))
 
 	// Ideally some UI which shows the possible next combinations
@@ -40,6 +41,7 @@ export function manageKeybinds() {
 	useEffect(() => {
 		const subscription = inputs$
 			.pipe(
+				tap((input) => logg.debug("manage keybinds pressed", input)),
 				map(tuirInputToKeyInput),
 				scan(reduceInputs, undefined as CommandOrSequence | undefined)
 			)
@@ -54,8 +56,6 @@ export function manageKeybinds() {
 				if (inputResult?.type === "command") {
 					inputResult.command.callback()
 				}
-
-				logg.debug("keybindManger", inputResult)
 			})
 
 		return () => subscription.unsubscribe()

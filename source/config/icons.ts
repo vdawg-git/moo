@@ -6,14 +6,20 @@ export const iconsSchema = z
 			.string()
 			.default("")
 			.describe("The play icon, also used as the playing indicator"),
+
 		pause: z.string().default("").describe("The pause icon"),
-		warn: z.string().default("").describe("Icon used for warnings"),
 		next: z.string().default("󰼧").describe("Play next icon."),
 		previous: z.string().default("󰼨").describe("Play previous icon."),
+
 		playingIndicator: z
 			.string()
 			.default("")
-			.describe("The indicator of a playing track in a list.")
+			.describe("The indicator of a playing track in a list."),
+
+		error: z.string().default("").describe("Icon used for errors."),
+		warn: z.string().default("").describe("Icon used for warnings."),
+		info: z.string().default("").describe("Icon used for info boxes."),
+		success: z.string().default("").describe("Icon used for success messages.")
 	})
 	.default({})
-	.describe("Overwrite icons used in the app.")
+	.describe("Change the icons used in the app.")

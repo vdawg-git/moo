@@ -11,7 +11,37 @@ import type { PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 import { Observable, shareReplay } from "rxjs"
 import { logg } from "#/logs"
-import { Modal } from "tuir"
+
+export interface AppState {
+	playback: {
+		/**
+		 * The tracks to play.
+		 * Does not include the manuallyAdded ones.
+		 */
+		queue: Queue | undefined
+		/**
+		 * Tracks to play next.
+		 * Those are manually added by the user via "Play next" or similliar.
+		 */
+		manuallyAdded: Track[]
+		index: number
+		playState: PlayingState
+		loopState: LoopState
+		isShuffling: boolean
+		isPlayingFromManualQueue: boolean
+		/** Time in seconds */
+		progress: number
+	}
+
+	/** This dictates the navigation */
+	view: {
+		historyIndex: number
+		history: ViewPage[]
+	}
+
+	notifications: AppNotification[]
+	modals: AppModal[]
+}
 
 export const appState = createStoreWithProducer(produce, {
 	context: createInitalState(),
@@ -94,9 +124,13 @@ export const appState = createStoreWithProducer(produce, {
 
 		addNotification: (
 			context,
-			{ notification }: { notification: Notification }
+			{ notification }: { notification: AppNotification }
 		) => {
 			context.notifications.push(notification)
+		},
+
+		clearNotifications: (context) => {
+			context.notifications = []
 		},
 
 		// navigation
@@ -120,7 +154,7 @@ export const appState = createStoreWithProducer(produce, {
 			context.view.historyIndex += 1
 		},
 
-		addModal: (context, { modal }: { modal: Modal }) => {
+		addModal: (context, { modal }: { modal: AppModal }) => {
 			if (context.modals.find(({ id }) => modal.id === id)) {
 				return
 			}
@@ -128,7 +162,7 @@ export const appState = createStoreWithProducer(produce, {
 			context.modals.push(modal)
 		},
 
-		closeModal: (context, { id }: { id: Modal["id"] }) => {
+		closeModal: (context, { id }: { id: AppModal["id"] }) => {
 			context.modals = context.modals.filter(
 				({ id: toClose }) => id !== toClose
 			)
@@ -157,50 +191,33 @@ function createInitalState(): AppState {
 	}
 }
 
-export interface AppState {
-	playback: {
-		/**
-		 * The tracks to play.
-		 * Does not include the manuallyAdded ones.
-		 */
-		queue: Queue | undefined
-		/**
-		 * Tracks to play next.
-		 * Those are manually added by the user via "Play next" or similliar.
-		 */
-		manuallyAdded: Track[]
-		index: number
-		playState: PlayingState
-		loopState: LoopState
-		isShuffling: boolean
-		isPlayingFromManualQueue: boolean
-		/** Time in seconds */
-		progress: number
-	}
+/**
+ * A modal in the {@link appState}.
+ * Does hold its content and its ID.
+ */
+export type AppModal = Readonly<{
+	/**
+	 * The content to show to the user.
+	 * The ModalManager shows it to the user via a modal.
+	 * */
+	Content: () => ReactNode
 
-	/** This dictates the navigation */
-	view: {
-		historyIndex: number
-		history: ViewPage[]
-	}
-
-	notifications: Notification[]
-	modals: Modal[]
-}
-
-type Modal = Readonly<{
-	node: ReactNode
 	/** Unique ID to discern the different modals */
-	id: number | symbol | string
+	id: number | string
+
+	/** The titel to show on the top of the modal box */
+	title: string
 }>
 
-type Notification = {
-	type: "error" | "success" | "default"
+/** A notification in Moo */
+export type AppNotification = {
+	type: "error" | "success" | "default" | "warn"
 	/** The message to display. Can be JSX. */
 	message: ReactNode
+	/** Unique ID */
 	id: string
 }
-type NotificationAdd = Except<Notification, "id">
+type NotificationAdd = Except<AppNotification, "id">
 
 type Queue = {
 	tracks: readonly Track[]

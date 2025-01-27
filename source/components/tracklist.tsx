@@ -1,8 +1,16 @@
 import { appConfig } from "#/config/config"
 import { appState, playNewPlayback } from "#/state/state"
-import path from "path"
+import path from "node:path"
 import type { Track } from "../database/types"
-import { Box, List, Text, useKeymap, useList, useListItem } from "tuir"
+import {
+	Box,
+	List,
+	Text,
+	useFocus,
+	useKeymap,
+	useList,
+	useListItem
+} from "tuir"
 
 type PlaylistProps = {
 	tracks: readonly Track[]
@@ -20,7 +28,7 @@ export function Tracklist({ tracks, onChange, playingIndex }: PlaylistProps) {
 	})
 
 	return (
-		<Box>
+		<Box flexDirection="column">
 			<List listView={listView}>
 				{items.map((item, index) => (
 					<TrackItem
