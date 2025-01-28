@@ -2,7 +2,6 @@ import { appConfig } from "#/config/config"
 import type { Track } from "#/database/types"
 import { appState } from "#/state/state"
 import { useCurrentTrack, usePlaybackState } from "#/state/useSelectors"
-import { match } from "ts-pattern"
 import { Box, Text } from "tuir"
 
 export function Playbar() {
@@ -27,6 +26,8 @@ export function Playbar() {
 				<Text dimColor={playbackState !== "playing"}>[ {playbackState} ]</Text>
 			</Box>
 
+			{/* Currently mouse support does not seem to work
+			at least not in Kitty. If it works in the future, lets add the clickable media controls */}
 			{/* <MediaControl /> */}
 		</Box>
 	)

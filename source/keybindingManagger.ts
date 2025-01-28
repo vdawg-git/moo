@@ -1,12 +1,11 @@
-import { useApp, useFocus, useInput, type Key } from "tuir"
+import { useInput, type Key } from "tuir"
 import { appConfig } from "./config/config"
-import { logg } from "./logs"
 import { useEffect, useState } from "react"
-import { filter, map, scan, Subject, tap } from "rxjs"
-import { isNonNullish, isTruthy, omitBy, pickBy } from "remeda"
+import { map, scan, Subject } from "rxjs"
+import { isTruthy } from "remeda"
 import type { KeyInput } from "./config/shortcutParser"
 import type { AppCommand } from "./commands/commands"
-import { isMatching, match, P } from "ts-pattern"
+import { match, P } from "ts-pattern"
 
 /** This is a mirror of the internal `SpecialKeys`,
  * which does not get exported, but used in `useInput` */
@@ -41,7 +40,6 @@ export function manageKeybinds() {
 	useEffect(() => {
 		const subscription = inputs$
 			.pipe(
-				tap((input) => logg.debug("manage keybinds pressed", input)),
 				map(tuirInputToKeyInput),
 				scan(reduceInputs, undefined as CommandOrSequence | undefined)
 			)

@@ -3,9 +3,8 @@ import { appState, type AppNotification } from "#/state/state"
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { match } from "ts-pattern"
-import { Box, Text, useFocus, useKeymap } from "tuir"
+import { Box, Text, useKeymap } from "tuir"
 import { BracketButton } from "./button"
-import { logg } from "#/logs"
 
 export const notificationModalId = "_notificationModalaid_"
 

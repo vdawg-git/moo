@@ -19,7 +19,7 @@ export const keybindingsSchema = z
 	.default([])
 	.transform((userBinds, ctx) => {
 		const userSetCommandIds = userBinds.map(({ id }) => id)
-		// Commands set by the user should be overriden (thus the default removed)
+		// Commands set by the user should be overriden (thus the defaults removed)
 		const defaultCommands = appCommands.filter(
 			({ id }) => !userSetCommandIds.includes(id)
 		)

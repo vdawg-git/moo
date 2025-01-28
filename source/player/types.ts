@@ -1,6 +1,5 @@
 import type { Observable } from "rxjs"
-import type { AsyncResult, Result } from "typescript-result"
-import type { PlayingState } from "../types/types"
+import type { Result } from "typescript-result"
 import type { TrackId } from "#/database/types"
 
 /**

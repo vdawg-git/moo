@@ -5,8 +5,6 @@ import {
 	NotificationModal
 } from "#/components/notifications"
 import { deepEquals } from "bun"
-import { Text } from "tuir"
-import { logg } from "#/logs"
 
 /**
  * Reacts to state changes.

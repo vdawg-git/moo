@@ -1,7 +1,6 @@
-import { logg } from "#/logs"
 import { appState, type AppModal } from "#/state/state"
 import { useSelector } from "@xstate/store/react"
-import { Box, Modal, Text, useFocus, useInput, useKeymap, useModal } from "tuir"
+import { Modal, useModal } from "tuir"
 
 export function ModalManager() {
 	const modals = useSelector(appState, (state) => state.context.modals)

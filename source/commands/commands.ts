@@ -1,6 +1,6 @@
 import { openRunner } from "#/components/runner"
 import type { KeyInput } from "#/config/shortcutParser"
-import { appState, type AppState } from "#/state/state"
+import { appState } from "#/state/state"
 
 /**
  * A user command which can be executed via the runner or shortcuts.
