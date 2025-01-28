@@ -28,6 +28,8 @@ function connectDatabase(): Database {
 	const db = drizzle({ connection: databasePath })
 	const changed$ = new Subject<string>()
 
+	// A lot of the api is not needed yet,
+	// so they are just placeholders for now
 	const database: Database = {
 		getAlbum: async () => Result.ok(undefined),
 		getAlbums: async (ids = []) => Result.ok([]),
