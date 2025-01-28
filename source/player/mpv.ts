@@ -82,17 +82,6 @@ export function createMpvPlayer(): Player {
 function socketToPlayerEvents(
 	socket: Promise<Socket$<JsonValue[]>> | Socket$<JsonValue[]>
 ): Observable<PlayerEvent> {
-	Result.fromAsync(
-		runCommand("observe_property", [22, "playback-time"], socket)
-	).onFailure((error) =>
-		addErrorNotification("Failed to listen to progress updates in mpv", error)
-	)
-
-	Result.fromAsync(runCommand("event", [33, "end-file"], socket)).onFailure(
-		(error) =>
-			addErrorNotification("Failed to listen to track ending in MPV.", error)
-	)
-
 	return (isPromise(socket) ? from(socket) : of(socket)).pipe(
 		concatMap((socket) => socket.events$),
 		concatMap((event) =>
