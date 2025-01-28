@@ -5,15 +5,17 @@ import { appState } from "#/state/state"
 const runnerId = "_runner"
 
 export function openRunner() {
-	const items: RunnerItem[] = appCommands.map(({ label, callback, id }) => ({
-		id,
-		label,
-		onSelect: callback
-	}))
+	const items: RunnerItem[] = appCommands
+		.filter((command) => command.id !== "runner.open")
+		.map(({ label, callback, id }) => ({
+			id,
+			label,
+			onSelect: callback
+		}))
 
 	appState.send({
 		type: "addModal",
-		modal: { Content: () => Runner({ items }), id: runnerId }
+		modal: { Content: () => Runner({ items }), id: runnerId, title: "Commands" }
 	})
 }
 
@@ -58,7 +60,14 @@ function RunnerItem(): React.ReactNode {
 	useEvent("submit", () => onSelect(item))
 
 	return (
-		<Box width="100" backgroundColor={color} onClick={() => onSelect(item)}>
+		<Box
+			width="100"
+			backgroundColor={color}
+			onClick={() => {
+				onSelect(item)
+				appState.send({ type: "closeModal", id: runnerId })
+			}}
+		>
 			<Text wrap="truncate-end">{label}</Text>
 		</Box>
 	)
