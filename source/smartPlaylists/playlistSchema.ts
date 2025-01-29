@@ -1,30 +1,42 @@
 import { tracksTable } from "#/database/schema"
 import { getTableColumns } from "drizzle-orm"
-import { mapValues, pickBy, pipe } from "remeda"
+import * as R from "remeda"
+import { pipe } from "remeda"
 import { match } from "ts-pattern"
 import { z } from "zod"
 
 const columns = getTableColumns(tracksTable)
 
+const stringOrArray = orArray(z.string()).optional()
+const numberOrArray = orArray(z.number()).optional()
+const dateOrArray = orArray(z.date()).optional()
+
 const stringSchema = z.object({
-	includes: z.string().or(z.array(z.string()).nonempty()).optional(),
-	includes_not: z.string().or(z.array(z.string()).nonempty()).optional(),
-	starts_with: z.string().or(z.array(z.string()).nonempty()).optional(),
-	starts_not_with: z.string().or(z.array(z.string()).nonempty()).optional(),
-	ends_with: z.string().or(z.array(z.string()).nonempty()).optional(),
-	ends_not_with: z.string().or(z.array(z.string()).nonempty()).optional(),
-	is: z.string().or(z.array(z.string()).nonempty()).optional()
+	includes: stringOrArray,
+	includes_not: stringOrArray,
+	starts_with: stringOrArray,
+	starts_not_with: stringOrArray,
+	ends_with: stringOrArray,
+	ends_not_with: stringOrArray,
+	is: stringOrArray
 })
 
 const numberSchema = z.object({
-	is: z.number().or(z.array(z.number()).nonempty()).optional(),
-	is_not: z.number().or(z.array(z.number()).nonempty()).optional(),
-	greater_than: z.number().optional(),
-	smaller_than: z.number().optional(),
-	in_the_range: z
-		.tuple([z.number(), z.number()])
-		.or(z.array(z.tuple([z.number(), z.number()])).nonempty())
+	is: numberOrArray.describe(
+		"Is exactly the provided number. Or one of them if multiple are specified."
+	),
+	is_not: numberOrArray.describe("Is not the provided number(s)"),
+	greater_than: z
+		.number()
 		.optional()
+		.describe("Everything greater than the provided number."),
+	smaller_than: z
+		.number()
+		.optional()
+		.describe("Everything smaller than the provided number"),
+	in_the_range: orArray(z.tuple([z.number(), z.number()]))
+		.optional()
+		.describe("Is in between the provided range(s), including the end.")
 })
 
 const booleanSchema = z.object({
@@ -38,8 +50,8 @@ const relativeDateSchema = z.object({
 })
 
 const dateSchema = z.object({
-	is: z.date().or(z.array(z.date()).nonempty()).optional(),
-	is_not: z.date().or(z.array(z.date()).nonempty()).optional(),
+	is: dateOrArray,
+	is_not: dateOrArray,
 	before: z.date().optional(),
 	after: z.date().optional(),
 	in_the_last: relativeDateSchema.optional(),
@@ -47,21 +59,75 @@ const dateSchema = z.object({
 })
 
 /** The schema to validate all fields like 'artist', 'title' etc */
-const fieldsSchema = pipe(
-	columns,
-	pickBy((column) => column.columnType !== "SQLiteTextJson"),
-	mapValues((column) =>
-		match(column.columnType)
-			.with("SQLiteBoolean", () => booleanSchema)
-			.with("SQLiteInteger", () => numberSchema)
-			.with("SQLiteText", () => stringSchema)
-			.with("SQLiteTimestamp", () => dateSchema)
+const fieldSchema = pipe(
+	Object.entries(columns),
+	R.map(([field, { columnType }]) => [field, columnType] as const),
+	R.flatMap(([field, column]) =>
+		match(column)
+			.with("SQLiteBoolean", () => z.object({ [field]: booleanSchema }))
+			.with("SQLiteInteger", () => z.object({ [field]: numberSchema }))
+			.with("SQLiteText", () => z.object({ [field]: stringSchema }))
+			.with("SQLiteTimestamp", () => z.object({ [field]: dateSchema }))
+			.with("SQLiteTextJson", () => [])
 			.exhaustive()
 	),
-	z.object
+	(schemas) => z.union([schemas[0], schemas[1], ...schemas.slice(2)])
 )
 
-const operators = ["ALL", "ANY", "NONE"] as const
-const operatorSchema = z.record(z.enum(operators), z.string())
+type MetaOperator = Readonly<
+	| { all: readonly (z.infer<typeof fieldSchema> | MetaOperator)[] }
+	| { any: readonly (z.infer<typeof fieldSchema> | MetaOperator)[] }
+>
 
-const playlistSchema = z.object({})
+const metaOperators = ["all", "any"] as const
+// @ts-expect-error Too much for TS, but its fine
+const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
+	metaOperators,
+	R.map((meta) =>
+		z.object({
+			[meta]: z.array(
+				fieldSchema,
+				z.lazy(() => metaOperatorSchema)
+			)
+		})
+	),
+	(metas) =>
+		z
+			.union(metas)
+			.describe("Filter by fields or add nested 'all' and 'any' groups.")
+)
+
+// TODO recursive operators
+
+/** The schema for a smart playlist config */
+const playlistSchema = z.object({
+	$schema: z
+		.string()
+		.optional()
+		.describe(
+			"The JSON schema to use. This allows your Editor/LSP to give you autocompletion and validate some inputs."
+		),
+	name: z
+		.string()
+		.optional()
+		.describe(
+			"Optional display name. If not set the filename will get shown in the app."
+		),
+
+	rules: metaOperatorSchema
+		.array()
+		.nonempty()
+		.readonly()
+		.describe("Dicates what to put into the smart playlist.")
+})
+
+function orArray<T extends z.ZodTypeAny>(
+	type: T
+): z.ZodUnion<[T, z.ZodArray<T, "atleastone">]> {
+	return type.or(z.array(type).nonempty())
+}
+
+// TODO support PLAYLIST field to include/exclude playlists from other playlists
+// this is useful if you for example want to filter all skits, podcasts etc
+// and then base your other playlists on that.
+// Also allow for a "hidden" field in the yml to not show those meta playlists in the app
