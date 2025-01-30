@@ -262,8 +262,13 @@ export type ViewPage = {
 		: { route: Route; parameter: ViewPages[Route] }
 }[keyof ViewPages]
 
-export function addErrorNotification(message: string, error?: Error | unknown) {
-	logg.error(message, { error })
+export function addErrorNotification(
+	message: string,
+	error?: Error | unknown,
+	/** Tag to be used for the logs */
+	tag?: string
+) {
+	logg.error(tag ?? message, { error, ...(!tag && { message }) })
 	addNotification({ message, type: "error" })
 }
 
