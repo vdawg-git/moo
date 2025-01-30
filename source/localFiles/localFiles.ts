@@ -1,4 +1,3 @@
-import { watch } from "node:fs"
 import { readdir } from "node:fs/promises"
 import path from "node:path"
 import parseDate from "any-date-parser"
@@ -6,7 +5,7 @@ import { parseBuffer, selectCover } from "music-metadata"
 import { mapValues } from "remeda"
 import {
 	buffer,
-	Observable,
+	type Observable,
 	concatMap,
 	debounceTime,
 	distinctUntilChanged,
@@ -18,37 +17,11 @@ import {
 import { Result } from "typescript-result"
 import { DATA_DIRECTORY } from "#/constants"
 import type { Database, TrackData, TrackId } from "#/database/types"
+import { createWatcher } from "#/filesystem"
 import { logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
 import type { FilePath } from "#/types/types"
 import { supportedFormats } from "./formats"
-
-type FileChanged = {
-	/** The absolute filepath which changed */
-	filePath: FilePath
-	type: "change" | "rename"
-}
-
-function createWatcher(toWatch: string): Observable<FileChanged> {
-	return new Observable<FileChanged>((subscriber) => {
-		const watcher = watch(toWatch, { recursive: true }, (type, filePath) => {
-			if (!filePath) return
-
-			subscriber.next({
-				type,
-				filePath: path.join(toWatch, filePath) as FilePath
-			})
-		})
-
-		return () => watcher.close()
-	}).pipe(
-		distinctUntilChanged(
-			(previous, current) =>
-				JSON.stringify(previous) === JSON.stringify(current)
-		),
-		share()
-	)
-}
 
 function createMusicDirectoriesWatcher(
 	directories: readonly FilePath[]
