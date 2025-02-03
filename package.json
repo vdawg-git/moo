@@ -5,7 +5,8 @@
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
-		"dev": "bun --watch . "
+		"dev": "bun --watch . ",
+		"writeSchemas": "bun run ./scripts/writeSchemas.ts"
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",
