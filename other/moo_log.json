@@ -1,0 +1,42 @@
+{
+	"$schema": "https://lnav.org/schemas/format-v1.schema.json",
+	"moo_log": {
+		"title": "Moo Json log",
+		"description": "",
+		"url": "",
+		"file-type": "json",
+		"level-field": "level",
+		"level": {
+			"error": "error",
+			"warning": "warn",
+			"info": "info",
+			"debug": "http|verbose|debug",
+			"trace": "silly"
+		},
+		"timestamp-field": "timestamp",
+		"body-field": "message",
+		"timestamp-divisor": 1000,
+		"line-format": [
+			{
+				"field": "timestamp",
+				"timestamp-format": "%H:%M:%S",
+				"suffix": " "
+			},
+			{
+				"field": "level",
+				"suffix": " "
+			},
+			{ "field": "message" }
+		],
+		"value": {
+			"message": { "kind": "string", "identifier": true },
+			"timestamp": { "kind": "integer" },
+			"level": {
+				"kind": "string"
+			}
+		},
+		"highlights": {
+			"date": { "pattern": "\\d.*:.*\\d ", "color": "gray" }
+		}
+	}
+}
