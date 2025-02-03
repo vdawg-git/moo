@@ -11,7 +11,7 @@ import { keybindingsSchema } from "./keybindings"
 
 // biome-ignore lint/suspicious/noExplicitAny: .
 const zFilePath: z.Schema<FilePath> = z.string() as any
-const schema = z
+export const appConfigSchema = z
 	.object({
 		musicDirectories: z
 			.array(zFilePath)
@@ -29,6 +29,8 @@ const schema = z
 				"Wether to watch the musicDirectories for changes and update the music library then."
 			),
 
+		version: z.literal("0.1"),
+
 		/** The icons used by the app. */
 		icons: iconsSchema,
 
@@ -37,11 +39,12 @@ const schema = z
 	})
 	.strict("Unknown properties found in the config!")
 
-type Config = Readonly<z.infer<typeof schema>>
+type Config = Readonly<z.infer<typeof appConfigSchema>>
 
 const defaultConfig: Partial<Config> = {
 	musicDirectories: [],
-	watchDirectories: true
+	watchDirectories: true,
+	version: "0.1"
 }
 
 const defaultConfigPath = path.join(
@@ -51,7 +54,7 @@ const defaultConfigPath = path.join(
 
 async function parseConfig(file: BunFile): Promise<Result<Config, unknown>> {
 	const config = Result.fromAsyncCatching(parseJson5(await file.text())).map(
-		(data) => Result.try(() => schema.parse(data))
+		(data) => Result.try(() => appConfigSchema.parse(data))
 	)
 
 	return config
@@ -60,7 +63,7 @@ async function parseConfig(file: BunFile): Promise<Result<Config, unknown>> {
 async function writeDefaultConfig(): Promise<Result<Config, Error>> {
 	return Result.fromAsync(
 		Bun.write(defaultConfigPath, stringifyJson5(defaultConfig, undefined, 4))
-	).map(() => schema.parse(defaultConfig))
+	).map(() => appConfigSchema.parse(defaultConfig))
 }
 
 /**

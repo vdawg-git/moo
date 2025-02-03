@@ -1,13 +1,9 @@
 import { basename } from "node:path"
-import { parsePlaylists, playlistsChanged$ } from "./parsing"
-import type { PlaylistSchema } from "./schema"
-import type { PlaylistId } from "#/database/types"
-import { Result } from "typescript-result"
-import { addErrorNotification } from "#/state/state"
 import type { Subscription } from "rxjs"
-import * as R from "remeda"
-import { logg } from "#/logs"
 import { database } from "#/database/database"
+import type { PlaylistId } from "#/database/types"
+import { addErrorNotification } from "#/state/state"
+import { playlistsChanged$ } from "./parsing"
 
 export function watchPlaylists(): Subscription {
 	return playlistsChanged$.subscribe(({ parseResult, playlistPath }) => {

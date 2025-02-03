@@ -21,7 +21,8 @@ const stringSchema = z.object({
 	starts_not_with: stringOrArray,
 	ends_with: stringOrArray,
 	ends_not_with: stringOrArray,
-	is: stringOrArray,
+	is: stringOrArray.describe("If an array tests them with or."),
+	is_not: stringOrArray.describe("If an array all have to not match."),
 	_type: discriminator("string")
 })
 export type StringSchema = z.infer<typeof stringSchema>
@@ -52,21 +53,39 @@ const booleanSchema = z.object({
 })
 export type BooleanSchema = z.infer<typeof booleanSchema>
 
-const relativeTimeSchema = z.object({
-	days: z.number().optional(),
-	weeks: z.number().optional(),
-	years: z.number().optional(),
-	_type: discriminator("relativeTime")
-})
-export type RelativeTimeSchema = z.infer<typeof relativeTimeSchema>
+/** Does not need _type as its not a rule, but just a nicer way to get a number for a rule  */
+const durationSchema = z
+	.object({
+		minutes: z.number().optional(),
+		hours: z.number().optional(),
+		days: z.number().optional(),
+		weeks: z.number().optional(),
+		years: z.number().optional()
+	})
+	.strict()
+	.transform((input) => {
+		const { days, weeks, years, minutes, hours } = input
+
+		const offsetMinutes =
+			(minutes ?? 0) +
+			(hours ?? 0) * 60 +
+			(days ?? 0) * 60 * 24 +
+			(weeks ?? 0) * 60 * 24 * 7 +
+			(years ?? 0) * 60 * 24 * 7 * 364
+
+		const offsetMillicseconds = offsetMinutes * 60 * 1000
+
+		return offsetMillicseconds
+	})
+export type RelativeTimeSchema = z.infer<typeof durationSchema>
 
 const dateSchema = z.object({
 	is: dateOrArray,
 	is_not: dateOrArray,
 	before: z.date().optional(),
 	after: z.date().optional(),
-	in_the_last: relativeTimeSchema.optional(),
-	not_in_the_last: relativeTimeSchema.optional(),
+	in_the_last: durationSchema.optional(),
+	not_in_the_last: durationSchema.optional(),
 	_type: discriminator("date")
 })
 export type DateSchema = z.infer<typeof dateSchema>

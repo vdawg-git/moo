@@ -5,6 +5,7 @@ import {
 	map,
 	mergeMap,
 	type Observable,
+	share,
 	switchMap
 } from "rxjs"
 import { playlistSchema, type PlaylistSchema } from "./schema"
@@ -48,7 +49,8 @@ export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
 				}))
 			)
 		)
-	)
+	),
+	share()
 )
 
 export async function parsePlaylists(): Promise<
