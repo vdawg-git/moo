@@ -24,13 +24,13 @@ const validExtensions = [".yml", ".yaml"]
  */
 const playlistChangedDebounce = 70
 
-type PlaylistsUpdate = {
+type PlaylistParsed = {
 	playlistPath: FilePath
 	parseResult: Result<PlaylistSchema, Error>
 }
 
 // TODO handle playlist rename
-export const playlistsChanged$: Observable<PlaylistsUpdate> = createWatcher(
+export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
 	playlistsDirectory
 ).pipe(
 	filter(({ filePath }) => isSupportedExtension(filePath)),
@@ -51,8 +51,8 @@ export const playlistsChanged$: Observable<PlaylistsUpdate> = createWatcher(
 	)
 )
 
-export async function getSmartPlaylists(): Promise<
-	readonly Result<PlaylistSchema, Error>[]
+export async function parsePlaylists(): Promise<
+	Result<readonly PlaylistParsed[], Error>
 > {
 	return Result.fromAsyncCatching(readdir(playlistsDirectory))
 		.map((paths) =>
@@ -62,12 +62,15 @@ export async function getSmartPlaylists(): Promise<
 					(relativePath) =>
 						path.join(playlistsDirectory, relativePath) as FilePath
 				)
-				.map(parsePlaylist)
+				.map(
+					async (filepath) =>
+						({
+							playlistPath: filepath,
+							parseResult: await parsePlaylist(filepath)
+						}) satisfies PlaylistParsed
+				)
 		)
-		.fold(
-			(ok) => Promise.all(ok),
-			(error) => [Result.error(error)]
-		)
+		.map((ok) => Promise.all(ok))
 }
 
 async function parsePlaylist(

@@ -1,5 +1,5 @@
-import { tracksTable } from "#/database/schema"
-import { getTableColumns } from "drizzle-orm"
+import { tracksTable, type TrackColumnKey } from "#/database/schema"
+import { getTableColumns, type Column } from "drizzle-orm"
 import * as R from "remeda"
 import { pipe } from "remeda"
 import { match } from "ts-pattern"
@@ -11,6 +11,8 @@ const columns = getTableColumns(tracksTable)
 const stringOrArray = orArray(z.string()).optional()
 const numberOrArray = orArray(z.number()).optional()
 const dateOrArray = orArray(z.date()).optional()
+const discriminator = <T extends string>(string: T) =>
+	z.literal(string).default(string)
 
 const stringSchema = z.object({
 	includes: stringOrArray,
@@ -19,8 +21,10 @@ const stringSchema = z.object({
 	starts_not_with: stringOrArray,
 	ends_with: stringOrArray,
 	ends_not_with: stringOrArray,
-	is: stringOrArray
+	is: stringOrArray,
+	_type: discriminator("string")
 })
+export type StringSchema = z.infer<typeof stringSchema>
 
 const numberSchema = z.object({
 	is: numberOrArray.describe(
@@ -37,48 +41,76 @@ const numberSchema = z.object({
 		.describe("Everything smaller than the provided number"),
 	in_the_range: orArray(z.tuple([z.number(), z.number()]))
 		.optional()
-		.describe("Is in between the provided range(s), including the end.")
+		.describe("Is in between the provided range(s), including the end."),
+	_type: discriminator("number")
 })
+export type NumberSchema = z.infer<typeof numberSchema>
 
 const booleanSchema = z.object({
-	is: z.boolean()
+	is: z.boolean(),
+	_type: z.literal("boolean").default("boolean")
 })
+export type BooleanSchema = z.infer<typeof booleanSchema>
 
-const relativeDateSchema = z.object({
+const relativeTimeSchema = z.object({
 	days: z.number().optional(),
 	weeks: z.number().optional(),
-	years: z.number().optional()
+	years: z.number().optional(),
+	_type: discriminator("relativeTime")
 })
+export type RelativeTimeSchema = z.infer<typeof relativeTimeSchema>
 
 const dateSchema = z.object({
 	is: dateOrArray,
 	is_not: dateOrArray,
 	before: z.date().optional(),
 	after: z.date().optional(),
-	in_the_last: relativeDateSchema.optional(),
-	not_in_the_last: relativeDateSchema.optional()
+	in_the_last: relativeTimeSchema.optional(),
+	not_in_the_last: relativeTimeSchema.optional(),
+	_type: discriminator("date")
 })
+export type DateSchema = z.infer<typeof dateSchema>
 
 /** The schema to validate all fields like 'artist', 'title' etc */
-const fieldSchema = pipe(
-	Object.entries(columns),
-	R.map(([field, { columnType }]) => [field, columnType] as const),
-	R.flatMap(([field, columnType]) =>
+const trackColumnSchema = pipe(
+	R.entries(columns),
+	R.filter(([column]) => column !== "id"),
+	R.map(([columnName, { columnType }]) => [columnName, columnType] as const),
+	R.map(([columnName, columnType]) =>
 		match(columnType)
-			.with("SQLiteBoolean", () => z.object({ [field]: booleanSchema }))
-			.with("SQLiteInteger", () => z.object({ [field]: numberSchema }))
-			.with("SQLiteText", () => z.object({ [field]: stringSchema }))
-			.with("SQLiteTimestamp", () => z.object({ [field]: dateSchema }))
-			.with("SQLiteTextJson", () => [])
+			.with("SQLiteBoolean", () => [columnName, booleanSchema] as const)
+			.with("SQLiteInteger", () => [columnName, numberSchema] as const)
+			.with("SQLiteText", () => [columnName, stringSchema] as const)
+			.with("SQLiteTimestamp", () => [columnName, dateSchema] as const)
+			.with("SQLiteTextJson", () => undefined)
 			.exhaustive()
 	),
-	(schemas) => z.union([schemas[0], schemas[1], ...schemas.slice(2)])
+	R.filter(R.isNonNullish),
+	R.map(([column, schema]) =>
+		z.object({ [column]: schema }).transform((parsed) => {
+			const [trackColumn, rules] = Object.entries(parsed)[0]
+			return {
+				_type: "column" as const,
+				column: trackColumn as TrackColumnKey,
+				rules
+			}
+		})
+	),
+	(schemas) => z.union([schemas[0], schemas[1], ...schemas.slice(2)] as const)
 )
 
-type MetaOperator = Readonly<
-	| { all: readonly (z.infer<typeof fieldSchema> | MetaOperator)[] }
-	| { any: readonly (z.infer<typeof fieldSchema> | MetaOperator)[] }
->
+/**
+ * A rule for a single property of a track.
+ * For example for "Genre" with properties like "includes"
+ */
+export type TrackColumnSchema = z.infer<typeof trackColumnSchema>
+/**
+ * Defines a group of rules. Can be nested.
+ */
+export type MetaOperator = Readonly<{
+	_type: "all" | "any"
+	fields: readonly (TrackColumnSchema | MetaOperator)[]
+}>
 
 const metaOperators = [
 	{
@@ -91,6 +123,7 @@ const metaOperators = [
 			"*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added."
 	}
 ] as const
+
 // @ts-expect-error Too much for TS, but its fine
 const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 	metaOperators,
@@ -98,11 +131,21 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 		z
 			.object({
 				[type]: z.array(
-					fieldSchema,
+					trackColumnSchema,
 					z.lazy(() => metaOperatorSchema)
 				)
 			})
 			.describe(description)
+			.transform((object) => {
+				// should always only have one key
+				const [_type, fields] = Object.entries(object)[0]
+				const typedType = _type as (typeof metaOperators)[number]["type"]
+
+				return {
+					_type: typedType,
+					fields
+				}
+			})
 	),
 	(metas) =>
 		z

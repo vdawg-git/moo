@@ -65,6 +65,8 @@ function connectDatabase(): Database {
 		getPlaylist: async () => Result.ok(undefined),
 		getPlaylists: async () => Result.ok([]),
 
+		updateSmartPlaylist: async ({ id, schema }) => {},
+
 		search: async () =>
 			Result.ok({
 				tracks: [],

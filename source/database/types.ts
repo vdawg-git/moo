@@ -5,6 +5,7 @@ import { Result } from "typescript-result"
 import type { Observable } from "rxjs"
 import type { FilePath } from "#/types/types"
 import { addErrorNotification } from "#/state/state"
+import type { PlaylistSchema } from "#/smartPlaylists/schema"
 
 export interface Database {
 	getTrack: (id: TrackId) => Promise<Result<Track | undefined, Error>>
@@ -26,6 +27,14 @@ export interface Database {
 	getPlaylists: (
 		ids: readonly PlaylistId[]
 	) => Promise<Result<readonly Playlist[], Error>>
+	/**
+	 * Updates a smart by providing the new schema to it.
+	 * Is also used to refresh it.
+	 * */
+	updateSmartPlaylist: (data: {
+		id: PlaylistId
+		schema: PlaylistSchema
+	}) => Promise<Result<void, Error>>
 
 	/** Fuzzy search the database */
 	search: (input: string) => Promise<
@@ -250,4 +259,8 @@ interface Album {
 export type TrackId = string & { __brand: "TrackId" }
 export type AlbumId = string & { __brand: "AlbumId" }
 export type ArtistId = string & { __brand: "ArtistId" }
+/**
+ * For smart playlists it is the filename.
+ * Currently we only have smart playlists though.
+ */
 export type PlaylistId = string & { __brand: "PlaylistId" }

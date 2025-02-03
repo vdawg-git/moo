@@ -3,6 +3,9 @@ import type { ILyricsTag } from "music-metadata"
 import type { AlbumId, ArtistId, PlaylistId, TrackId } from "./types"
 import type { FilePath } from "#/types/types"
 
+export type TrackColumnKey = keyof (typeof tracksTable)["_"]["columns"]
+// export type TrackColumn = (typeof tracksTable)["_"]["columns"][TrackColumnKey]
+
 export const tracksTable = sqliteTable("tracks", {
 	id: text().primaryKey().$type<TrackId>(),
 

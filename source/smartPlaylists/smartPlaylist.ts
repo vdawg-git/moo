@@ -1,21 +1,23 @@
 import { basename } from "node:path"
-import { playlistsChanged$ } from "./parsing"
+import { parsePlaylists, playlistsChanged$ } from "./parsing"
 import type { PlaylistSchema } from "./schema"
 import type { PlaylistId } from "#/database/types"
-import type { Result } from "typescript-result"
+import { Result } from "typescript-result"
 import { addErrorNotification } from "#/state/state"
 import type { Subscription } from "rxjs"
+import * as R from "remeda"
+import { logg } from "#/logs"
+import { database } from "#/database/database"
 
 export function watchPlaylists(): Subscription {
 	return playlistsChanged$.subscribe(({ parseResult, playlistPath }) => {
 		const playlistId = basename(playlistPath) as PlaylistId
 
 		parseResult
-			.map(playlistSchemaToSql)
-			.map((sql) =>
-				updatePlaylist({
+			.map((schema) =>
+				database.updateSmartPlaylist({
 					id: playlistId,
-					updateSql: sql
+					schema
 				})
 			)
 			.onFailure((error) =>
@@ -27,10 +29,3 @@ export function watchPlaylists(): Subscription {
 			)
 	})
 }
-
-export async function updatePlaylist({
-	id,
-	updateSql
-}: { id: PlaylistId; updateSql: string }): Promise<Result<void, Error>> {}
-
-function playlistSchemaToSql(schema: PlaylistSchema): string {}
