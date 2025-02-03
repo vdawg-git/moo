@@ -150,8 +150,7 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 		z
 			.object({
 				[type]: z.array(
-					trackColumnSchema,
-					z.lazy(() => metaOperatorSchema)
+					z.union([trackColumnSchema, z.lazy(() => metaOperatorSchema)])
 				)
 			})
 			.describe(description)

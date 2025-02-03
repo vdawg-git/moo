@@ -1,8 +1,8 @@
-import { basename } from "node:path"
-import type { Subscription } from "rxjs"
 import { database } from "#/database/database"
 import type { PlaylistId } from "#/database/types"
 import { addErrorNotification } from "#/state/state"
+import { basename } from "node:path"
+import type { Subscription } from "rxjs"
 import { playlistsChanged$ } from "./parsing"
 
 export function watchPlaylists(): Subscription {

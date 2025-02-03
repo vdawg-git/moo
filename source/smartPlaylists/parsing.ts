@@ -8,6 +8,7 @@ import {
 	share,
 	switchMap
 } from "rxjs"
+import * as yaml from "yaml"
 import { playlistSchema, type PlaylistSchema } from "./schema"
 import { createWatcher } from "#/filesystem"
 import { CONFIG_DIRECTORY } from "#/constants"
@@ -15,6 +16,7 @@ import path from "node:path"
 import { Result } from "typescript-result"
 import { readdir, readFile } from "node:fs/promises"
 import type { FilePath } from "#/types/types"
+import { logg } from "#/logs"
 
 const playlistsDirectory = path.join(CONFIG_DIRECTORY, "playlists")
 const validExtensions = [".yml", ".yaml"]
@@ -56,6 +58,7 @@ export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
 export async function parsePlaylists(): Promise<
 	Result<readonly PlaylistParsed[], Error>
 > {
+	logg.debug("parsing playlists..")
 	return Result.fromAsyncCatching(readdir(playlistsDirectory))
 		.map((paths) =>
 			paths
@@ -78,9 +81,14 @@ export async function parsePlaylists(): Promise<
 async function parsePlaylist(
 	filePath: FilePath
 ): Promise<Result<PlaylistSchema, Error>> {
-	return Result.fromAsyncCatching(readFile(filePath, "utf-8")).mapCatching(
-		playlistSchema.parseAsync
-	)
+	return Result.fromAsyncCatching(readFile(filePath, "utf-8"))
+		.map((text) => yaml.parse(text))
+		.mapCatching((toParse) => playlistSchema.parseAsync(toParse))
+		.mapError((error) =>
+			error instanceof Error
+				? error
+				: new Error(`Error parsing file: ${filePath}`, { cause: error })
+		)
 }
 
 function isSupportedExtension(filepath: string): boolean {
