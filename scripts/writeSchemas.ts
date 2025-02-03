@@ -15,6 +15,8 @@ process.exit(0)
 
 async function writeSchema(name: string, schema: ZodSchema<unknown>) {
 	const jsonSchema = zodToJsonSchema(schema, {
+		pipeStrategy: "input",
+		$refStrategy: "root",
 		override: (defs, refs) => {
 			const current = refs.currentPath.at(-1)
 
