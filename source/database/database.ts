@@ -2,7 +2,7 @@ import { type SQL, getTableColumns, inArray, sql } from "drizzle-orm"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
 import { isNonNullish } from "remeda"
-import { Subject } from "rxjs"
+import { noop, Subject } from "rxjs"
 import { Result } from "typescript-result"
 import { databasePath } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
@@ -21,6 +21,8 @@ import {
 	Track,
 	type TrackId
 } from "./types.js"
+import { schmemaToSql } from "#/smartPlaylists/toSql.js"
+import { logg } from "#/logs.js"
 
 export const database = connectDatabase()
 
@@ -65,7 +67,16 @@ function connectDatabase(): Database {
 		getPlaylist: async () => Result.ok(undefined),
 		getPlaylists: async () => Result.ok([]),
 
-		updateSmartPlaylist: async ({ id, schema }) => {},
+		upsertSmartPlaylist: async ({ id, schema }) => {
+			const sqlGetTracks = schmemaToSql(schema)
+			logg.debug("sqlGetTracks", { id, sql: sqlGetTracks })
+
+			const tracks = Result.try(() => db.all(sqlGetTracks)).onSuccess(
+				(tracks) => logg.debug("sql playlist", { tracks, id })
+			)
+
+			return tracks
+		},
 
 		search: async () =>
 			Result.ok({

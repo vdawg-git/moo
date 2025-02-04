@@ -20,6 +20,11 @@ import { useEffect } from "react"
 import { reactToState } from "./state/stateReact"
 import { ModalManager } from "./components/modalManager"
 import { appState } from "./state/state"
+import { parsePlaylists } from "./smartPlaylists/parsing"
+import {
+	updateSmartPlaylists,
+	watchPlaylists
+} from "./smartPlaylists/smartPlaylist"
 
 const App = () => {
 	useEffect(() => {
@@ -75,12 +80,16 @@ export async function startApp() {
 			})
 	}
 
+	updateSmartPlaylists()
+	const watcher = watchPlaylists()
+	logg.debug("playlists", await Result.fromAsync(parsePlaylists()).getOrThrow())
 	preserveScreen()
 	const instance = render(<App />, { patchConsole: false })
 	await instance.waitUntilExit()
 
+	watcher.unsubscribe()
 	// exit fullscreen / use default buffer
-	await writeToStdout("\x1b[?1049l")
+	// await writeToStdout("\x1b[?1049l")
 }
 
 async function writeToStdout(content: string) {

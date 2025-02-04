@@ -1,11 +1,7 @@
-import { randomUUIDv7 } from "bun"
 import {
 	type SQL,
-	type Subquery,
-	type WithSubquery,
 	and,
 	eq,
-	exists,
 	gt,
 	gte,
 	like,
@@ -20,6 +16,7 @@ import { QueryBuilder } from "drizzle-orm/sqlite-core"
 import * as R from "remeda"
 import { P, match } from "ts-pattern"
 import type { Simplify } from "type-fest"
+import { logg } from "#/logs"
 import type {
 	BooleanSchema,
 	DateSchema,
@@ -31,20 +28,21 @@ import type {
 } from "#/smartPlaylists/schema"
 import { type TrackColumn, tracksTable } from "../database/schema"
 
-export function schmemaToSql(schema: PlaylistSchema): SQL {
+export function schmemaToSql(schema: PlaylistSchema) {
 	const { rules } = schema
 
 	const filterGroups = rules.map(transformRule)
 	const builder = new QueryBuilder()
-		.select()
+		.select({ id: tracksTable.id, sourceProvider: tracksTable.sourceProvider })
 		.from(tracksTable)
 		.where(and(...filterGroups))
-		.getSQL()
+
+	logg.debug("schema sql", builder.toSQL())
 
 	return builder
 }
 
-function transformRule(rule: MetaOperator | TrackColumnSchema): Subquery {
+function transformRule(rule: MetaOperator | TrackColumnSchema): SQL {
 	return (
 		match(rule)
 			.with({ _type: P.union("all", "any") }, transfromRuleGroup)
@@ -54,20 +52,10 @@ function transformRule(rule: MetaOperator | TrackColumnSchema): Subquery {
 	)
 }
 
-function transfromRuleGroup(groupRule: MetaOperator): WithSubquery {
+function transfromRuleGroup(groupRule: MetaOperator): SQL {
 	const subqueries = groupRule.fields.map(transformRule)
 	const combine = groupRule._type === "all" ? and : or
-	const combined = combine(...subqueries)
-
-	const builder = new QueryBuilder()
-	const query = builder.$with(randomUUIDv7()).as(
-		builder
-			.select({ exists: sql`1` })
-			.from(tracksTable)
-			.where(combined && exists(combined))
-	)
-
-	return query
+	return combine(...subqueries) ?? sql`1=1`
 }
 
 /**
@@ -77,7 +65,7 @@ type ColumnFilter = (column: TrackColumn) => SQL | undefined
 /**
  * Transforms a track column rule (like a rule for "album", "artist" etc) to a subquery.
  */
-function transformRuleColumn(schema: TrackColumnSchema): WithSubquery {
+function transformRuleColumn(schema: TrackColumnSchema): SQL {
 	const applyFilter: ColumnFilter = match(schema.rules)
 		.with({ _type: "boolean" }, rulesBoolean)
 		.with({ _type: "date" }, rulesDate)
@@ -85,17 +73,7 @@ function transformRuleColumn(schema: TrackColumnSchema): WithSubquery {
 		.with({ _type: "string" }, rulesString)
 		.exhaustive()
 
-	const toFilter = applyFilter(tracksTable[schema.column])
-
-	const builder = new QueryBuilder()
-	const query = builder.$with(randomUUIDv7()).as(
-		builder
-			.select({ exists: sql`1` })
-			.from(tracksTable)
-			.where(toFilter && exists(toFilter))
-	)
-
-	return query
+	return applyFilter(tracksTable[schema.column]) ?? sql`1=1`
 }
 
 function rulesBoolean(schema: BooleanSchema): ColumnFilter {

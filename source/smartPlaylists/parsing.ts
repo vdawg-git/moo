@@ -16,7 +16,7 @@ import path from "node:path"
 import { Result } from "typescript-result"
 import { readdir, readFile } from "node:fs/promises"
 import type { FilePath } from "#/types/types"
-import { logg } from "#/logs"
+import type { PlaylistId } from "#/database/types"
 
 const playlistsDirectory = path.join(CONFIG_DIRECTORY, "playlists")
 const validExtensions = [".yml", ".yaml"]
@@ -28,7 +28,7 @@ const validExtensions = [".yml", ".yaml"]
 const playlistChangedDebounce = 70
 
 type PlaylistParsed = {
-	playlistPath: FilePath
+	playlistPath: PlaylistId
 	parseResult: Result<PlaylistSchema, Error>
 }
 
@@ -47,7 +47,7 @@ export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
 			switchMap(({ filePath }) =>
 				parsePlaylist(filePath).then((parseResult) => ({
 					parseResult,
-					playlistPath: filePath
+					playlistPath: filePath as unknown as PlaylistId
 				}))
 			)
 		)
@@ -58,7 +58,6 @@ export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
 export async function parsePlaylists(): Promise<
 	Result<readonly PlaylistParsed[], Error>
 > {
-	logg.debug("parsing playlists..")
 	return Result.fromAsyncCatching(readdir(playlistsDirectory))
 		.map((paths) =>
 			paths
@@ -70,7 +69,7 @@ export async function parsePlaylists(): Promise<
 				.map(
 					async (filepath) =>
 						({
-							playlistPath: filepath,
+							playlistPath: filepath as unknown as PlaylistId,
 							parseResult: await parsePlaylist(filepath)
 						}) satisfies PlaylistParsed
 				)

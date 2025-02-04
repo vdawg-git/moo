@@ -27,14 +27,11 @@ export interface Database {
 	getPlaylists: (
 		ids: readonly PlaylistId[]
 	) => Promise<Result<readonly Playlist[], Error>>
-	/**
-	 * Updates a smart by providing the new schema to it.
-	 * Is also used to refresh it.
-	 * */
-	updateSmartPlaylist: (data: {
+
+	upsertSmartPlaylist: (data: {
 		id: PlaylistId
 		schema: PlaylistSchema
-	}) => Promise<Result<void, Error>>
+	}) => Promise<Result<unknown, Error>>
 
 	/** Fuzzy search the database */
 	search: (input: string) => Promise<
