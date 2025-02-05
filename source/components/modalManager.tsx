@@ -1,5 +1,6 @@
 import { appState, type AppModal } from "#/state/state"
 import { useSelector } from "@xstate/store/react"
+import { useState } from "react"
 import { Modal, useModal } from "tuir"
 
 export function ModalManager() {
@@ -10,10 +11,11 @@ export function ModalManager() {
 }
 
 function ModalWrapper({ Content, id, title }: AppModal) {
+	const [displayTitle, setTitle] = useState(title)
 	const { modal } = useModal({
-		// 	// The manager shows/hide the modal
-		show: { input: "ignore" },
-		hide: { key: "esc" }
+		// The manager shows/hide the modal
+		show: [],
+		hide: [{ key: "esc" }, { input: "q" }]
 	})
 
 	const hideModal: (typeof modal)["_hideModal"] = () => {
@@ -21,21 +23,17 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 		modal._hideModal()
 	}
 
-	// useInput((input, key) => logg.debug("in", { input, key }), { isActive: true })
-
 	return (
 		<Modal
 			modal={{ ...modal, _hideModal: hideModal, _vis: true }}
-			padding={1}
 			borderStyle={"round"}
 			borderColor={"gray"}
 			minHeight={5}
 			minWidth={5}
 			flexDirection="column"
-			titleTopLeft={{ title, bold: true, color: "magenta" }}
+			titleTopLeft={{ title: displayTitle, bold: true, color: "magenta" }}
 		>
-			{/* <Text>ayyy my man why dis no working</Text> */}
-			<Content />
+			<Content hideModal={hideModal} changeTitle={setTitle} />
 		</Modal>
 	)
 }

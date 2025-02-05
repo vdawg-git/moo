@@ -200,7 +200,7 @@ export type AppModal = Readonly<{
 	 * The content to show to the user.
 	 * The ModalManager shows it to the user via a modal.
 	 * */
-	Content: () => ReactNode
+	Content: (props: AppModalContentProps) => ReactNode
 
 	/** Unique ID to discern the different modals */
 	id: number | string
@@ -208,6 +208,11 @@ export type AppModal = Readonly<{
 	/** The titel to show on the top of the modal box */
 	title: string
 }>
+export type AppModalContentProps = {
+	/** Removes the current modal */
+	hideModal: () => void
+	changeTitle: (title: string) => void
+}
 
 /** A notification in Moo */
 export type AppNotification = {

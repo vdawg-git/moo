@@ -19,7 +19,19 @@ export const iconsSchema = z
 		error: z.string().default("").describe("Icon used for errors."),
 		warn: z.string().default("").describe("Icon used for warnings."),
 		info: z.string().default("").describe("Icon used for info boxes."),
-		success: z.string().default("").describe("Icon used for success messages.")
+		success: z
+			.string()
+			.default("")
+			.describe("Icon used for success messages."),
+
+		playlist: z
+			.string()
+			.default("📜")
+			.describe("Icon used to indicate a playlist."),
+		command: z
+			.string()
+			.default("❯")
+			.describe("Icon used to indicate a command.")
 	})
 	.default({})
 	.describe("Change the icons used in the app.")

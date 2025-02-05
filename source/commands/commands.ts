@@ -1,4 +1,4 @@
-import { openRunner } from "#/components/runner"
+import { openRunner } from "#/components/runner/runner"
 import type { KeyInput } from "#/config/shortcutParser"
 import { appState } from "#/state/state"
 
@@ -70,6 +70,17 @@ export const appCommands = [
 		description:
 			"Global keybinding. Toggles the playback from pause to play and vice versa.",
 		callback: () => appState.send({ type: "togglePlayback" })
+	},
+
+	{
+		id: "goTo.playlists",
+		label: "Open playlist",
+		keybinding: [
+			{ key: "g", modifiers: [] },
+			{ key: "p", modifiers: [] }
+		],
+		description: "Open a modal to quickly switch to a playlist.",
+		callback: () => openRunner("p ")
 	}
 ] as const satisfies AppCommand[]
 
