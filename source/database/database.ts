@@ -1,28 +1,33 @@
-import { type SQL, getTableColumns, inArray, sql } from "drizzle-orm"
+import { type SQL, eq, getTableColumns, inArray, or, sql } from "drizzle-orm"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
 import { isNonNullish } from "remeda"
-import { noop, Subject } from "rxjs"
+import { Subject, noop } from "rxjs"
 import { Result } from "typescript-result"
 import { databasePath } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
+import { logg } from "#/logs.js"
+import { schmemaToSql } from "#/smartPlaylists/toSql.js"
 import { createLocalPlayer } from "../player/player.js"
 import {
 	albumsTable,
 	artistsTable,
 	composersTable,
 	movementsTable,
+	playlistTracksTable,
+	playlistsTable,
 	tracksTable
 } from "./schema.js"
+import { upsert } from "./sqlHelper.js"
 import {
 	type AlbumId,
 	type ArtistId,
 	type Database,
+	type Playlist,
+	type PlaylistId,
 	Track,
 	type TrackId
 } from "./types.js"
-import { schmemaToSql } from "#/smartPlaylists/toSql.js"
-import { logg } from "#/logs.js"
 
 export const database = connectDatabase()
 
@@ -64,18 +69,50 @@ function connectDatabase(): Database {
 				data.map((track) => new LocalTrack(nullsToUndefined(track)))
 			),
 
-		getPlaylist: async () => Result.ok(undefined),
-		getPlaylists: async () => Result.ok([]),
+		getPlaylist: async (id) => {
+			return Result.fromAsyncCatching(
+				db
+					.select()
+					.from(playlistsTable)
+					.leftJoin(
+						playlistTracksTable,
+						eq(playlistsTable.id, playlistTracksTable.playlistId)
+					)
+					.leftJoin(
+						tracksTable,
+						eq(playlistTracksTable.trackId, tracksTable.id)
+					)
+					.where(eq(playlistsTable.id, id))
+			).map((joined) => {
+				const playlist = joined[0]?.playlists
+				if (!playlist) {
+					return Result.error(new Error(`Could not find playlist ${id}`))
+				}
 
-		upsertSmartPlaylist: async ({ id, schema }) => {
-			const sqlGetTracks = schmemaToSql(schema)
-			logg.debug("sqlGetTracks", { id, sql: sqlGetTracks })
-
-			const tracks = Result.try(() => db.all(sqlGetTracks)).onSuccess(
-				(tracks) => logg.debug("sql playlist", { tracks, id })
+				return {
+					id: playlist.id as PlaylistId,
+					displayName: playlist.displayName ?? undefined,
+					tracks: joined
+						.map((data) => data.tracks)
+						.filter(isNonNullish)
+						.map((track) => new LocalTrack(nullsToUndefined(track)))
+				} satisfies Playlist
+			})
+		},
+		getPlaylists: async (ids) => {
+			return Result.fromAsyncCatching(
+				db
+					.select()
+					.from(playlistsTable)
+					.where(ids && or(...ids.map((id) => eq(playlistsTable.id, id))))
 			)
+		},
 
-			return tracks
+		upsertSmartPlaylist: async (data) => {
+			const result = await upsertSmartPlaylist(db)(data)
+			result.onSuccess(() => changed$.next(""))
+
+			return result
 		},
 
 		search: async () =>
@@ -110,7 +147,7 @@ export class LocalTrack extends Track {
 }
 
 const addTracks: (database: BunSQLiteDatabase) => Database["addTracks"] = (
-	database
+	db
 ) => {
 	return async (tracks) => {
 		if (tracks.length === 0) {
@@ -157,7 +194,7 @@ const addTracks: (database: BunSQLiteDatabase) => Database["addTracks"] = (
 		)
 
 		return Result.fromAsyncCatching(
-			database.transaction(
+			db.transaction(
 				async (tx) => {
 					if (artistsToAdd.length > 0) {
 						await upsert(artistsTable, artistsToAdd, "name", tx)
@@ -185,51 +222,38 @@ const addTracks: (database: BunSQLiteDatabase) => Database["addTracks"] = (
 	}
 }
 
-/**
- * Upsert a table, updating the columns if the key already exists.
- *
- *
- * For the SQL ransaction to trigger this needs to return the operation directly
- * and not a Result type
- * */
-async function upsert<
-	T extends SQLiteTable,
-	V extends readonly T["$inferInsert"][],
-	E extends keyof T["$inferInsert"]
->(
-	table: T,
-	values: V,
-	/** First key should be the primary key, then other unique keys */
-	primaryKey: E,
-	database:
-		| BunSQLiteDatabase
-		| SQLiteTransaction<
-				"sync",
-				void,
-				Record<string, never>,
-				Record<string, never>
-		  >
-): Promise<void> {
-	return database
-		.insert(table)
-		.values(values)
-		.onConflictDoUpdate({
-			//@ts-expect-error
-			target: table[primaryKey],
-			set: conflictUpdateAllExcept(table)
-		})
-}
+const upsertSmartPlaylist: (
+	database: BunSQLiteDatabase
+) => Database["upsertSmartPlaylist"] = (db) => {
+	return async ({ id, schema }) => {
+		const sqlGetTracks = schmemaToSql(schema)
 
-export function conflictUpdateAllExcept<T extends SQLiteTable>(table: T) {
-	const columns = Object.entries(getTableColumns(table))
-	const updateColumns = columns.filter(([_, { primary }]) => !primary)
+		return Result.fromAsyncCatching(
+			db.transaction(async (tx) => {
+				const tracks = tx.all(sqlGetTracks) as readonly { id: TrackId }[]
 
-	return updateColumns.reduce((acc, [columnName, column]) => {
-		//@ts-expect-error
-		acc[columnName] = sql.raw(`excluded.${column.name}`)
+				await upsert(
+					playlistsTable,
+					[{ id, displayName: schema.name }],
+					"id",
+					tx
+				)
+				await tx
+					.delete(playlistTracksTable)
+					.where(eq(playlistTracksTable.playlistId, id as string))
 
-		return acc
-	}, {}) as Partial<Record<keyof typeof table.$inferInsert, SQL>>
+				if (tracks.length > 0) {
+					await tx.insert(playlistTracksTable).values(
+						tracks.map((track, index) => ({
+							playlistId: id,
+							position: index,
+							trackId: track.id
+						}))
+					)
+				}
+			})
+		)
+	}
 }
 
 /**

@@ -131,6 +131,7 @@ export const artistsTable = sqliteTable("artists", {
 	name: text().primaryKey().$type<ArtistId>(),
 	sort: text()
 })
+export type ArtistSimple = typeof artistsTable.$inferSelect
 
 export const albumsTable = sqliteTable(
 	"albums",
@@ -142,28 +143,30 @@ export const albumsTable = sqliteTable(
 	},
 	(table) => [primaryKey({ name: "id", columns: [table.title, table.artist] })]
 )
+export type AlbumSimple = typeof albumsTable.$inferSelect
 
 export const movementsTable = sqliteTable("movements", {
 	title: text().primaryKey()
 })
+export type MovementSimple = typeof albumsTable.$inferSelect
 
 export const composersTable = sqliteTable("composers", {
 	name: text().primaryKey(),
 	sort: text()
 })
+export type ComposerSimple = typeof albumsTable.$inferSelect
 
 export const playlistsTable = sqliteTable("playlists", {
-	// We use an auto-incrementing integer as the primary key,
-	// as plugins could add playlists with the same name from for example Spotify
-	id: integer().primaryKey({ autoIncrement: true }).$type<PlaylistId>(),
-	name: text()
+	id: text().primaryKey().$type<PlaylistId>(),
+	displayName: text()
 })
+export type PlaylistSimple = typeof playlistsTable.$inferSelect
 
 /** Links tracks to playlists */
 export const playlistTracksTable = sqliteTable(
 	"playlistTracks",
 	{
-		playlistId: integer()
+		playlistId: text()
 			.notNull()
 			.references(() => playlistsTable.id),
 		trackId: text()

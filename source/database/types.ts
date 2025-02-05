@@ -6,6 +6,7 @@ import type { Observable } from "rxjs"
 import type { FilePath } from "#/types/types"
 import { addErrorNotification } from "#/state/state"
 import type { PlaylistSchema } from "#/smartPlaylists/schema"
+import type { AlbumSimple, ArtistSimple, PlaylistSimple } from "./schema"
 
 export interface Database {
 	getTrack: (id: TrackId) => Promise<Result<Track | undefined, Error>>
@@ -16,17 +17,17 @@ export interface Database {
 	getAlbum: (id: AlbumId) => Promise<Result<Album | undefined, Error>>
 	getAlbums: (
 		ids?: readonly AlbumId[]
-	) => Promise<Result<readonly Album[], Error>>
+	) => Promise<Result<readonly AlbumSimple[], Error>>
 
 	getArtist: (id: ArtistId) => Promise<Result<Artist | undefined, Error>>
 	getArtists: (
 		ids?: readonly ArtistId[]
-	) => Promise<Result<readonly Artist[], Error>>
+	) => Promise<Result<readonly ArtistSimple[], Error>>
 
-	getPlaylist: (id: PlaylistId) => Promise<Result<Playlist | undefined, Error>>
+	getPlaylist: (id: PlaylistId) => Promise<Result<Playlist, Error>>
 	getPlaylists: (
-		ids: readonly PlaylistId[]
-	) => Promise<Result<readonly Playlist[], Error>>
+		ids?: readonly PlaylistId[]
+	) => Promise<Result<readonly PlaylistSimple[], Error>>
 
 	upsertSmartPlaylist: (data: {
 		id: PlaylistId
@@ -38,9 +39,9 @@ export interface Database {
 		Result<
 			{
 				tracks: readonly Track[]
-				albums: readonly Album[]
-				artists: readonly Artist[]
-				playlists: readonly Playlist[]
+				albums: readonly AlbumSimple[]
+				artists: readonly ArtistSimple[]
+				playlists: readonly PlaylistSimple[]
 			},
 			Error
 		>
@@ -228,7 +229,7 @@ export type TrackData = Except<
 	sourceProvider: string
 }
 
-interface Artist {
+export type Artist = {
 	/** Also the id in the database */
 	name: string
 	albums: readonly string[]
@@ -236,15 +237,14 @@ interface Artist {
 	id: string
 }
 
-interface Playlist {
-	/** Also the id in the database */
-	name: string
+export type Playlist = {
+	id: PlaylistId
+	displayName?: string
 	// For smart playlist it is the same, as those will just get updated on start/file change. The definition of the smart playlist is saved in the dotfiles.
 	tracks: readonly Track[]
-	id: PlaylistId
 }
 
-interface Album {
+export type Album = {
 	name: string
 	cover: string
 	artist: string
