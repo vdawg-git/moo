@@ -49,7 +49,8 @@ export function useQuery<T>(
 	return state
 }
 
-function observeQuery<T>(
+/** Runs and caches a query */
+export function observeQuery<T>(
 	key: string | string[],
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	query: () => Promise<T> | Promise<Result<T, any>>
@@ -98,7 +99,7 @@ function observeQuery<T>(
 	)
 }
 
-type QueryResult<T> =
+export type QueryResult<T> =
 	| {
 			data: undefined
 			/** Used when data is (re)fetching */

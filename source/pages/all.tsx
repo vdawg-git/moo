@@ -1,7 +1,7 @@
 import { Playbar } from "#/components/playbar"
 import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
-import { useQuery } from "#/database/query"
+import { useQuery } from "#/database/useQuery"
 import { playNewPlayback } from "#/state/state"
 import { usePlayingIndex } from "#/state/useSelectors"
 import { Box, Text, useFocus } from "tuir"
@@ -39,6 +39,7 @@ export function All() {
 					)
 				)}
 			</Box>
+
 			<Playbar />
 		</>
 	)

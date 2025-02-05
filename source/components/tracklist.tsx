@@ -20,6 +20,8 @@ export function Tracklist({ tracks, onChange, playingIndex }: PlaylistProps) {
 
 	return (
 		<Box flexDirection="column">
+			{items.length === 0 && <Text>No tracks here</Text>}
+
 			<List listView={listView}>
 				{items.map((item, index) => (
 					<TrackItem
