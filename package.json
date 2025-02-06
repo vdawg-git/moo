@@ -36,8 +36,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@types/bun": "^1.2.2",
-		"@types/node": "22.13.1",
+		"@types/bun": "latest",
+		"@types/node": "latest",
 		"@types/react": "^18.3.18",
 		"drizzle-kit": "^0.30.4",
 		"type-fest": "^4.33.0"
