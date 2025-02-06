@@ -7,7 +7,7 @@ export function ModalManager() {
 	const modals = useSelector(appState, (state) => state.context.modals)
 	const toRender = modals.at(-1)
 
-	return toRender && <ModalWrapper {...toRender} />
+	return toRender && <ModalWrapper {...toRender} key={toRender.id} />
 }
 
 function ModalWrapper({ Content, id, title }: AppModal) {
