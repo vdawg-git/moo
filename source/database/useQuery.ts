@@ -1,20 +1,20 @@
 // A basic TanStack Query/SWR implementation.
 // We'll use this to cache the results of our database queries.
 
-import { Result } from "typescript-result"
-import { database } from "./database"
+import { useEffect, useState } from "react"
+import { isNullish } from "remeda"
 import {
+	type Observable,
 	from,
 	map,
 	merge,
 	of,
 	startWith,
 	switchMap,
-	tap,
-	type Observable
+	tap
 } from "rxjs"
-import { isNullish } from "remeda"
-import { useEffect, useState } from "react"
+import { Result } from "typescript-result"
+import { database } from "./database"
 
 const cache: Record<string, unknown> = {}
 
@@ -67,8 +67,8 @@ export function observeQuery<T>(
 	)
 
 	return stream$.pipe(
-		map((data) => {
-			return Result.isResult(data)
+		map((data) =>
+			Result.isResult(data)
 				? {
 						data: data as Result<T, unknown>,
 						isFetching: false as const,
@@ -79,12 +79,12 @@ export function observeQuery<T>(
 						isFetching: false,
 						isLoading: false as const
 					}
-		}),
-		tap(({ data }) =>
-			data.onSuccess(() => {
-				cache[cacheKey] = data
-			})
 		),
+		tap(({ data }) => {
+			data.onSuccess((success) => {
+				cache[cacheKey] = success
+			})
+		}),
 		startWith(
 			isNullish(initialCacheValue)
 				? { data: undefined, isFetching: true, isLoading: true as const }
