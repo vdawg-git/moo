@@ -10,7 +10,7 @@ import { database } from "#/database/database"
 import type { PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 import { Observable, shareReplay } from "rxjs"
-import { logg } from "#/logs"
+import { logg, enumarateError } from "#/logs"
 
 export interface AppState {
 	playback: {
@@ -140,7 +140,8 @@ export const appState = createStoreWithProducer(produce, {
 			const currentView = context.view.history[index]
 			if (deepEquals(currentView, goTo)) return
 
-			context.view.history.splice(index, Number.POSITIVE_INFINITY, goTo)
+			context.view.history.splice(index + 1, Number.POSITIVE_INFINITY)
+			context.view.history.push(goTo)
 			context.view.historyIndex += 1
 		},
 
@@ -273,7 +274,13 @@ export function addErrorNotification(
 	/** Tag to be used for the logs */
 	tag?: string
 ) {
-	logg.error(tag ?? message, { error, ...(!tag && { message }) })
+	const logableError =
+		error instanceof Error ? enumarateError(error) : { error }
+
+	logg.error(tag ?? message, {
+		...logableError,
+		...(!tag && { msg: message })
+	})
 	addNotification({ message, type: "error" })
 }
 

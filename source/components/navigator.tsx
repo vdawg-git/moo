@@ -20,7 +20,8 @@ export function Navigator() {
 
 	manageKeybinds()
 
-	return renderRoute(view)
+	// biome-ignore lint/style/noNonNullAssertion: Should crash if undefined as it is unexpected
+	return renderRoute(view!)
 }
 
 function renderRoute(view: ViewPage): JSX.Element {
