@@ -34,6 +34,8 @@ export function useQuery<T>(
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	query: () => Promise<T> | Promise<Result<T, any>>
 ): QueryResult<T> {
+	const combinedKey = Array.isArray(key) ? key.join("-") : key
+
 	const [state, setState] = useState<QueryResult<T>>({
 		data: undefined,
 		isLoading: true as const,
@@ -41,10 +43,10 @@ export function useQuery<T>(
 	})
 
 	useEffect(() => {
-		const subscription = observeQuery(key, query).subscribe(setState)
+		const subscription = observeQuery(combinedKey, query).subscribe(setState)
 
 		return () => subscription.unsubscribe()
-	}, [key, query])
+	}, [combinedKey])
 
 	return state
 }
@@ -55,7 +57,7 @@ export function observeQuery<T>(
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	query: () => Promise<T> | Promise<Result<T, any>>
 ): Observable<QueryResult<T>> {
-	const cacheKey = Array.isArray(key) ? key.join(".") : key
+	const cacheKey = Array.isArray(key) ? key.join("-") : key
 	const initialCacheValue = cache[cacheKey] as T
 
 	const query$ = refresh$.pipe(switchMap(() => query().catch(Result.error)))
