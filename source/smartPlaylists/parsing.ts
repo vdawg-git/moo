@@ -1,25 +1,22 @@
+import { readFile, readdir } from "node:fs/promises"
+import path from "node:path"
 import {
+	type Observable,
 	debounceTime,
 	filter,
 	groupBy,
-	map,
 	mergeMap,
-	type Observable,
 	share,
 	switchMap
 } from "rxjs"
-import * as yaml from "yaml"
-import { playlistSchema, type PlaylistSchema } from "./schema"
-import { createWatcher } from "#/filesystem"
-import { CONFIG_DIRECTORY } from "#/constants"
-import path from "node:path"
 import { Result } from "typescript-result"
-import { readdir, readFile } from "node:fs/promises"
+import * as yaml from "yaml"
+import { CONFIG_DIRECTORY } from "#/constants"
+import { createWatcher } from "#/filesystem"
 import type { FilePath } from "#/types/types"
-import type { PlaylistId } from "#/database/types"
+import { type PlaylistSchema, playlistSchema } from "./schema"
 
 const playlistsDirectory = path.join(CONFIG_DIRECTORY, "playlists")
-const validExtensions = [".yml", ".yaml"]
 
 /**
  * A time fast engough to feel instant,
@@ -28,7 +25,7 @@ const validExtensions = [".yml", ".yaml"]
 const playlistChangedDebounce = 70
 
 type PlaylistParsed = {
-	playlistPath: PlaylistId
+	playlistPath: FilePath
 	parseResult: Result<PlaylistSchema, Error>
 }
 
@@ -47,7 +44,7 @@ export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
 			switchMap(({ filePath }) =>
 				parsePlaylist(filePath).then((parseResult) => ({
 					parseResult,
-					playlistPath: filePath as unknown as PlaylistId
+					playlistPath: filePath
 				}))
 			)
 		)
@@ -69,7 +66,7 @@ export async function parsePlaylists(): Promise<
 				.map(
 					async (filepath) =>
 						({
-							playlistPath: filepath as unknown as PlaylistId,
+							playlistPath: filepath,
 							parseResult: await parsePlaylist(filepath)
 						}) satisfies PlaylistParsed
 				)
@@ -91,5 +88,5 @@ async function parsePlaylist(
 }
 
 function isSupportedExtension(filepath: string): boolean {
-	return validExtensions.some((extension) => filepath.endsWith(extension))
+	return path.extname(filepath) === ".yml"
 }

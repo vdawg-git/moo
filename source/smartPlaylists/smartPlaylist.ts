@@ -1,11 +1,12 @@
 import { database } from "#/database/database"
 import type { PlaylistId } from "#/database/types"
 import { addErrorNotification } from "#/state/state"
-import { basename } from "node:path"
+import path, { basename } from "node:path"
 import type { Subscription } from "rxjs"
 import { parsePlaylists, playlistsChanged$ } from "./parsing"
 import { Result } from "typescript-result"
 import * as R from "remeda"
+import type { FilePath } from "#/types/types"
 
 export async function updateSmartPlaylists(): Promise<void> {
 	const parsed = await Result.fromAsync(parsePlaylists())
@@ -13,7 +14,10 @@ export async function updateSmartPlaylists(): Promise<void> {
 			R.piped(
 				R.map(({ parseResult, playlistPath }) =>
 					parseResult.map((schema) =>
-						database.upsertSmartPlaylist({ schema, id: playlistPath })
+						database.upsertSmartPlaylist({
+							schema,
+							id: playlistPathToId(playlistPath)
+						})
 					)
 				),
 				(updateResults) => Promise.all(updateResults)
@@ -54,4 +58,8 @@ export function watchPlaylists(): Subscription {
 				)
 			)
 	})
+}
+
+function playlistPathToId(filepath: FilePath): PlaylistId {
+	return path.basename(filepath, "yml") as PlaylistId
 }

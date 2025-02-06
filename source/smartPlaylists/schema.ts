@@ -1,10 +1,10 @@
-import { tracksTable, type TrackColumnKey } from "#/database/schema"
-import { getTableColumns, type Column } from "drizzle-orm"
+import { getTableColumns } from "drizzle-orm"
 import * as R from "remeda"
 import { pipe } from "remeda"
+import stripIndent from "strip-indent"
 import { match } from "ts-pattern"
 import { z } from "zod"
-import stripIndent from "strip-indent"
+import { type TrackColumnKey, tracksTable } from "#/database/schema"
 
 const columns = getTableColumns(tracksTable)
 
@@ -107,7 +107,8 @@ const trackColumnSchema = pipe(
 	R.filter(R.isNonNullish),
 	R.map(([column, schema]) =>
 		z.object({ [column]: schema }).transform((parsed) => {
-			const [trackColumn, rules] = Object.entries(parsed)[0]
+			// biome-ignore lint/style/noNonNullAssertion: There will always be a single key
+			const [trackColumn, rules] = Object.entries(parsed)[0]!
 			return {
 				_type: "column" as const,
 				column: trackColumn as TrackColumnKey,
@@ -115,7 +116,8 @@ const trackColumnSchema = pipe(
 			}
 		})
 	),
-	(schemas) => z.union([schemas[0], schemas[1], ...schemas.slice(2)] as const)
+	// biome-ignore lint/style/noNonNullAssertion: We need to do this because of zods union typing
+	(schemas) => z.union([schemas[0]!, schemas[1]!, ...schemas.slice(2)] as const)
 )
 
 /**
@@ -155,8 +157,8 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 			})
 			.describe(description)
 			.transform((object) => {
-				// should always only have one key
-				const [_type, fields] = Object.entries(object)[0]
+				// biome-ignore lint/style/noNonNullAssertion: should always only have one key
+				const [_type, fields] = Object.entries(object)[0]!
 				const typedType = _type as (typeof metaOperators)[number]["type"]
 
 				return {
@@ -210,3 +212,5 @@ function orArray<T extends z.ZodTypeAny>(
 // this is useful if you for example want to filter all skits, podcasts etc
 // and then base your other playlists on that.
 // Also allow for a "hidden" field in the yml to not show those meta playlists in the app
+
+// TODO add sorting

@@ -1,3 +1,12 @@
+import type {
+	BooleanSchema,
+	DateSchema,
+	MetaOperator,
+	NumberSchema,
+	PlaylistSchema,
+	StringSchema,
+	TrackColumnSchema
+} from "#/smartPlaylists/schema"
 import {
 	type SQL,
 	and,
@@ -16,16 +25,6 @@ import { QueryBuilder } from "drizzle-orm/sqlite-core"
 import * as R from "remeda"
 import { P, match } from "ts-pattern"
 import type { Simplify } from "type-fest"
-import { logg } from "#/logs"
-import type {
-	BooleanSchema,
-	DateSchema,
-	MetaOperator,
-	NumberSchema,
-	PlaylistSchema,
-	StringSchema,
-	TrackColumnSchema
-} from "#/smartPlaylists/schema"
 import { type TrackColumn, tracksTable } from "../database/schema"
 
 export function schmemaToSql(schema: PlaylistSchema) {
@@ -36,8 +35,6 @@ export function schmemaToSql(schema: PlaylistSchema) {
 		.select({ id: tracksTable.id, sourceProvider: tracksTable.sourceProvider })
 		.from(tracksTable)
 		.where(and(...filterGroups))
-
-	logg.debug("schema sql", builder.toSQL())
 
 	return builder
 }
