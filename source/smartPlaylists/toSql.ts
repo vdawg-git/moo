@@ -21,7 +21,7 @@ import {
 	or,
 	sql
 } from "drizzle-orm"
-import { QueryBuilder } from "drizzle-orm/sqlite-core"
+import { QueryBuilder, type SQLiteColumn } from "drizzle-orm/sqlite-core"
 import * as R from "remeda"
 import { P, match } from "ts-pattern"
 import type { Simplify } from "type-fest"
@@ -173,64 +173,70 @@ function rulesString(schema: StringSchema): ColumnFilter {
 				["is", P.select()],
 				(toCompare) => (column) =>
 					Array.isArray(toCompare)
-						? or(...toCompare.map((a) => eq(column, a)))
-						: eq(column, toCompare)
+						? or(...toCompare.map((a) => eq(lower(column), lower(a))))
+						: eq(lower(column), lower(toCompare))
 			)
 
 			.with(
 				["is_not", P.select()],
 				(toCompare) => (column) =>
 					Array.isArray(toCompare)
-						? and(...toCompare.map((a) => not(eq(column, a))))
-						: not(eq(column, toCompare))
+						? and(...toCompare.map((a) => not(eq(lower(column), lower(a)))))
+						: not(eq(lower(column), lower(toCompare)))
 			)
 
 			.with(
 				["starts_with", P.select()],
 				(toCompare) => (column) =>
 					Array.isArray(toCompare)
-						? and(...toCompare.map((a) => like(column, `${a}%`)))
-						: like(column, `${toCompare}%`)
+						? and(...toCompare.map((a) => like(lower(column), lower(`${a}%`))))
+						: like(lower(column), lower(`${toCompare}%`))
 			)
 
 			.with(
 				["starts_not_with", P.select()],
 				(toCompare) => (column) =>
 					Array.isArray(toCompare)
-						? and(...toCompare.map((a) => notLike(column, `${a}%`)))
-						: notLike(column, `${toCompare}%`)
+						? and(
+								...toCompare.map((a) => notLike(lower(column), lower(`${a}%`)))
+							)
+						: notLike(lower(column), lower(`${toCompare}%`))
 			)
 
 			.with(
 				["ends_with", P.select()],
 				(toCompare) => (column) =>
 					Array.isArray(toCompare)
-						? or(...toCompare.map((a) => like(column, `%${a}`)))
-						: like(column, `%${toCompare}`)
+						? or(...toCompare.map((a) => like(lower(column), lower(`%${a}`))))
+						: like(lower(column), lower(`%${toCompare}`))
 			)
 
 			.with(
 				["ends_not_with", P.select()],
 				(toCompare) => (column) =>
 					Array.isArray(toCompare)
-						? and(...toCompare.map((a) => notLike(column, `%${a}`)))
-						: notLike(column, `%${toCompare}`)
+						? and(
+								...toCompare.map((a) => notLike(lower(column), lower(`%${a}`)))
+							)
+						: notLike(lower(column), lower(`%${toCompare}`))
 			)
 
 			.with(
 				["includes", P.select()],
 				(toInclude) => (column) =>
 					Array.isArray(toInclude)
-						? or(...toInclude.map((a) => like(column, `%${a}%`)))
-						: like(column, `%${toInclude}%`)
+						? or(...toInclude.map((a) => like(lower(column), lower(`%${a}%`))))
+						: like(lower(column), lower(`%${toInclude}%`))
 			)
 
 			.with(
 				["includes_not", P.select()],
 				(toInclude) => (column) =>
 					Array.isArray(toInclude)
-						? and(...toInclude.map((a) => notLike(column, `%${a}%`)))
-						: notLike(column, `%${toInclude}%`)
+						? and(
+								...toInclude.map((a) => notLike(lower(column), lower(`%${a}%`)))
+							)
+						: notLike(lower(column), lower(`%${toInclude}%`))
 			)
 
 			.exhaustive()
@@ -265,4 +271,8 @@ function isSingleRange(
 	rangeOrRanges: [number, number] | [number, number][]
 ): rangeOrRanges is [number, number] {
 	return typeof rangeOrRanges[0] === "number"
+}
+
+function lower(input: string | SQLiteColumn): SQL {
+	return sql`LOWER(${input})`
 }
