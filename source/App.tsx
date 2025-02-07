@@ -1,32 +1,30 @@
-import { enumarateError, logg } from "./logs"
+import { useEffect } from "react"
+import { ErrorBoundary } from "react-error-boundary"
 import {
+	Viewport,
 	preserveScreen,
 	render,
-	setMouseReporting,
-	Text,
-	useInput,
-	Viewport
+	setCharRegisterSize,
+	setMouseReporting
 } from "tuir"
-import { Navigator } from "./components/navigator"
-import { ErrorBoundary } from "react-error-boundary"
-import { ErrorScreen } from "./components/errorScreen"
-import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
-import { appConfig } from "./config/config"
-import { database } from "./database/database"
 import { Result } from "typescript-result"
-import { IS_DEV } from "./constants"
 import { registerAudioPlayback } from "./audio/audio"
-import { useEffect } from "react"
-import { reactToState } from "./state/stateReact"
+import { ErrorScreen } from "./components/errorScreen"
 import { ModalManager } from "./components/modalManager"
-import { appState } from "./state/state"
-import { parsePlaylists } from "./smartPlaylists/parsing"
+import { Navigator } from "./components/navigator"
+import { appConfig } from "./config/config"
+import { IS_DEV } from "./constants"
+import { database } from "./database/database"
+import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
+import { enumarateError, logg } from "./logs"
 import {
 	updateSmartPlaylists,
 	watchPlaylists
 } from "./smartPlaylists/smartPlaylist"
+import { reactToState } from "./state/stateReact"
 
 const App = () => {
+	setCharRegisterSize(1)
 	useEffect(() => {
 		const unsubscribes = [registerAudioPlayback(), reactToState()]
 		setMouseReporting(true)
@@ -67,9 +65,6 @@ export async function startApp() {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)
 	}
 
-	// toggle fullscreen / different buffer
-	await writeToStdout("\x1b[?1049h")
-
 	if (!IS_DEV) {
 		Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
 			.onFailure((error) => {
@@ -82,14 +77,11 @@ export async function startApp() {
 
 	updateSmartPlaylists()
 	const watcher = watchPlaylists()
-	logg.debug("playlists", await Result.fromAsync(parsePlaylists()).getOrThrow())
 	preserveScreen()
 	const instance = render(<App />, { patchConsole: false })
 	await instance.waitUntilExit()
 
 	watcher.unsubscribe()
-	// exit fullscreen / use default buffer
-	// await writeToStdout("\x1b[?1049l")
 }
 
 async function writeToStdout(content: string) {
