@@ -1,5 +1,10 @@
+import { appCommands } from "#/commands/commands"
+import { appConfig } from "#/config/config"
+import { database } from "#/database/database"
+import { observeQuery } from "#/database/useQuery"
+import { addErrorNotification, appState } from "#/state/state"
 import Fuse from "fuse.js"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import * as R from "remeda"
 import {
 	type Observable,
@@ -7,21 +12,12 @@ import {
 	distinctUntilChanged,
 	filter,
 	map,
-	noop,
 	shareReplay,
-	switchMap,
-	tap
+	switchMap
 } from "rxjs"
 import { P, match } from "ts-pattern"
 import type { Result } from "typescript-result"
-import { appCommands } from "#/commands/commands"
-import { appConfig } from "#/config/config"
-import { database } from "#/database/database"
-import { observeQuery } from "#/database/useQuery"
-import { addErrorNotification, appState } from "#/state/state"
 import type { RunnerItem } from "./runner"
-import { addErrorMessage } from "zod-to-json-schema"
-import { logg } from "#/logs"
 
 type SearchMode = "Playlists" | "Go to" | "Commands"
 
@@ -99,8 +95,6 @@ function createGetRunnerItems(): {
 				)
 				.exhaustive()
 
-			logg.debug("uuu", { input, query })
-
 			return observeQuery(input.toSearch, query)
 		}),
 		map((result) =>
@@ -117,19 +111,18 @@ function createGetRunnerItems(): {
 		shareReplay({ refCount: true, bufferSize: 1 })
 	)
 
-	const filtered$ = input$.pipe(
-		switchMap((input) =>
+	const filtered$ = inputParsed$.pipe(
+		switchMap(({ value }) =>
 			results$.pipe(
 				map((result) =>
 					result?.map(({ items, fuse }) =>
-						!input
-							? items.slice(0, 15)
-							: fuse.search(input, { limit: 15 }).map(({ item }) => item)
+						!value
+							? items
+							: fuse.search(value, { limit: 35 }).map(({ item }) => item)
 					)
 				)
 			)
-		),
-		tap((filtered) => logg.debug("filtered", { filtered }))
+		)
 	)
 
 	const mode$ = inputParsed$.pipe(map(({ toSearch }) => toSearch))
@@ -188,7 +181,8 @@ function getRunnerCommands(): RunnerItem[] {
 		.map(({ label, callback, id }) => ({
 			id,
 			label,
-			onSelect: callback
+			onSelect: callback,
+			icon: appConfig.icons.command
 		}))
 }
 

@@ -33,7 +33,7 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 			flexDirection="column"
 			titleTopLeft={{ title: displayTitle, bold: true, color: "magenta" }}
 		>
-			<Content hideModal={hideModal} changeTitle={setTitle} />
+			<Content closeModal={hideModal} changeTitle={setTitle} />
 		</Modal>
 	)
 }

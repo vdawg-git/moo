@@ -211,7 +211,7 @@ export type AppModal = Readonly<{
 }>
 export type AppModalContentProps = {
 	/** Removes the current modal */
-	hideModal: () => void
+	closeModal: () => void
 	changeTitle: (title: string) => void
 }
 
