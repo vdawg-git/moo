@@ -20,7 +20,7 @@ export function Tracklist({ tracks, onChange, playingIndex }: PlaylistProps) {
 
 	return (
 		<Box flexDirection="column">
-			{items.length === 0 && <Text>No tracks here</Text>}
+			{items.length === 0 && <Text>No tracks here :(</Text>}
 
 			<List listView={listView}>
 				{items.map((item, index) => (
@@ -47,14 +47,14 @@ function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
 
 	const { useEvent } = useKeymap({ submit: { key: "return" } })
 	useEvent("submit", onSelect)
+	const playIcon = isPlaying ? appConfig.icons.playingIndicator : ""
 
 	return (
 		<Box width="100" backgroundColor={color} onClick={() => onSelect()}>
-			{isPlaying ? (
-				<Text color={"green"}>{appConfig.icons.playingIndicator}</Text>
-			) : (
-				<Text> </Text>
-			)}
+			<Text color={"green"}>
+				{playIcon}
+				{"  "}
+			</Text>
 
 			<Text wrap="truncate-end">{titleDisplay}</Text>
 		</Box>

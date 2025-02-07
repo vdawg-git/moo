@@ -26,7 +26,7 @@ export const iconsSchema = z
 
 		playlist: z
 			.string()
-			.default("📜")
+			.default("")
 			.describe("Icon used to indicate a playlist."),
 		command: z
 			.string()

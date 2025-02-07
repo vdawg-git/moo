@@ -1,10 +1,12 @@
 import { Playbar } from "#/components/playbar"
 import { Tracklist } from "#/components/tracklist"
+import { appConfig } from "#/config/config"
 import { database } from "#/database/database"
 import type { PlaylistId } from "#/database/types"
 import { useQuery } from "#/database/useQuery"
 import { playNewPlayback } from "#/state/state"
 import { usePlayingIndex } from "#/state/useSelectors"
+import { useCallback } from "react"
 import { Box, Text } from "tuir"
 
 type PlaylistProps = {
@@ -12,7 +14,8 @@ type PlaylistProps = {
 }
 
 export function Playlist({ id }: PlaylistProps) {
-	const response = useQuery(["playlist", id], () => database.getPlaylist(id))
+	const query = useCallback(() => database.getPlaylist(id), [id])
+	const response = useQuery(["playlist", id], query)
 	const playingIndex = usePlayingIndex({ type: "playlist", id })
 	const amount = response.data?.getOrNull()?.tracks.length
 	const displayName = response.data?.getOrNull()?.displayName ?? id
@@ -21,7 +24,7 @@ export function Playlist({ id }: PlaylistProps) {
 		<>
 			<Box flexGrow={1} flexDirection="column">
 				<Text color={"magenta"} bold>
-					{displayName}{" "}
+					{appConfig.icons.playlist} {displayName}{" "}
 					<Text color={"gray"}>{amount ? `(${amount} tracks)` : ""}</Text>
 				</Text>
 

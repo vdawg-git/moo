@@ -31,7 +31,8 @@ export function useQuery<T>(
 ): QueryResult<T>
 export function useQuery<T>(
 	key: string | string[],
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	/** ! Make sure to wrap the query in `useCallback` */
+	// biome-ignore lint/suspicious/noExplicitAny: we dont need the error type here
 	query: () => Promise<T> | Promise<Result<T, any>>
 ): QueryResult<T> {
 	const combinedKey = Array.isArray(key) ? key.join("-") : key
@@ -46,7 +47,7 @@ export function useQuery<T>(
 		const subscription = observeQuery(combinedKey, query).subscribe(setState)
 
 		return () => subscription.unsubscribe()
-	}, [combinedKey])
+	}, [combinedKey, query])
 
 	return state
 }
