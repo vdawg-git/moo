@@ -16,7 +16,6 @@ import {
 	useNodeMap,
 	useTextInput
 } from "tuir"
-import { logg } from "#/logs"
 import { type AppModalContentProps, appState } from "#/state/state"
 import { useRunnerItems } from "./useRunnerItems"
 
@@ -72,28 +71,18 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		[setInput]
 	)
 
-	const { useEvent } = useKeymap(
-		{
-			select: { key: "return" },
-			next: { key: "tab" }
-		},
-		{ priority: "always" }
-	)
-
-	useEvent("select", () => {
+	const onClose = () => {
 		modal.closeModal()
-		logg.debug("selected", activeItem)
+	}
+
+	const onSelect = () => {
+		onClose()
 		activeItem?.onSelect()
-	})
+	}
 
 	useEffect(() => {
 		mode && modal.changeTitle(mode)
 	}, [mode, modal.changeTitle])
-
-	const execActiveItem = () => {
-		modal.closeModal()
-		activeItem?.onSelect()
-	}
 
 	return (
 		<Box
@@ -103,7 +92,8 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		>
 			<Node.Box {...nodemap.register("textinput")}>
 				<RunnerInput
-					onSelect={execActiveItem}
+					onSelect={onSelect}
+					onClose={onClose}
 					onChange={onInputChange}
 					initialValue={initialValue}
 					bindUpdateValue={setUpdateInputValueRef}
@@ -112,12 +102,12 @@ function Runner({ modal, initialValue }: RunnerProps) {
 
 			<Node.Box {...nodemap.register("list")}>
 				<RunnerList
-					onSelect={execActiveItem}
+					onIndexChange={(index) => {
+						setActiveItem(runnerItems[index])
+					}}
+					onSelect={onSelect}
 					onOtherInput={(input) => {
-						updateInputValueRef.current?.((value) => {
-							logg.debug("withinUpdater", { value, input })
-							return value + input
-						})
+						updateInputValueRef.current?.((value) => value + input)
 						nodemap.control.goToNode("textinput")
 					}}
 					bindGoToIndex={(goTo) => {
@@ -125,7 +115,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 					}}
 				>
 					{runnerItems.map((item) => (
-						<RunnerListItem item={item} onFocus={setActiveItem} key={item.id} />
+						<RunnerListItem item={item} key={item.id} />
 					))}
 				</RunnerList>
 			</Node.Box>
@@ -138,6 +128,7 @@ type RunnerInputProps = {
 	/** When the user pressed enter */
 	onSelect: (value: string) => void
 	initialValue?: string
+	onClose: () => void
 	bindUpdateValue: (
 		setter: (updater: (oldValue: string) => string) => void
 	) => void
@@ -147,6 +138,7 @@ function RunnerInput({
 	onChange,
 	initialValue,
 	onSelect,
+	onClose,
 	bindUpdateValue
 }: RunnerInputProps): React.ReactNode {
 	const { control, isFocus } = useNode()
@@ -154,18 +146,11 @@ function RunnerInput({
 	const {
 		onChange: onChange_,
 		value,
-		// setValue does not take in a function to update
-		// but always a string
 		setValue
 	} = useTextInput(initialValue ?? "")
 
 	const updateValue = useCallback(
 		(updater: (oldValue: string) => string): void => {
-			const newValue = updater(value)
-			logg.debug("called updater", {
-				newValue,
-				oldValue: value
-			})
 			// setValue always has to take in a string and not a function, so the dependency on value has to be there
 			setValue(updater(value))
 		},
@@ -178,7 +163,6 @@ function RunnerInput({
 
 	useEffect(() => {
 		bindUpdateValue(updateValue)
-		logg.debug("bind updateValue function")
 	}, [bindUpdateValue, updateValue])
 
 	return (
@@ -196,11 +180,17 @@ function RunnerInput({
 				textStyle={{ inverse: true }}
 				cursorColor={"blue"}
 				autoEnter
-				exitKeymap={[{ key: "tab" }, { key: "down" }, { key: "return" }]}
+				exitKeymap={[
+					{ key: "tab" },
+					{ key: "esc" },
+					{ key: "down" },
+					{ key: "return" }
+				]}
 				onExit={(_, char) => {
 					if (char === Key.tab) control.next()
 					if (char === Key.down) control.down()
 					if (char === Key.return) onSelect(value)
+					if (char === Key.esc) onClose()
 				}}
 			/>
 		</Box>
@@ -210,6 +200,7 @@ function RunnerInput({
 type RunnerListProps = {
 	children: ReactNode[]
 	onSelect: () => void
+	onIndexChange: (newIndex: number) => void
 	/**
 	 * When the user pressed a non-navigation key,
 	 * used to then focus the text input and update it
@@ -224,7 +215,8 @@ export function RunnerList({
 	children,
 	onSelect,
 	onOtherInput,
-	bindGoToIndex
+	bindGoToIndex,
+	onIndexChange
 }: RunnerListProps) {
 	const node = useNode()
 
@@ -254,6 +246,10 @@ export function RunnerList({
 		bindGoToIndex(control.goToIndex)
 	}, [bindGoToIndex, control.goToIndex])
 
+	useEffect(() => {
+		onIndexChange(control.currentIndex)
+	}, [onIndexChange, control.currentIndex])
+
 	return (
 		<Box height={16}>
 			<List listView={listView}>{children}</List>
@@ -262,16 +258,11 @@ export function RunnerList({
 }
 
 type RunnerItemProps = {
-	onFocus: (item: RunnerItem) => void
 	item: RunnerItem
 }
 
-function RunnerListItem({ onFocus, item }: RunnerItemProps): React.ReactNode {
-	const {
-		isFocus,
-		isShallowFocus,
-		onFocus: gotFocus
-	} = useListItem<RunnerItem[]>()
+function RunnerListItem({ item }: RunnerItemProps): React.ReactNode {
+	const { isFocus, isShallowFocus } = useListItem<RunnerItem[]>()
 	const color: Color | undefined = isShallowFocus
 		? "green"
 		: isFocus
@@ -279,8 +270,6 @@ function RunnerListItem({ onFocus, item }: RunnerItemProps): React.ReactNode {
 			: undefined
 
 	const { label, icon } = item
-
-	gotFocus(() => onFocus(item))
 
 	return (
 		<Box minWidth={40}>

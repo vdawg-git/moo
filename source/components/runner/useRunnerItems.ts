@@ -16,7 +16,7 @@ import {
 	switchMap
 } from "rxjs"
 import { P, match } from "ts-pattern"
-import type { Result } from "typescript-result"
+import { Result } from "typescript-result"
 import type { RunnerItem } from "./runner"
 
 type SearchMode = "Playlists" | "Go to" | "Commands"
@@ -134,22 +134,37 @@ function createGetRunnerItems(): {
 	}
 }
 
-async function getPlaylistRunnerItems(): Promise<Result<RunnerItem[], Error>> {
-	return (await database.getPlaylists()).map(
-		R.map(
-			({ displayName, id }) =>
-				({
-					id: `playlist-${id}`,
-					label: displayName ?? id,
-					icon: appConfig.icons.playlist,
-					onSelect: () =>
-						appState.send({
-							type: "navigateTo",
-							goTo: { route: "playlist", parameter: { id } }
-						})
-				}) satisfies RunnerItem
+async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
+	const home: RunnerItem = {
+		id: "all-tracks",
+		label: "All tracks",
+		icon: appConfig.icons.playlist,
+		onSelect: () =>
+			appState.send({ type: "navigateTo", goTo: { route: "home" } })
+	}
+
+	const playlists = await Result.fromAsync(database.getPlaylists())
+		.map(
+			R.map(
+				({ displayName, id }) =>
+					({
+						id: `playlist-${id}`,
+						label: displayName ?? id,
+						icon: appConfig.icons.playlist,
+						onSelect: () =>
+							appState.send({
+								type: "navigateTo",
+								goTo: { route: "playlist", parameter: { id } }
+							})
+					}) satisfies RunnerItem
+			)
 		)
-	)
+		.onFailure((error) =>
+			addErrorNotification("Failed to get playlists for search", error)
+		)
+		.getOrDefault([] as RunnerItem[])
+
+	return [home, ...playlists]
 }
 
 function rawInputToPrefixed(input: string): ParsedInput {
@@ -186,8 +201,6 @@ function getRunnerCommands(): RunnerItem[] {
 		}))
 }
 
-async function getPossibleGotos(): Promise<
-	Result<readonly RunnerItem[], Error>
-> {
+async function getPossibleGotos(): Promise<readonly RunnerItem[]> {
 	return getPlaylistRunnerItems()
 }
