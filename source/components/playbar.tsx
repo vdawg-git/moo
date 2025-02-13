@@ -66,8 +66,12 @@ function TrackDisplay({ track }: { track: Track }) {
 
 	return (
 		<Box paddingLeft={1} flexDirection="column">
-			<Text>{track.title ?? track.id}</Text>
-			<Text dimColor>{artist ?? "Unknown"}</Text>
+			<Box>
+				<Text>{track.title ?? track.id}</Text>
+			</Box>
+			<Box>
+				<Text dimColor>{artist ?? "Unknown"}</Text>
+			</Box>
 		</Box>
 	)
 }
