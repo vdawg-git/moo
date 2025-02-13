@@ -7,7 +7,12 @@ import type { TrackId } from "#/database/types"
  *
  * Right now this is overkill as we only support direct local playback,
  * but it might be useful if we want to support Spotify, or MPD as well.
+ *
  * */
+// And because we want to support multiple player backends,
+// this also means that we have to duplicate some logic within each player
+// to handle its own state
+// (mpv's `loadfile` and `pause false` needs state, Spotify manages if for you for example)
 export interface Player {
 	/**
 	 * Plays the specified track.

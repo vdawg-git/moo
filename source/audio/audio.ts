@@ -49,7 +49,9 @@ export function registerAudioPlayback() {
 	const playEventsSubscription = toPlay$
 		.pipe(
 			switchMap((track) => track?.events$ ?? EMPTY),
-			tap((playEvent) => logg.debug(`playevent: ${playEvent.type}`, playEvent))
+			tap((playEvent) =>
+				logg.debug(`playevent: ${playEvent.type}`, playEvent, "playevent")
+			)
 		)
 		.subscribe((event) =>
 			match(event)
@@ -71,7 +73,15 @@ export function registerAudioPlayback() {
 	const playSubscription = toPlay$
 		.pipe(startWith(undefined), pairwise())
 		.subscribe(([previous, current]) => {
-			if (previous?.sourceProvider !== current?.sourceProvider) {
+			// Wether the source has changed and the current player should be cleared
+			// Do not clear if previous or current is undefined, because this could just
+			// mean that the playback got paused.
+			const hasSourceChanged =
+				previous &&
+				current &&
+				previous.sourceProvider !== current?.sourceProvider
+
+			if (hasSourceChanged) {
 				previous?.clear()
 			}
 

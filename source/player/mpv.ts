@@ -14,12 +14,12 @@ import {
 } from "rxjs"
 import { match } from "ts-pattern"
 import type { JsonValue } from "type-fest"
-import { Result } from "typescript-result"
+import { type AsyncResult, Result } from "typescript-result"
 import { z } from "zod"
 import { TEMP_DIRECTORY } from "#/constants"
 import { logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
-import { type Socket$, createSocketClient } from "./socket"
+import { type SocketWrapper, createSocketClient } from "./socket"
 import type { Player, PlayerEvent } from "./types"
 
 const socketPath = path.join(TEMP_DIRECTORY, "mpv.sock")
@@ -35,18 +35,17 @@ const mpvReply = z.object({
 const endFileEvent = z.object({
 	event: z.literal("end-file"),
 	reason: z.enum(["eof", "stop", "quit", "error", "redirect", "unknown"]),
+	/** not used by us */
 	playlist_entry_id: z.number().optional()
 })
+const otherEvents = z.object({
+	event: z.enum(["property-change", "shutdown"]),
+	id: z.number().optional(),
+	name: z.string().optional(),
+	data: z.any()
+})
 
-const mpvEvent = z.union([
-	z.object({
-		event: z.enum(["property-change", "shutdown"]),
-		id: z.number().optional(),
-		name: z.string().optional(),
-		data: z.any()
-	}),
-	endFileEvent
-])
+const mpvEvent = z.union([otherEvents, endFileEvent])
 
 // TODO restart on mpv crash
 // and better error handling
@@ -55,16 +54,28 @@ const mpvEvent = z.union([
 export function createMpvPlayer(): Player {
 	const socket = spawnMpv()
 
+	const events$ = socketToPlayerEvents(socket)
+
 	return {
 		play: async (id) => {
 			// mpv's loadfile command always succeeds, even if the file does not exist.
-			// So lets add a check here..
 			const doesFileExist = await Bun.file(id).exists()
 			if (!doesFileExist) {
 				return Result.error(new Error(`File ${id} is not accessible.`))
 			}
 
-			return runCommand("loadfile", [id], socket)
+			return (
+				runCommand("get_property", ["path"], socket)
+					// needed as getting `path` will error if no playback is set
+					.recover(() => undefined)
+					.map((filepath) =>
+						filepath === id
+							? runCommand("set_property", ["pause", false], socket)
+							: runCommand("loadfile", [id], socket).map(() =>
+									runCommand("set_property", ["pause", false], socket)
+								)
+					)
+			)
 		},
 
 		pause: async () => runCommand("set_property", ["pause", true], socket),
@@ -75,14 +86,17 @@ export function createMpvPlayer(): Player {
 
 		clear: async () => runCommand("stop", [], socket),
 
-		events$: socketToPlayerEvents(socket)
+		events$
 	}
 }
 
+/** Transforms the events MPV sends us to `PlayerEvent`s */
 function socketToPlayerEvents(
-	socket: Promise<Socket$<JsonValue[]>> | Socket$<JsonValue[]>
+	socket: Promise<SocketWrapper<JsonValue[]>> | SocketWrapper<JsonValue[]>
 ): Observable<PlayerEvent> {
-	return (isPromise(socket) ? from(socket) : of(socket)).pipe(
+	const wrapper$ = isPromise(socket) ? from(socket) : of(socket)
+
+	return wrapper$.pipe(
 		concatMap((socket) => socket.events$),
 		concatMap((event) =>
 			match(event)
@@ -116,12 +130,22 @@ function parseEvent(event: z.infer<typeof mpvEvent>): PlayerEvent | undefined {
 		)
 
 		.with({ event: "end-file" }, ({ reason }) => {
-			const toEmit: PlayerEvent =
-				reason === "eof"
-					? { type: "finishedTrack" }
-					: { type: "error", error: `Track ended unexpected: ${reason}` }
-
-			return toEmit
+			return (
+				match(reason)
+					.returnType<PlayerEvent | undefined>()
+					.with("error", () => ({
+						type: "error",
+						error: "Error ending track"
+					}))
+					// reached end of the playback (end of file)
+					.with("eof", () => ({ type: "finishedTrack" }))
+					// user pressed `pause`
+					.with("stop", () => undefined)
+					.otherwise(() => ({
+						type: "error",
+						error: `Track ended unexpected: ${reason}`
+					}))
+			)
 		})
 
 		.with({ event: "shutdown" }, (event) => {
@@ -133,7 +157,7 @@ function parseEvent(event: z.infer<typeof mpvEvent>): PlayerEvent | undefined {
 		.exhaustive()
 }
 
-async function runCommand(
+function runCommand(
 	command:
 		| "get_property"
 		| "loadfile"
@@ -143,45 +167,48 @@ async function runCommand(
 		| "event"
 		| "stop",
 	args: JsonValue[],
-	socket: Promise<Socket$<JsonValue[]>> | Socket$<JsonValue[]>
-): Promise<Result<void, Error>> {
-	const { client, events$ } = await socket
-	const { payload, id: requestId } = createPayload(command, args)
+	socket: Promise<SocketWrapper<JsonValue[]>>
+): AsyncResult<unknown, Error> {
+	const waitForCommand: Promise<unknown> = socket.then(
+		({ client, events$ }) =>
+			new Promise((resolve, reject) => {
+				const { payload, id: requestId } = createPayload(command, args)
 
-	logg.debug(`COMMAND ${command}`, { requestId, args })
-	client.write(payload)
+				logg.debug("mpv command", { command, args, requestId })
+				client.write(payload)
 
-	const waitForCommand: Promise<void> = new Promise((resolve, reject) => {
-		const timeoutId = setTimeout(() => {
-			subscription.unsubscribe()
-			reject(`Timeout: ${payload}`)
-		}, 400)
+				const timeoutId = setTimeout(() => {
+					subscription.unsubscribe()
+					reject(`Timeout: ${payload}`)
+				}, 400)
 
-		const subscription = events$
-			.pipe(
-				filter((event) => event.type === "data"),
-				concatMap(({ data }) =>
-					Promise.all(data.map((toTry) => mpvReply.safeParseAsync(toTry))).then(
-						(results) =>
-							results.find((result) => {
-								return result.success && result.data.request_id === requestId
-							})?.data
+				const subscription = events$
+					.pipe(
+						filter((event) => event.type === "data"),
+						concatMap(async ({ data }) => {
+							const parsed = await Promise.all(
+								data.map((toParse) => mpvReply.safeParseAsync(toParse))
+							)
+
+							return parsed.find(
+								(result) => result.data?.request_id === requestId
+							)?.data
+						}),
+						filter(isNonNullish),
+						take(1)
 					)
-				),
-				filter(isNonNullish),
-				take(1)
-			)
-			.subscribe((response) => {
-				clearTimeout(timeoutId)
+					.subscribe((response) => {
+						clearTimeout(timeoutId)
 
-				if (response.error) {
-					reject({ error: response.error, requestId })
-					return
-				}
+						if (response.error) {
+							reject({ error: response.error, requestId })
+							return
+						}
 
-				resolve(undefined)
+						resolve(response.data)
+					})
 			})
-	})
+	)
 
 	return Result.fromAsyncCatching(waitForCommand)
 }
@@ -198,7 +225,7 @@ function createPayload(
 	return { payload: JSON.stringify(payload) + "\n", id }
 }
 
-async function spawnMpv(): Promise<Socket$<JsonValue[]>> {
+async function spawnMpv(): Promise<SocketWrapper<JsonValue[]>> {
 	await mkdir(path.dirname(socketPath), { recursive: true })
 
 	const mpvFlags = [

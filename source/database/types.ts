@@ -88,7 +88,8 @@ export abstract class Track {
 		Result.fromAsync(this.player.play(this.id)).onFailure((error) =>
 			addErrorNotification(
 				`Failed to play track ${this.title ?? this.id}`,
-				error
+				error,
+				"Track playback failed"
 			)
 		)
 	}
@@ -105,7 +106,8 @@ export abstract class Track {
 		Result.fromAsync(this.player.clear()).onFailure((error) =>
 			addErrorNotification(
 				`Failed to clear old track ${this.title ?? this.id}`,
-				error
+				error,
+				"Failed to clear player"
 			)
 		)
 	}

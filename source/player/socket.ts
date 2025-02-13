@@ -8,7 +8,7 @@ export type SocketEvents<T> =
 	| { type: "close" }
 	| { type: "open" }
 
-export type Socket$<T> = {
+export type SocketWrapper<T> = {
 	events$: Observable<SocketEvents<T>>
 	client: Socket<undefined>
 }
@@ -23,7 +23,7 @@ export async function createSocketClient<T>(
 		 * */
 		onData: (data: Buffer<ArrayBufferLike>) => T
 	}
-): Promise<Socket$<T>> {
+): Promise<SocketWrapper<T>> {
 	const events$ = new Subject<SocketEvents<T>>()
 
 	const client = await Bun.connect({
