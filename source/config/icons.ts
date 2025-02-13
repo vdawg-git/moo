@@ -8,8 +8,8 @@ export const iconsSchema = z
 			.describe("The play icon, also used as the playing indicator"),
 
 		pause: z.string().default("").describe("The pause icon"),
-		next: z.string().default("󰼧").describe("Play next icon."),
-		previous: z.string().default("󰼨").describe("Play previous icon."),
+		next: z.string().default(">").describe("Play next icon."),
+		previous: z.string().default("<").describe("Play previous icon."),
 
 		playingIndicator: z
 			.string()

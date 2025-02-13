@@ -6,11 +6,10 @@ import { Box, Text } from "tuir"
 
 export function Playbar() {
 	const currentTrack = useCurrentTrack()
-	const playbackState = usePlaybackState()
 
 	return (
 		<Box flexDirection="column" width={"100%"}>
-			<Box borderStyle={"round"} borderDimColor paddingX={1}>
+			<Box borderStyle={"round"} height={4} borderDimColor paddingX={1}>
 				<Box flexGrow={1}>
 					{currentTrack ? (
 						<TrackDisplay track={currentTrack} />
@@ -23,12 +22,8 @@ export function Playbar() {
 					)}
 				</Box>
 
-				<Text dimColor={playbackState !== "playing"}>[ {playbackState} ]</Text>
+				<MediaControl />
 			</Box>
-
-			{/* Currently mouse support does not seem to work
-			at least not in Kitty. If it works in the future, lets add the clickable media controls */}
-			{/* <MediaControl /> */}
 		</Box>
 	)
 }
@@ -39,13 +34,16 @@ function MediaControl() {
 
 	return (
 		<Box>
-			<Box padding={2} onClick={() => appState.send({ type: "previousTrack" })}>
+			<Box
+				paddingX={1}
+				onClick={() => appState.send({ type: "previousTrack" })}
+			>
 				<Text dimColor={!hasPlayback}>{appConfig.icons.previous}</Text>
 			</Box>
 
 			<Box
 				onClick={() => appState.send({ type: "togglePlayback" })}
-				padding={2}
+				paddingX={1}
 			>
 				<Text dimColor={!hasPlayback}>
 					{playbackState === "playing"
@@ -54,7 +52,7 @@ function MediaControl() {
 				</Text>
 			</Box>
 
-			<Box padding={2} onClick={() => appState.send({ type: "nextTrack" })}>
+			<Box paddingX={1} onClick={() => appState.send({ type: "nextTrack" })}>
 				<Text dimColor={!hasPlayback}>{appConfig.icons.next}</Text>
 			</Box>
 		</Box>

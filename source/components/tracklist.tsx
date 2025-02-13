@@ -1,7 +1,15 @@
-import { appConfig } from "#/config/config"
 import path from "node:path"
+import {
+	Box,
+	type Color,
+	List,
+	Text,
+	useKeymap,
+	useList,
+	useListItem
+} from "tuir"
+import { appConfig } from "#/config/config"
 import type { Track } from "../database/types"
-import { Box, List, Text, useKeymap, useList, useListItem } from "tuir"
 
 type PlaylistProps = {
 	tracks: readonly Track[]
