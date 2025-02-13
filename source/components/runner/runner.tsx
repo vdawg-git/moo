@@ -212,7 +212,7 @@ function RunnerInput({
 		>
 			<TextInput
 				onChange={_onChangeInternal}
-				textStyle={{ inverse: true }}
+				textStyle={{ bold: isFocus }}
 				cursorColor={"blue"}
 				autoEnter
 				exitKeymap={[
@@ -285,7 +285,13 @@ export function RunnerList({
 	})
 
 	useEvent("down", control.nextItem)
-	useEvent("up", control.prevItem)
+	useEvent("up", () => {
+		if (control.currentIndex === 0) {
+			node.control.up()
+			return
+		}
+		control.prevItem()
+	})
 	useEvent("next", node.control.next)
 	useEvent("select", onSelect)
 	useEvent("delete", onDeletePressed)
@@ -316,52 +322,27 @@ type RunnerItemProps = {
 
 function RunnerListItem({ item }: RunnerItemProps): React.ReactNode {
 	const { isFocus, isShallowFocus } = useListItem<RunnerItem[]>()
-	const color: Color | undefined = isShallowFocus
+	const backgroundColor: Color | undefined = isShallowFocus
 		? "green"
 		: isFocus
 			? "blue"
 			: undefined
+	const color: Color | undefined = isShallowFocus || isFocus ? "black" : "white"
 
 	const { label, icon } = item
 
 	return (
 		<Box minWidth={40}>
 			<Box marginRight={1} width={1}>
-				<Text color={color} wrap="truncate-end">
+				<Text color={backgroundColor} wrap="truncate-end">
 					{icon ?? ""}
 				</Text>
 			</Box>
-			<Text backgroundColor={color} wrap="truncate-end">
+			<Text backgroundColor={backgroundColor} color={color} wrap="truncate-end">
 				{label}
 			</Text>
 		</Box>
 	)
-}
-
-function getSpecialKeys(
-	inputs: KeyInput | KeyInput[],
-	pressedKeys: PressedSpecialKeys = new Set()
-): PressedSpecialKeys {
-	logg.debug("ihnputs", { inputs })
-	if (Array.isArray(inputs)) {
-		for (const input of inputs) {
-			if (Array.isArray(input)) {
-				getSpecialKeys(input, pressedKeys)
-				continue
-			}
-
-			if (input.key) {
-				pressedKeys.add(input.key)
-			}
-		}
-
-		return pressedKeys
-	}
-
-	const key = inputs.key
-	!!key && key && pressedKeys.add(key)
-
-	return pressedKeys
 }
 
 /** Gets the pressed letters. Ignores special keys like return */

@@ -192,7 +192,7 @@ type ParsedInput = {
 /** A function because otherwise we have circular imports  */
 function getRunnerCommands(): RunnerItem[] {
 	return appCommands
-		.filter((command) => command.id !== "runner.open")
+		.filter((command) => !command.id.startsWith("runner."))
 		.map(({ label, callback, id }) => ({
 			id,
 			label,

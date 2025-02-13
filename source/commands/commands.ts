@@ -41,11 +41,20 @@ export type AppCommand = Readonly<{
  */
 export const appCommands = [
 	{
-		id: "runner.open",
+		// ids starting with `runner.` get filtered out by the runner itself
+		id: "runner.openCommands",
 		label: "Open runner",
 		keybinding: [{ key: ":", modifiers: [] }],
 		description:
 			"Open the command runner from which you can access all commands for the app.",
+		callback: () => openRunner(">")
+	},
+	{
+		id: "runner.openGoto",
+		label: "Go to..",
+		keybinding: [{ key: ";", modifiers: [] }],
+		description:
+			"Open the switcher from where you can go to different parts of your library.",
 		callback: () => openRunner()
 	},
 
@@ -98,6 +107,7 @@ export const appCommands = [
 	},
 
 	{
+		// TODO not implemented yet. First implement artists, albums etc
 		id: "goTo.playlists",
 		label: "Open playlist",
 		keybinding: [
