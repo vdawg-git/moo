@@ -1,6 +1,8 @@
 import { openRunner } from "#/components/runner/runner"
 import type { KeyInput } from "#/config/shortcutParser"
+import { currentTrack$ } from "#/state/derivedState"
 import { appState } from "#/state/state"
+import { firstValueFrom } from "rxjs"
 
 /**
  * A user command which can be executed via the runner or shortcuts.
@@ -70,6 +72,29 @@ export const appCommands = [
 		description:
 			"Global keybinding. Toggles the playback from pause to play and vice versa.",
 		callback: () => appState.send({ type: "togglePlayback" })
+	},
+
+	{
+		id: "player.seekForward",
+		label: "Seeks forward",
+		keybinding: [{ key: "L", modifiers: [] }],
+		description: "Seeks forward a couple of seconds.",
+		callback: async () => {
+			const track = await firstValueFrom(currentTrack$)
+			return track?.seek(5)
+		}
+	},
+	{
+		id: "player.seekBackward",
+		label: "Seeks backward",
+		keybinding: [{ key: "H", modifiers: [] }],
+		description: "Seeks backward a couple of seconds.",
+		callback: async () => {
+			const track = await firstValueFrom(currentTrack$)
+			// A bit longer bc when we seek forward
+			// and then decide to go back some seconds have already passed
+			return track?.seek(-7)
+		}
 	},
 
 	{

@@ -84,6 +84,10 @@ export abstract class Track {
 		this.sourceProvider = sourceProvider
 	}
 
+	// We wrap the player like that as it needs to know the track id anyway,
+	// like that we can control always the correct player with the correct id
+	// and a simpler interface
+
 	play() {
 		Result.fromAsync(this.player.play(this.id)).onFailure((error) =>
 			addErrorNotification(
@@ -108,6 +112,17 @@ export abstract class Track {
 				`Failed to clear old track ${this.title ?? this.id}`,
 				error,
 				"Failed to clear player"
+			)
+		)
+	}
+
+	/** Duration in seconds to seek. Can be negative */
+	seek(duration: number) {
+		Result.fromAsync(this.player.seek(duration)).onFailure((error) =>
+			addErrorNotification(
+				`Failed to seek track ${this.id}`,
+				error,
+				"Seek failed"
 			)
 		)
 	}
