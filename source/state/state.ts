@@ -3,14 +3,14 @@ import { createStoreWithProducer } from "@xstate/store"
 import { deepEquals } from "bun"
 import { produce } from "immer"
 import type { ReactNode } from "react"
+import { Observable, shareReplay } from "rxjs"
 import { match } from "ts-pattern"
 import type { Except } from "type-fest"
 import { Result } from "typescript-result"
 import { database } from "#/database/database"
+import { enumarateError, logg } from "#/logs"
 import type { PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
-import { Observable, shareReplay } from "rxjs"
-import { logg, enumarateError } from "#/logs"
 
 export interface AppState {
 	playback: {
@@ -348,4 +348,4 @@ export const appState$: Observable<AppState> = new Observable<AppState>(
 
 		return () => subscription.unsubscribe()
 	}
-).pipe(shareReplay({ refCount: true }))
+).pipe(shareReplay())
