@@ -5,7 +5,8 @@
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
-		"dev": "bun --watch . ",
+		"dev": "bun --watch .",
+		"prod": "NODE_ENV=production bun .",
 		"writeSchemas": "bun run ./scripts/writeSchemas.ts"
 	},
 	"dependencies": {
