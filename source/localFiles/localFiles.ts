@@ -144,92 +144,123 @@ async function parseMusicFile(
 			.then((buffer) =>
 				parseBuffer(buffer, { path: filePath }, { duration: true })
 			)
-	).map(
-		async ({
-			common: { track, picture, ...tags },
-			format: { duration, bitrate, codec }
-		}) => {
-			const releasedate =
-				(tags.releasedate && parseDate.fromString(tags.releasedate)) ||
-				undefined
+	).map(async ({ common: { track, picture, ...tags }, format }) => {
+		const releasedate =
+			(tags.releasedate && parseDate.fromString(tags.releasedate)) || undefined
 
-			const coverData = selectCover(picture)
-			let coverName =
-				coverData && `${Bun.hash(coverData.data)}.${coverData.type}`
-			// not so nice, but where would this side-effect make more sense
-			if (coverName && coverData) {
-				const coverPath = path.join(
-					DATA_DIRECTORY,
-					"pictures/tracks/local/",
-					coverName
-				)
-				// TODO put this somewhere else
-				await Bun.write(coverPath, coverData.data).catch((error) => {
-					coverName = null
-					logg.error(`Failed to save cover image of ${filePath}`, error)
-				})
-			}
-
-			const joinedTags = mapValues(
-				{
-					comment: tags.comment,
-					genre: tags.genre,
-					composer: tags.composer,
-					mixer: tags.mixer,
-					technician: tags.technician,
-					label: tags.label,
-					category: tags.category,
-					djmixer: tags.djmixer,
-					writer: tags.writer,
-					remixer: tags.remixer,
-					arranger: tags.arranger,
-					engineer: tags.engineer,
-					publisher: tags.publisher,
-					catalognumber: tags.catalognumber,
-					releasetype: tags.releasetype,
-					isrc: tags.isrc,
-					performerInstrument: tags["performer:instrument"],
-					lyricist: tags.lyricist,
-					conductor: tags.conductor,
-					producer: tags.producer,
-					keywords: tags.keywords
-				} satisfies Partial<Record<keyof TrackData, unknown>>,
-				(value) => value?.join(", ")
+		const coverData = selectCover(picture)
+		let coverName = coverData && `${Bun.hash(coverData.data)}.${coverData.type}`
+		// not so nice, but where would this side-effect make more sense
+		if (coverName && coverData) {
+			const coverPath = path.join(
+				DATA_DIRECTORY,
+				"pictures/tracks/local/",
+				coverName
 			)
-
-			return {
-				...tags,
-
-				id: filePath as unknown as TrackId,
-				sourceProvider: "local",
-
-				releasedate: releasedate?.isValid() ? releasedate : undefined,
-
-				duration: duration ?? 0,
-
-				...joinedTags,
-
-				rating: tags.rating
-					?.map((r) => r.rating ?? 0)
-					.reduce((previous, current) => Math.max(previous, current)),
-
-				picture: (coverName as FilePath | null) ?? undefined,
-
-				trackNumber: track?.no ?? undefined,
-				trackNumberTotal: track?.of ?? undefined,
-				disk: tags.disk?.no ?? undefined,
-				diskOf: tags.disk?.of ?? undefined,
-				movementIndex: tags.movementIndex.no ?? undefined,
-				movementIndexTotal: tags.movementIndex.of ?? undefined,
-
-				bitrate,
-				codec
-			} satisfies TrackData
+			// TODO put this somewhere else
+			await Bun.write(coverPath, coverData.data).catch((error) => {
+				coverName = null
+				logg.error(`Failed to save cover image of ${filePath}`, error)
+			})
 		}
-	)
+
+		const {
+			duration,
+			bitrate,
+			codec,
+			audioMD5,
+			lossless,
+			modificationTime,
+			trackGain,
+			numberOfChannels,
+			numberOfSamples,
+			tool,
+			trackPeakLevel,
+			sampleRate,
+			bitsPerSample,
+			albumGain,
+			codecProfile,
+			container
+		} = format
+
+		const joinedTags = mapValues(
+			{
+				comment: tags.comment,
+				genre: tags.genre,
+				composer: tags.composer,
+				mixer: tags.mixer,
+				technician: tags.technician,
+				label: tags.label,
+				category: tags.category,
+				djmixer: tags.djmixer,
+				writer: tags.writer,
+				remixer: tags.remixer,
+				arranger: tags.arranger,
+				engineer: tags.engineer,
+				publisher: tags.publisher,
+				catalognumber: tags.catalognumber,
+				releasetype: tags.releasetype,
+				isrc: tags.isrc,
+				performerInstrument: tags["performer:instrument"],
+				lyricist: tags.lyricist,
+				conductor: tags.conductor,
+				producer: tags.producer,
+				keywords: tags.keywords
+			} satisfies Partial<Record<keyof TrackData, unknown>>,
+			(value) => value?.join(", ")
+		)
+
+		return {
+			...tags,
+
+			id: filePath as unknown as TrackId,
+			sourceProvider: "local",
+
+			releasedate: releasedate?.isValid() ? releasedate : undefined,
+
+			duration: duration ?? 0,
+
+			...joinedTags,
+
+			rating: tags.rating
+				?.map((r) => r.rating ?? 0)
+				.reduce((previous, current) => Math.max(previous, current)),
+
+			picture: (coverName as FilePath | null) ?? undefined,
+
+			trackNumber: track?.no ?? undefined,
+			trackNumberTotal: track?.of ?? undefined,
+			disk: tags.disk?.no ?? undefined,
+			diskOf: tags.disk?.of ?? undefined,
+			movementIndex: tags.movementIndex.no ?? undefined,
+			movementIndexTotal: tags.movementIndex.of ?? undefined,
+
+			bitrate,
+			codec,
+			audioMD5: audioMD5 && toHexString(audioMD5),
+			lossless,
+			modificationTime,
+			trackGain,
+			numberOfChannels,
+			numberOfSamples,
+			tool,
+			trackPeakLevel,
+			sampleRate,
+			bitsPerSample,
+			albumGain,
+			codecProfile,
+			container
+		} satisfies TrackData
+	})
 }
 
 function isSupportedFile(filepath: FilePath): boolean {
 	const extension = path.extname(filepath)
 	return extension === "" ? false : supportedFormats.includes(extension)
+}
+
+function toHexString(uint8Array: Uint8Array<ArrayBufferLike>): string {
+	return Array.from(uint8Array)
+		.map((byte) => byte.toString(16).padStart(2, "0"))
+		.join("")
 }

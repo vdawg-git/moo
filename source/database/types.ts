@@ -235,12 +235,25 @@ export abstract class Track {
 	readonly showMovement?: boolean
 	readonly bitrate?: number
 	readonly codec?: string
+	readonly audioMD5?: string
+	readonly lossless?: boolean
+	readonly modificationTime?: Date
+	readonly trackGain?: number
+	readonly numberOfChannels?: number
+	readonly numberOfSamples?: number
+	readonly tool?: string
+	readonly trackPeakLevel?: number
+	readonly sampleRate?: number
+	readonly bitsPerSample?: number
+	readonly albumGain?: number
+	readonly codecProfile?: string
+	readonly container?: string
 }
 
 /** Raw track data to be fed into the database */
 export type TrackData = Except<
 	Track,
-	"play" | "pause" | "events$" | "clear"
+	"play" | "pause" | "events$" | "clear" | "seek"
 > & {
 	/** The source of the track. Currently only `local` for local music is supported. */
 	sourceProvider: string

@@ -124,7 +124,20 @@ export const tracksTable = sqliteTable("tracks", {
 
 	// extra
 	bitrate: integer(),
-	codec: text()
+	codec: text(),
+	audioMD5: text(),
+	lossless: integer({ mode: "boolean" }),
+	modificationTime: integer({ mode: "timestamp_ms" }),
+	trackGain: integer(),
+	numberOfChannels: integer(),
+	numberOfSamples: integer(),
+	tool: text(),
+	trackPeakLevel: integer(),
+	sampleRate: integer(),
+	bitsPerSample: integer(),
+	albumGain: integer(),
+	codecProfile: text(),
+	container: text()
 })
 
 export const artistsTable = sqliteTable("artists", {

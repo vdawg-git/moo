@@ -1,12 +1,10 @@
-import { type SQL, eq, getTableColumns, inArray, or, sql } from "drizzle-orm"
+import { eq, inArray, or } from "drizzle-orm"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
-import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
 import { isNonNullish } from "remeda"
-import { Subject, noop } from "rxjs"
+import { Subject } from "rxjs"
 import { Result } from "typescript-result"
 import { databasePath } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
-import { logg } from "#/logs.js"
 import { schmemaToSql } from "#/smartPlaylists/toSql.js"
 import { createLocalPlayer } from "../player/player.js"
 import {
@@ -32,7 +30,7 @@ import {
 export const database = connectDatabase()
 
 function connectDatabase(): Database {
-	const db = drizzle({ connection: databasePath })
+	const db = drizzle(databasePath)
 	const changed$ = new Subject<string>()
 
 	// A lot of the api is not needed yet,
