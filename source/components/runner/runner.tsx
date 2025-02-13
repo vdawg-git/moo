@@ -18,6 +18,16 @@ import {
 } from "tuir"
 import { type AppModalContentProps, appState } from "#/state/state"
 import { useRunnerItems } from "./useRunnerItems"
+import { logg } from "#/logs"
+
+/**
+ * This component is a bit complicated,
+ * as in order for "J/K" to work for the list navigation,
+ * the list needs to be focused.
+ *
+ * So focus switching is required + plus all the other goodies from the VS Code runner.
+ */
+/** */
 
 const runnerId = "_runner"
 
@@ -62,11 +72,12 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		},
 		[]
 	)
-	const goToIndexRef = useRef<(nextIdx: number, center?: boolean) => void>()
+	const updateIndexRef =
+		useRef<(updater: (oldIndex: number) => number) => void>()
 	const onInputChange = useCallback(
 		(input: string) => {
 			setInput(input)
-			goToIndexRef.current?.(0)
+			updateIndexRef.current?.(() => 0)
 		},
 		[setInput]
 	)
@@ -97,6 +108,10 @@ function Runner({ modal, initialValue }: RunnerProps) {
 					onChange={onInputChange}
 					initialValue={initialValue}
 					bindUpdateValue={setUpdateInputValueRef}
+					onGoDown={() => {
+						updateIndexRef.current?.((oldIndex) => oldIndex + 1)
+						nodemap.control.down()
+					}}
 				/>
 			</Node.Box>
 
@@ -106,12 +121,26 @@ function Runner({ modal, initialValue }: RunnerProps) {
 						setActiveItem(runnerItems[index])
 					}}
 					onSelect={onSelect}
-					onOtherInput={(input) => {
-						updateInputValueRef.current?.((value) => value + input)
+					onOtherInput={(input, specialKey) => {
+						updateInputValueRef.current?.((oldValue) => {
+							logg.debug("xxx", {
+								value: oldValue ?? "ooo",
+								specialKey: specialKey ?? "yo"
+							})
+
+							return oldValue + input
+						})
+
+						if (input !== "") {
+							nodemap.control.goToNode("textinput")
+						}
+					}}
+					onDeletePressed={() => {
+						updateInputValueRef.current?.((oldValue) => oldValue.slice(0, -1))
 						nodemap.control.goToNode("textinput")
 					}}
-					bindGoToIndex={(goTo) => {
-						goToIndexRef.current = goTo
+					bindUpdateIndex={(updateIndex) => {
+						updateIndexRef.current = updateIndex
 					}}
 				>
 					{runnerItems.map((item) => (
@@ -129,8 +158,13 @@ type RunnerInputProps = {
 	onSelect: (value: string) => void
 	initialValue?: string
 	onClose: () => void
+	/**
+	 * When the user presses `down` while in the textinput
+	 * Should focus the list and go one item down in it.
+	 */
+	onGoDown: () => void
 	bindUpdateValue: (
-		setter: (updater: (oldValue: string) => string) => void
+		binder: (updater: (oldValue: string) => string) => void
 	) => void
 }
 
@@ -139,12 +173,13 @@ function RunnerInput({
 	initialValue,
 	onSelect,
 	onClose,
+	onGoDown,
 	bindUpdateValue
 }: RunnerInputProps): React.ReactNode {
 	const { control, isFocus } = useNode()
 
 	const {
-		onChange: onChange_,
+		onChange: _onChangeInternal,
 		value,
 		setValue
 	} = useTextInput(initialValue ?? "")
@@ -176,7 +211,7 @@ function RunnerInput({
 			borderTop={false}
 		>
 			<TextInput
-				onChange={onChange_}
+				onChange={_onChangeInternal}
 				textStyle={{ inverse: true }}
 				cursorColor={"blue"}
 				autoEnter
@@ -188,7 +223,7 @@ function RunnerInput({
 				]}
 				onExit={(_, char) => {
 					if (char === Key.tab) control.next()
-					if (char === Key.down) control.down()
+					if (char === Key.down) onGoDown()
 					if (char === Key.return) onSelect(value)
 					if (char === Key.esc) onClose()
 				}}
@@ -205,17 +240,25 @@ type RunnerListProps = {
 	 * When the user pressed a non-navigation key,
 	 * used to then focus the text input and update it
 	 */
-	onOtherInput: (letters: string) => void
-	// TODO on input text change the first item should
-	// be focused again
-	bindGoToIndex: (setter: (nextIdx: number, center?: boolean) => void) => void
+	onOtherInput: (letters: string, key: PressedSpecialKeys) => void
+	/**
+	 * Similiar to onOtherInput,
+	 * but just for when the user presses `backspace`
+	 *
+	 * Its a workaround for `useEvent` not emitting the special keys
+	 */
+	onDeletePressed: () => void
+	bindUpdateIndex: (
+		binder: (updater: (oldIndex: number) => number) => void
+	) => void
 }
 
 export function RunnerList({
 	children,
 	onSelect,
 	onOtherInput,
-	bindGoToIndex,
+	bindUpdateIndex,
+	onDeletePressed,
 	onIndexChange
 }: RunnerListProps) {
 	const node = useNode()
@@ -226,25 +269,35 @@ export function RunnerList({
 		unitSize: 1
 	})
 
+	const updateIndex = useCallback(
+		(updater: (oldIndex: number) => number) =>
+			control.goToIndex(updater(control.currentIndex)),
+		[control.currentIndex, control.goToIndex]
+	)
+
 	const { useEvent } = useKeymap({
 		down: [{ key: "down" }, { input: "j" }],
 		up: [{ key: "up" }, { input: "k" }],
 		next: [{ key: "tab" }],
 		select: [{ key: "return" }],
-		otherInput: [{ notInput: ["j", "k"] }]
+		otherInput: [{ notInput: ["j", "k"], notKey: ["backspace"] }],
+		delete: [{ key: "backspace" }]
 	})
 
 	useEvent("down", control.nextItem)
 	useEvent("up", control.prevItem)
 	useEvent("next", node.control.next)
 	useEvent("select", onSelect)
+	useEvent("delete", onDeletePressed)
 	useEvent("otherInput", (input) => {
-		input && onOtherInput(input)
+		if (input !== "") {
+			onOtherInput(input, new Set())
+		}
 	})
 
 	useEffect(() => {
-		bindGoToIndex(control.goToIndex)
-	}, [bindGoToIndex, control.goToIndex])
+		bindUpdateIndex(updateIndex)
+	}, [bindUpdateIndex, updateIndex])
 
 	useEffect(() => {
 		onIndexChange(control.currentIndex)
@@ -285,6 +338,32 @@ function RunnerListItem({ item }: RunnerItemProps): React.ReactNode {
 	)
 }
 
+function getSpecialKeys(
+	inputs: KeyInput | KeyInput[],
+	pressedKeys: PressedSpecialKeys = new Set()
+): PressedSpecialKeys {
+	logg.debug("ihnputs", { inputs })
+	if (Array.isArray(inputs)) {
+		for (const input of inputs) {
+			if (Array.isArray(input)) {
+				getSpecialKeys(input, pressedKeys)
+				continue
+			}
+
+			if (input.key) {
+				pressedKeys.add(input.key)
+			}
+		}
+
+		return pressedKeys
+	}
+
+	const key = inputs.key
+	!!key && key && pressedKeys.add(key)
+
+	return pressedKeys
+}
+
 /** Gets the pressed letters. Ignores special keys like return */
 function keyInputUnionToText(
 	inputs: KeyInput | KeyInput[]
@@ -298,3 +377,6 @@ function keyInputUnionToText(
 			: (inputs.input ?? "")
 	}
 }
+
+type SpecialKeys = keyof (typeof Key & { ctrl: undefined })
+type PressedSpecialKeys = Set<SpecialKeys>
