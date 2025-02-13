@@ -9,7 +9,8 @@ const keybinds = appCommands.map(({ id, description, keybinding }) =>
 			description + "\n" + `Default: "${displayKeybinding(keybinding)}"`
 		)
 )
-const toUnionize = [keybinds[0], keybinds[1], ...keybinds.slice(2)] as const
+// biome-ignore lint/style/noNonNullAssertion: Zod workaround for its non-empty array argument
+const toUnionize = [keybinds[0]!, keybinds[1]!, ...keybinds.slice(2)] as const
 
 export const keybindingsSchema = z
 	.array(z.union(toUnionize))

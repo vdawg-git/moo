@@ -1,19 +1,19 @@
-import type { Track } from "#/database/types"
-import { logg } from "#/logs"
-import { addErrorNotification, appState, appState$ } from "#/state/state"
 import {
+	EMPTY,
+	type Observable,
+	Subject,
 	auditTime,
 	distinctUntilChanged,
-	EMPTY,
 	map,
 	pairwise,
 	startWith,
-	Subject,
 	switchMap,
-	tap,
-	type Observable
+	tap
 } from "rxjs"
 import { match } from "ts-pattern"
+import type { Track } from "#/database/types"
+import { logg } from "#/logs"
+import { addErrorNotification, appState, appState$ } from "#/state/state"
 
 const toPlay$: Observable<Track | undefined> = appState$.pipe(
 	map((state) => {

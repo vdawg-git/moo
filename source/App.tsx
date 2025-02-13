@@ -21,12 +21,12 @@ import {
 	updateSmartPlaylists,
 	watchPlaylists
 } from "./smartPlaylists/smartPlaylist"
-import { reactToState } from "./state/stateReact"
+import { manageNotifications } from "./state/stateReact"
 
 const App = () => {
 	setCharRegisterSize(1)
 	useEffect(() => {
-		const unsubscribes = [registerAudioPlayback(), reactToState()]
+		const unsubscribes = [registerAudioPlayback(), manageNotifications()]
 		setMouseReporting(true)
 
 		return () => {

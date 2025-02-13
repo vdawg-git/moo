@@ -7,9 +7,9 @@ import {
 import { deepEquals } from "bun"
 
 /**
- * Reacts to state changes.
+ * Will get refactored once its bigger
  */
-export function reactToState() {
+export function manageNotifications() {
 	const modals = appState$
 		.pipe(
 			filter(
@@ -20,7 +20,7 @@ export function reactToState() {
 			map((state) => state.notifications.map(({ id }) => id)),
 			distinctUntilChanged(deepEquals)
 		)
-		.subscribe((notifications) => {
+		.subscribe((_notifications) => {
 			appState.send({
 				type: "addModal",
 				modal: {

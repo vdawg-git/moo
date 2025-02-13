@@ -3,13 +3,16 @@ import { appState, type PlaybackSource } from "./state"
 import type { Track } from "#/database/types"
 import type { PlayingState } from "#/types/types"
 import { deepEquals } from "bun"
+import { getCurrentTrackFromState } from "./stateUtils"
+
+// /
+// Hooks for the global state.
+// You can also just use `useSelector` from XState directly
+// /
 
 export const useCurrentTrack: () => Track | undefined = () =>
 	useSelector(appState, (snapshot) => {
-		const index = snapshot.context.playback.index
-		const tracks = snapshot.context.playback.queue?.tracks
-
-		return tracks?.[index]
+		return getCurrentTrackFromState(snapshot.context)
 	})
 
 export const usePlaybackState: () => PlayingState = () =>
