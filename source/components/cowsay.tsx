@@ -1,4 +1,4 @@
-import cowsay, { type IOptions as CowOptions } from "cowsay"
+import { say, type IOptions as CowOptions } from "cowsay"
 import { Text } from "tuir"
 
 export const cowGlasses = {
@@ -14,5 +14,5 @@ export const cowGlasses = {
 type CowSayProps = { children: string } & Omit<CowOptions, "text">
 
 export function CowSay({ children, ...options }: CowSayProps) {
-	return <Text>{cowsay.say({ text: children, ...options })}</Text>
+	return <Text>{say({ text: children, ...options })}</Text>
 }

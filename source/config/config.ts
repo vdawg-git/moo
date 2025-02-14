@@ -1,6 +1,6 @@
 import path from "node:path"
 import type { BunFile } from "bun"
-import { parse as parseJson5, stringify as stringifyJson5 } from "json5"
+import json5 from "json5"
 import { Result } from "typescript-result"
 import untildify from "untildify"
 import { z } from "zod"
@@ -50,7 +50,7 @@ const defaultConfig: Partial<Config> = {
 const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")
 
 async function parseConfig(file: BunFile): Promise<Result<Config, unknown>> {
-	const config = Result.fromAsyncCatching(parseJson5(await file.text())).map(
+	const config = Result.fromAsyncCatching(json5.parse(await file.text())).map(
 		(data) => Result.try(() => appConfigSchema.parse(data))
 	)
 
@@ -59,7 +59,7 @@ async function parseConfig(file: BunFile): Promise<Result<Config, unknown>> {
 
 async function writeDefaultConfig(): Promise<Result<Config, Error>> {
 	return Result.fromAsync(
-		Bun.write(defaultConfigPath, stringifyJson5(defaultConfig, undefined, 4))
+		Bun.write(defaultConfigPath, json5.stringify(defaultConfig, undefined, 4))
 	).map(() => appConfigSchema.parse(defaultConfig))
 }
 

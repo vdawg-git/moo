@@ -13,9 +13,8 @@ export const LOGS_DIRECTORY = appPaths.log
 export const TEMP_DIRECTORY = appPaths.temp
 
 // Drizzle Kit, which uses the databasePath, runs in CommonJs, so import.meta is not available
-export const APP_ROOT = import.meta?.dirname
-	? path.join(import.meta.dirname, "../")
-	: path.join(__dirname, "../")
+// Also import.meta.dirname will be "/$bunfs/root" when the app is compiled
+export const APP_ROOT = path.dirname(process.execPath)
 
 export const databasePath = IS_DEV
 	? path.join(APP_ROOT, "db.db")
