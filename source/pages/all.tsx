@@ -18,7 +18,6 @@ export function All() {
 					All tracks{" "}
 					<Text color={"gray"}>{amount ? `(${amount} tracks)` : ""}</Text>
 				</Text>
-
 				{response.isLoading ? (
 					<Text>Loading...</Text>
 				) : (
@@ -39,7 +38,6 @@ export function All() {
 					)
 				)}
 			</Box>
-
 			<Playbar />
 		</>
 	)

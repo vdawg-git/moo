@@ -91,7 +91,7 @@ export function observeQuery<T>(
 		startWith(
 			isNullish(initialCacheValue)
 				? { data: undefined, isFetching: true, isLoading: true as const }
-				: // we dont need to refetch data, as we just query our own db
+				: // we dont need to refetch stale data, as we just query our own db and we have a change notification with a refetch for that
 					{
 						data: Result.ok(initialCacheValue),
 						isFetching: false,
