@@ -5,7 +5,12 @@ import { Subject } from "rxjs"
 import { Result } from "typescript-result"
 import { databasePath } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
+import { logg } from "#/logs.js"
 import { schmemaToSql } from "#/smartPlaylists/toSql.js"
+// @ts-expect-error
+import setupSqlRaw from "../../drizzle/0000_fluffy_human_torch.sql" with {
+	type: "text"
+}
 import { createLocalPlayer } from "../player/player.js"
 import {
 	albumsTable,
@@ -29,13 +34,12 @@ import {
 
 export const database = connectDatabase()
 
-function connectDatabase(): Database {
-	const db = drizzle(databasePath)
+function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 	const changed$ = new Subject<string>()
 
 	// A lot of the api is not needed yet,
 	// so they are just placeholders for now
-	const database: Database = {
+	return {
 		getAlbum: async () => Result.ok(undefined),
 		getAlbums: async (ids = []) => Result.ok([]),
 
@@ -131,9 +135,47 @@ function connectDatabase(): Database {
 		},
 
 		changed$
-	}
+	} satisfies Database
+}
 
-	return database
+/**
+ * Proxies access to the database object,
+ * so that all methods first await the initialization/migration
+ * of the database
+ */
+function connectDatabase(): Database {
+	const db = drizzle(databasePath)
+
+	const waitForInit = initDatabase(db)
+	const base = connectDatabaseProxied(db)
+
+	/**
+	 * We need this as the proxy returns
+	 * a new function on each get,
+	 * defeating Reacts hook system
+	 */
+
+	// biome-ignore lint/complexity/noBannedTypes: We want to type "any" function
+	const stableIdentityFunctions: Record<string | symbol, Function> = {}
+
+	return new Proxy(base, {
+		get: (target, prop) => {
+			// @ts-expect-error
+			const gotten = target[prop]
+
+			if (typeof gotten === "function") {
+				if (!stableIdentityFunctions[prop]) {
+					stableIdentityFunctions[prop] = async (...args: unknown[]) => {
+						return waitForInit.then(() => gotten(...args))
+					}
+				}
+
+				return stableIdentityFunctions[prop]
+			}
+
+			return gotten
+		}
+	})
 }
 
 const localPlayer = createLocalPlayer()
@@ -279,4 +321,27 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
 
 	// @ts-expect-error
 	return Object.values(sum)
+}
+
+/**
+ * Can throw and shoudn't be handled,
+ * as the database setup is needed for everything
+ */
+async function initDatabase(db: BunSQLiteDatabase): Promise<void> {
+	const shouldWork = await db
+		.select({ id: tracksTable.id })
+		.from(tracksTable)
+		.limit(1)
+		.then(() => true)
+		.catch(() => false)
+
+	if (shouldWork) return
+
+	logg.debug("running database init..")
+
+	const setupCalls = (setupSqlRaw as string).split("--> statement-breakpoint")
+
+	return db.transaction((tx) => {
+		setupCalls.forEach((setup) => tx.run(setup))
+	})
 }

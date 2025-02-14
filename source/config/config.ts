@@ -47,10 +47,7 @@ const defaultConfig: Partial<Config> = {
 	version: "0.1"
 }
 
-const defaultConfigPath = path.join(
-	CONFIG_DIRECTORY,
-	`${IS_DEV ? "dev_config" : "config"}.json5`
-)
+const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")
 
 async function parseConfig(file: BunFile): Promise<Result<Config, unknown>> {
 	const config = Result.fromAsyncCatching(parseJson5(await file.text())).map(

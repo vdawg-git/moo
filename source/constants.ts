@@ -4,7 +4,7 @@ import packageJson from "#/../package.json"
 
 export const IS_DEV = process.env.NODE_ENV !== "production"
 
-export const APP_NAME = packageJson.name
+export const APP_NAME = IS_DEV ? packageJson.name + "_dev" : packageJson.name
 
 const appPaths = envPaths(APP_NAME, { suffix: "" })
 export const CONFIG_DIRECTORY = appPaths.config
