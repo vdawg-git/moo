@@ -1,6 +1,6 @@
 {
 	"name": "moo",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"main": "source/index.ts",
 	"license": "MIT",
 	"type": "module",
@@ -8,7 +8,8 @@
 		"dev": "bun --watch .",
 		"prod": "NODE_ENV=production bun .",
 		"writeSchemas": "bun run ./scripts/writeSchemas.ts",
-		"compile": "bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo"
+		"compile": "bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
+		"release": "release-it"
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",
@@ -22,7 +23,6 @@
 		"json5": "^2.2.3",
 		"music-metadata": "^10.8.2",
 		"react": "18.2.0",
-		"react-devtools-core": "^6.1.1",
 		"react-error-boundary": "^5.0.0",
 		"remeda": "^2.20.1",
 		"rxjs": "^7.8.1",
@@ -42,6 +42,8 @@
 		"@types/bun": "latest",
 		"@types/node": "latest",
 		"@types/react": "^18.3.18",
+		"react-devtools-core": "^6.1.1",
+		"release-it": "^18.1.2",
 		"drizzle-kit": "^0.30.4",
 		"type-fest": "^4.33.0"
 	},
