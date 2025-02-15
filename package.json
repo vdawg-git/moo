@@ -1,6 +1,6 @@
 {
 	"name": "moo",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"main": "source/index.ts",
 	"license": "MIT",
 	"type": "module",
