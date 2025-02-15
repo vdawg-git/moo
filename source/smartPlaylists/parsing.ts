@@ -20,7 +20,7 @@ const playlistsDirectory = path.join(CONFIG_DIRECTORY, "playlists") as FilePath
 
 /**
  * A time fast engough to feel instant,
- * but slow enough to catch for example mass fast-and-replace of the playlists
+ * but slow enough to catch for example mass search-and-replace of the playlists
  */
 const playlistChangedDebounce = 70
 
