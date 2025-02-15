@@ -7,5 +7,7 @@
     "release": true,
     "autoGenerate": true
   },
-  "npm": false
+  "npm": {
+    "publish": false
+  }
 }
