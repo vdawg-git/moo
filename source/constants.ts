@@ -2,7 +2,11 @@ import packageJson from "#/../package.json"
 import envPaths from "env-paths"
 import path from "node:path"
 
-const isCompiled = __dirname.includes("$bunfs")
+// drizzle kit runs on Cjs where import.meta.dirname
+// is not available
+const isCompiled = import.meta?.dirname
+	? import.meta.dirname.includes("$bunfs")
+	: false
 const nodeEnv = process.env.NODE_ENV
 export const IS_DEV =
 	nodeEnv === "production"
