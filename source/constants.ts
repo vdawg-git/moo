@@ -2,7 +2,14 @@ import path from "node:path"
 import envPaths from "env-paths"
 import packageJson from "#/../package.json"
 
-export const IS_DEV = process.env.NODE_ENV !== "production"
+const isCompiled = __dirname.includes("$bunfs")
+const nodeEnv = process.env.NODE_ENV
+export const IS_DEV =
+	nodeEnv === "production"
+		? false
+		: nodeEnv === "development"
+			? true
+			: !isCompiled
 
 export const APP_NAME = IS_DEV ? packageJson.name + "_dev" : packageJson.name
 
