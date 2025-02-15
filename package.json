@@ -9,7 +9,7 @@
 		"prod": "NODE_ENV=production bun .",
 		"writeSchemas": "bun run ./scripts/writeSchemas.ts",
 		"compile": "bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
-		"release": "release-it"
+		"release": "dotenv -- release-it"
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",
@@ -38,6 +38,7 @@
 		"zod-to-json-schema": "^3.24.1"
 	},
 	"devDependencies": {
+		"dotenv-cli": "^8.0.0",
 		"@biomejs/biome": "1.9.4",
 		"@types/bun": "latest",
 		"@types/node": "latest",
