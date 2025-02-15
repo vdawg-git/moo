@@ -21,6 +21,12 @@
   - (Chorded) keybindings, icons and more
   - Custom layouts/colors will get added in the future
 
+## How to use
+- Use <kbd>;</kbd> to switch to other playlists.
+- Use <kbd>:</kbd> to open the commandd runner.
+- <kbd>Enter</kbd> to play the selected track.
+- <kbd>Space</kbd> to toggle pause.
+- Default keybindings use Vim mode.
 
 
 ## Install
