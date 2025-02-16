@@ -64,7 +64,9 @@ function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
 				{"  "}
 			</Text>
 
-			<Text wrap="truncate-end">{titleDisplay}</Text>
+			<Text color={isPlaying ? "green" : undefined} wrap="truncate-end">
+				{titleDisplay}
+			</Text>
 		</Box>
 	)
 }
