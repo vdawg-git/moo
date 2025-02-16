@@ -6,8 +6,8 @@
 
 </div>
 
-> [!WARNING]  
-> The app is in early development. There are some bugs and a lot of features I still want to implement.
+> [! WARNING]  
+> The app is in early development. There are bugs and a lot of features I still need to implement.
 
 ## Features
 
@@ -58,6 +58,11 @@ rules:
   - any:
       - genre:
           includes: "deephouse"
+      - all:
+          - artist:
+              starts_not_with: "Grass"
+          - genre:
+              includes: ['idk smth']
 ```
 
 ## Install
