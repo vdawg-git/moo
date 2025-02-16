@@ -22,7 +22,7 @@ import {
 	watchPlaylists
 } from "./smartPlaylists/smartPlaylist"
 import { manageNotifications } from "./state/stateReact"
-import { setupConfigDirectories } from "./filesystem"
+import { setupFiles } from "./filesystem"
 
 const App = () => {
 	setCharRegisterSize(1)
@@ -53,7 +53,7 @@ const App = () => {
 }
 
 export async function startApp() {
-	await setupConfigDirectories()
+	await setupFiles()
 
 	if (!IS_DEV) {
 		updateDatabase(appConfig.musicDirectories, database)
