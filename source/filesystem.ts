@@ -3,6 +3,8 @@ import { mkdir, readdir } from "node:fs/promises"
 import path from "node:path"
 import { Observable, distinctUntilChanged, share } from "rxjs"
 import { Result } from "typescript-result"
+import { playlistsDirectory } from "./constants"
+import { examplePlaylist } from "./smartPlaylists/examplePlaylist"
 import type { FilePath } from "./types/types"
 
 /**
@@ -36,14 +38,21 @@ export function createWatcher(
 	)
 }
 
+/**
+ * Creates the directory if it does not exist.
+ *
+ * @return true if the directory existed, otherwise false
+ * */
 export async function ensureDirectoryExists(
 	directoryPath: FilePath
-): Promise<Result<FilePath, Error>> {
+): Promise<Result<boolean, Error>> {
 	const exists = await checkDirectoryExists(directoryPath)
 
 	return exists
-		? Result.ok(directoryPath)
-		: Result.fromAsyncCatching(mkdir(directoryPath)).map(() => directoryPath)
+		? Result.ok(exists)
+		: Result.fromAsyncCatching(mkdir(directoryPath, { recursive: true })).map(
+				() => false
+			)
 }
 
 async function checkDirectoryExists(directoryPath: FilePath): Promise<boolean> {
@@ -56,4 +65,15 @@ type FileChanged = {
 	/** The absolute filepath which changed */
 	filePath: FilePath
 	type: "change" | "rename"
+}
+
+export async function setupConfigDirectories() {
+	const exists = (await ensureDirectoryExists(playlistsDirectory)).getOrThrow()
+
+	if (!exists) {
+		return Bun.write(
+			path.join(playlistsDirectory, "example.yml"),
+			examplePlaylist
+		)
+	}
 }
