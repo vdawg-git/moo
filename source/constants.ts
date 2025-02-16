@@ -1,6 +1,7 @@
 import packageJson from "#/../package.json"
 import envPaths from "env-paths"
 import path from "node:path"
+import type { FilePath } from "./types/types"
 
 // drizzle kit runs on Cjs where import.meta.dirname
 // is not available
@@ -23,15 +24,21 @@ export const APP_ROOT = isCompiled
 
 const appPaths = envPaths(APP_NAME, { suffix: "" })
 
-export const CONFIG_DIRECTORY = appPaths.config
-export const DATA_DIRECTORY = appPaths.data
-export const LOGS_DIRECTORY =
+export const CONFIG_DIRECTORY = appPaths.config as FilePath
+export const DATA_DIRECTORY = appPaths.data as FilePath
+export const LOGS_DIRECTORY = (
 	isCompiled || !IS_DEV ? appPaths.log : path.dirname(APP_ROOT)
-export const TEMP_DIRECTORY = appPaths.temp
+) as FilePath
+export const TEMP_DIRECTORY = appPaths.temp as FilePath
+export const playlistsDirectory = path.join(
+	CONFIG_DIRECTORY,
+	"playlists"
+) as FilePath
 
-export const databasePath =
+export const databasePath = (
 	IS_DEV && !isCompiled
 		? path.join(APP_ROOT, "db.db")
 		: path.join(DATA_DIRECTORY, "database.db")
+) as FilePath
 
 // console.log({ appPaths, nodeEnv, isCompiled, dir: import.meta.dirname })
