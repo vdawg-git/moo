@@ -67,7 +67,11 @@ type FileChanged = {
 	type: "change" | "rename"
 }
 
-export async function setupConfigDirectories() {
+/**
+ * Creates the playlist directory if it does not exist
+ * including an example playlist
+ */
+export async function setupFiles() {
 	const exists = (await ensureDirectoryExists(playlistsDirectory)).getOrThrow()
 
 	if (!exists) {

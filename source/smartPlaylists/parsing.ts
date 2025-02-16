@@ -11,12 +11,10 @@ import {
 } from "rxjs"
 import { Result } from "typescript-result"
 import * as yaml from "yaml"
-import { CONFIG_DIRECTORY } from "#/constants"
+import { playlistsDirectory } from "#/constants"
 import { createWatcher, ensureDirectoryExists } from "#/filesystem"
 import type { FilePath } from "#/types/types"
 import { type PlaylistSchema, playlistSchema } from "./schema"
-
-const playlistsDirectory = path.join(CONFIG_DIRECTORY, "playlists") as FilePath
 
 /**
  * A time fast engough to feel instant,
@@ -56,11 +54,6 @@ export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
 export async function parsePlaylists(): Promise<
 	Result<readonly PlaylistParsed[], Error>
 > {
-	const existsResult = await ensureDirectoryExists(playlistsDirectory)
-	if (existsResult.isError()) {
-		return existsResult
-	}
-
 	return Result.fromAsyncCatching(readdir(playlistsDirectory))
 		.map((paths) =>
 			paths
