@@ -13,6 +13,8 @@ import { keybindingsSchema } from "./keybindings"
 const zFilePath: z.Schema<FilePath> = z.string() as any
 export const appConfigSchema = z
 	.object({
+		$schema: z.string().optional(),
+
 		musicDirectories: z
 			.array(zFilePath)
 			.transform(
@@ -42,6 +44,8 @@ export const appConfigSchema = z
 type Config = Readonly<z.infer<typeof appConfigSchema>>
 
 const defaultConfig: Partial<Config> = {
+	$schema:
+		"https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/main/other/schemas/mooConfig.json",
 	musicDirectories: [],
 	watchDirectories: true,
 	version: "0.1"
