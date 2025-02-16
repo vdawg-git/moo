@@ -31,6 +31,7 @@ import {
 	Track,
 	type TrackId
 } from "./types.js"
+import { databaseLogger } from "./logger.js"
 
 export const database = connectDatabase()
 
@@ -42,7 +43,6 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 	return {
 		getAlbum: async () => Result.ok(undefined),
 		getAlbums: async (ids = []) => Result.ok([]),
-
 		getArtist: async () => Result.ok(undefined),
 		getArtists: async () => Result.ok([]),
 
@@ -117,6 +117,14 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 			return result
 		},
 
+		deletePlaylist: async (id) => {
+			return Result.fromAsyncCatching(
+				db.delete(playlistsTable).where(eq(playlistsTable.id, id))
+			)
+				.map(() => id)
+				.onSuccess(() => changed$.next(""))
+		},
+
 		search: async () =>
 			Result.ok({
 				tracks: [],
@@ -134,6 +142,8 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 			return result
 		},
 
+		// TODO remove deleted songs
+
 		changed$
 	} satisfies Database
 }
@@ -144,7 +154,7 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
  * of the database
  */
 function connectDatabase(): Database {
-	const db = drizzle(databasePath)
+	const db = drizzle(databasePath, { logger: databaseLogger })
 
 	const waitForInit = initDatabase(db)
 	const base = connectDatabaseProxied(db)

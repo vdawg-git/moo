@@ -34,6 +34,14 @@ export interface Database {
 		schema: PlaylistSchema
 	}) => Promise<Result<unknown, Error>>
 
+	/**
+	 * Deletes the playlist in the database,
+	 * does not do any other IO.
+	 *
+	 * Used when a playlist file got removed from the filesystem.
+	 */
+	deletePlaylist: (id: PlaylistId) => Promise<Result<PlaylistId, Error>>
+
 	/** Fuzzy search the database */
 	search: (input: string) => Promise<
 		Result<
