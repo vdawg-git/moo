@@ -24,7 +24,7 @@
       // If the program should be run in watch mode.
       // This is equivalent to passing `--watch` to the `bun` executable.
       // You can also set this to "hot" to enable hot reloading using `--hot`.
-      "watchMode": false,
+      "watchMode": true,
 
       // If the debugger should stop on the first line of the program.
       "stopOnEntry": false,
@@ -46,7 +46,7 @@
 
       // The URL of the WebSocket inspector to attach to.
       // This value can be retrieved by using `bun --inspect`.
-      "url": "ws://localhost:6499/1111",
+      "url": "ws://localhost:1111/a",
     },
   ],
 }
