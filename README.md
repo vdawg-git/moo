@@ -6,7 +6,7 @@
 
 </div>
 
-> [! WARNING]  
+> [!WARNING]  
 > The app is in early development. There are some bugs and a lot of features I still want to implement.
 
 ## Features
