@@ -10,3 +10,11 @@ export function nullsToUndefined<T extends object>(
 		(value) => value ?? undefined
 	) as unknown as NullToUndefined<T>
 }
+
+const stripIndentRegex = /^[ \t]+/gm
+/**
+ * Strips *all* indents on each line of the string.
+ */
+export function stripIndent(string: string): string {
+	return string.replace(stripIndentRegex, "")
+}

@@ -1,8 +1,9 @@
-import { appConfigSchema } from "#/config/config"
-import { playlistSchema } from "#/smartPlaylists/schema"
 import path from "node:path"
-import { zodToJsonSchema, ignoreOverride } from "zod-to-json-schema"
-import type { z, ZodSchema } from "zod"
+import type { ZodSchema } from "zod"
+import { ignoreOverride, zodToJsonSchema } from "zod-to-json-schema"
+import { appConfigSchema } from "#/config/config"
+import { APP_ROOT } from "#/constants"
+import { playlistSchema } from "#/smartPlaylists/schema"
 
 const schemas = [
 	["mooConfig.json", appConfigSchema],
@@ -20,6 +21,7 @@ async function writeSchema(name: string, schema: ZodSchema<unknown>) {
 		override: (defs, refs) => {
 			const current = refs.currentPath.at(-1)
 
+			// removes the identifier which is only used for Typescript
 			if (current === "_type") return undefined
 
 			return ignoreOverride
@@ -27,7 +29,7 @@ async function writeSchema(name: string, schema: ZodSchema<unknown>) {
 	})
 
 	return Bun.write(
-		path.join(process.cwd(), "dist/schemas/", name),
+		path.join(APP_ROOT, "other/schemas/", name),
 		JSON.stringify(jsonSchema, null, 2)
 	)
 }

@@ -1,7 +1,7 @@
-import { z } from "zod"
-import stripIndent from "strip-indent"
 import { pipe } from "remeda"
 import { Result } from "typescript-result"
+import { z } from "zod"
+import { stripIndent } from "#/helpers"
 
 /**
  * A single key input with its modifiers.

@@ -1,10 +1,10 @@
 import { getTableColumns } from "drizzle-orm"
 import * as R from "remeda"
 import { pipe } from "remeda"
-import stripIndent from "strip-indent"
 import { match } from "ts-pattern"
 import { z } from "zod"
 import { type TrackColumnKey, tracksTable } from "#/database/schema"
+import { stripIndent } from "#/helpers"
 
 const columns = getTableColumns(tracksTable)
 
@@ -194,9 +194,9 @@ export const playlistSchema = z.object({
 		.nonempty("`rules` is empty and would lead to an empty playlist.")
 		.readonly()
 		.describe(
-			stripIndent(`Dicates what to put into the smart playlist.
-							 All top level rules need to match for a track to get added.
-							 An "any" group matches if any single rule within it matches. Whereas an "all" rules matches only if all rules match.`)
+			stripIndent(`Dictates what to put into the smart playlist.
+				All top level rules need to match for a track to get added.
+				An "any" group matches if any single rule within it matches. Whereas an "all" rules matches only if all rules match.`)
 		)
 })
 
