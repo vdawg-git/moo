@@ -1,6 +1,3 @@
-> [! IMPORTANT]
-> Wip, not working atm.
-
 <div align="center">
 
 <h1>Moo</h1>
@@ -8,6 +5,9 @@
 </br>
 
 </div>
+
+> [! WARNING]  
+> The app is in early development. There are some bugs and a lot of features I still want to implement.
 
 ## Features
 
