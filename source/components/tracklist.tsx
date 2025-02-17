@@ -49,7 +49,7 @@ type TrackItemProps = {
 }
 
 function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
-	const { isFocus, item: track } = useListItem<Track[]>()
+	const { isFocus, item: track, control, itemIndex } = useListItem<Track[]>()
 	const color = isFocus ? "blue" : undefined
 	const titleDisplay = track.title ?? path.basename(track.id)
 
@@ -58,7 +58,11 @@ function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
 	const playIcon = isPlaying ? appConfig.icons.playingIndicator : ""
 
 	return (
-		<Box width="100" backgroundColor={color} onClick={() => onSelect()}>
+		<Box
+			width="100"
+			backgroundColor={color}
+			onClick={() => (isFocus ? onSelect() : control.goToIndex(itemIndex))}
+		>
 			<Text color={"green"}>
 				{playIcon}
 				{"  "}
