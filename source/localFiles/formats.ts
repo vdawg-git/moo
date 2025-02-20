@@ -39,5 +39,6 @@ export const supportedFormats = [
 	".wave",
 	".webm",
 	".wv",
-	".wma"
+	".wma",
+	".flac"
 ]

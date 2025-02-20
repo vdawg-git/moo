@@ -26,7 +26,11 @@ import { supportedFormats } from "./formats"
 function createMusicDirectoriesWatcher(
 	directories: readonly FilePath[]
 ): Observable<FilePath> {
-	return merge(...directories.map(createWatcher)).pipe(
+	return merge(
+		...directories.map((directory) =>
+			createWatcher(directory, { recursive: true })
+		)
+	).pipe(
 		map(({ filePath }) => filePath),
 		distinctUntilChanged(),
 		filter(isSupportedFile),
@@ -255,8 +259,8 @@ async function parseMusicFile(
 }
 
 function isSupportedFile(filepath: FilePath): boolean {
-	const extension = path.extname(filepath)
-	return extension === "" ? false : supportedFormats.includes(extension)
+	const extension = path.extname(filepath).toLowerCase()
+	return !!extension && supportedFormats.includes(extension)
 }
 
 function toHexString(uint8Array: Uint8Array<ArrayBufferLike>): string {
