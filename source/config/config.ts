@@ -11,9 +11,12 @@ import { keybindingsSchema } from "./keybindings"
 
 // biome-ignore lint/suspicious/noExplicitAny: .
 const zFilePath: z.Schema<FilePath> = z.string() as any
+const schemaUrl =
+	"https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/main/other/schemas/mooConfig.json"
+
 export const appConfigSchema = z
 	.object({
-		$schema: z.string().optional(),
+		$schema: z.string().optional().default(schemaUrl),
 
 		musicDirectories: z
 			.array(zFilePath)
@@ -44,8 +47,7 @@ export const appConfigSchema = z
 type Config = Readonly<z.infer<typeof appConfigSchema>>
 
 const defaultConfig: Partial<Config> = {
-	$schema:
-		"https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/main/other/schemas/mooConfig.json",
+	$schema: schemaUrl,
 	musicDirectories: [],
 	watchDirectories: true,
 	version: "0.1"
