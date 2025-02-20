@@ -28,22 +28,22 @@ type PlaylistParsed = {
 }
 
 // TODO handle playlist rename
-export const playlistsChanged$: Observable<PlaylistParsed> = createWatcher(
-	playlistsDirectory,
-	{ recursive: false }
-).pipe(
+export const playlistsChanged$: Observable<
+	PlaylistParsed & { type: "change" | "rename" }
+> = createWatcher(playlistsDirectory, { recursive: false }).pipe(
 	filter(({ filePath }) => isSupportedExtension(filePath)),
 	// We use groupBy to debounce individual filePaths,
-	// as multiple files could be updates at once and debouncing them all at once
+	// as multiple files could be updated at once and debouncing them all at once
 	// would lead to only the latest one updating
 	groupBy(({ filePath }) => filePath),
 	mergeMap((changedFile$) =>
 		changedFile$.pipe(
 			debounceTime(playlistChangedDebounce),
-			switchMap(({ filePath }) =>
+			switchMap(({ filePath, type }) =>
 				parsePlaylist(filePath).then((parseResult) => ({
 					parseResult,
-					playlistPath: filePath
+					playlistPath: filePath,
+					type
 				}))
 			)
 		)

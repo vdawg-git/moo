@@ -7,35 +7,64 @@ import { parsePlaylists, playlistsChanged$ } from "./parsing"
 import { Result } from "typescript-result"
 import * as R from "remeda"
 import type { FilePath } from "#/types/types"
+import { logg } from "#/logs"
 
 export async function updateSmartPlaylists(): Promise<void> {
-	const parsed = await Result.fromAsync(parsePlaylists())
-		.map(
-			R.piped(
-				R.map(({ parseResult, playlistPath }) =>
-					parseResult.map((schema) =>
-						database.upsertSmartPlaylist({
-							schema,
-							id: playlistPathToId(playlistPath)
-						})
-					)
-				),
-				(updateResults) => Promise.all(updateResults)
-			)
+	const playlistSchemas = await Result.fromAsync(parsePlaylists())
+		.onFailure((error) =>
+			addErrorNotification("Failed to parse playlists", error)
 		)
-		.fold(
-			(updateResults) => updateResults,
-			(accessError) => [Result.error(accessError)]
-		)
+		.getOrNull()
 
-	parsed.forEach((updateResult) =>
-		updateResult.onFailure((error) =>
-			addErrorNotification(
-				`Failed to update smart playlist: ${error}`,
-				error,
-				"Update smart playlist failed"
+	if (!playlistSchemas) {
+		return
+	}
+
+	// Remove deleted smart playlists from database
+	const toDelete = await Result.fromAsync(database.getPlaylists())
+		.map(
+			R.filter(
+				({ id }) =>
+					!playlistSchemas.some(
+						(parsed) => playlistPathToId(parsed.playlistPath) === id
+					)
 			)
 		)
+		.onFailure((error) =>
+			addErrorNotification(
+				"Failed to get playlists",
+				error,
+				"Failed to get playlists during updateSmartPlaylist."
+			)
+		)
+		.getOrDefault([])
+
+	toDelete.forEach(async ({ id }) => {
+		Result.fromAsync(database.deletePlaylist(id)).onFailure((error) =>
+			addErrorNotification(
+				`Failed to remove deleted playlist ${id} from database`,
+				error,
+				"Failed to remove deleted playlist --"
+			)
+		)
+	})
+
+	// Update smart playlists
+	playlistSchemas.forEach(({ parseResult, playlistPath }) =>
+		parseResult
+			.map((schema) =>
+				database.upsertSmartPlaylist({
+					schema,
+					id: playlistPathToId(playlistPath)
+				})
+			)
+			.onFailure((error) =>
+				addErrorNotification(
+					`Failed to update smart playlist: ${error}`,
+					error,
+					"Update smart playlist failed"
+				)
+			)
 	)
 }
 
@@ -50,6 +79,9 @@ export function watchPlaylists(): Subscription {
 					schema
 				})
 			)
+			.onSuccess(() => {
+				logg.silly("Updated smart-playlist", { playlistId, playlistPath })
+			})
 			.onFailure((error) =>
 				addErrorNotification(
 					`Failed to update playlist "${playlistId}"\n${error.message}`,
@@ -61,5 +93,5 @@ export function watchPlaylists(): Subscription {
 }
 
 function playlistPathToId(filepath: FilePath): PlaylistId {
-	return path.basename(filepath, "yml") as PlaylistId
+	return path.basename(filepath, ".yml") as PlaylistId
 }
