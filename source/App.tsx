@@ -13,7 +13,7 @@ import { ErrorScreen } from "./components/errorScreen"
 import { ModalManager } from "./components/modalManager"
 import { Navigator } from "./components/navigator"
 import { appConfig } from "./config/config"
-import { IS_DEV } from "./constants"
+import { databasePath, IS_DEV } from "./constants"
 import { database } from "./database/database"
 import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { enumarateError, logg } from "./logs"
@@ -59,7 +59,7 @@ export async function startApp() {
 		updateDatabase(appConfig.musicDirectories, database)
 	}
 
-	logg.info("Starting app..")
+	logg.info("Starting app..", { is_dev: IS_DEV, dbPath: databasePath })
 
 	if (appConfig.watchDirectories) {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)
