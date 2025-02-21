@@ -302,7 +302,7 @@ export async function playNewPlayback({
 	const isSamePlayback =
 		index === state.index && source.type === state.queue?.source.type
 	if (isSamePlayback) {
-		// appState.send({ type: "togglePlayback" })
+		appState.send({ type: "togglePlayback" })
 		return
 	}
 
