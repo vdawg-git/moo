@@ -116,6 +116,19 @@ export const appCommands = [
 		],
 		description: "Open a modal to quickly switch to a playlist.",
 		callback: () => openRunner("p ")
+	},
+
+	{
+		id: "showKeybinds",
+		label: "Show keybindings",
+		keybinding: [{ key: "?", modifiers: [] }],
+		description: "Show all keybinds",
+		callback: () => {
+			appState.send({
+				type: "addModal",
+				modal: { id: "Keybinds", title: "Keybinds", Content: KeybindsModal }
+			})
+		}
 	}
 ] as const satisfies AppCommand[]
 
