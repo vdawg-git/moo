@@ -2,9 +2,11 @@ import { appCommands, type AppCommand } from "#/commands/commands"
 import { z } from "zod"
 import { displayKeybinding, shortcutSchema } from "./shortcutParser"
 
+const optionalShortcut = shortcutSchema.nullable()
+
 const keybinds = appCommands.map(({ id, description, keybinding }) =>
 	z
-		.object({ id: z.literal(id), key: shortcutSchema.nullable() })
+		.object({ id: z.literal(id), key: optionalShortcut })
 		.describe(
 			description + "\n" + `Default: "${displayKeybinding(keybinding)}"`
 		)
@@ -38,7 +40,7 @@ export const keybindingsSchema = z
 				return []
 			}
 
-			return { ...matchingCommand, ...userBind }
+			return { ...matchingCommand, keybinding: userBind.key }
 		})
 
 		return [...defaultCommands, ...userSetCommands]

@@ -52,13 +52,16 @@ export const shortcutSchema = z
 	.string()
 	.min(1)
 	.transform<KeyInput[]>((toParse, ctx) => {
-		const inputs = pipe(toParse, removeDuplicateWhitespace, (rawKeybinding) =>
-			rawKeybinding.split(" ").filter((string) => string !== "")
+		const inputs = pipe(
+			toParse, //
+			removeDuplicateWhitespace,
+			(rawKeybinding) =>
+				rawKeybinding.split(" ").filter((string) => string !== "")
 		)
 
 		const parsed: KeyInput[] = []
 		for (const input of inputs) {
-			const result = parseInput(input)
+			const result = parseSequencePart(input)
 			if (result.isError()) {
 				ctx.addIssue({
 					message: result.error,
@@ -67,6 +70,7 @@ export const shortcutSchema = z
 				})
 				return z.NEVER
 			}
+			parsed.push(result.getOrThrow())
 		}
 
 		return parsed
@@ -76,9 +80,11 @@ export const shortcutSchema = z
 	)
 
 /**
- * This parses an input of a keybinding sequence (most keybindings will consist of only one part so they are not actually a sequence),
+ * This parses a sequence part of a keybinding.
+ *
+ * (most keybindings will consist of only one part so they are not actually a sequence),
  */
-function parseInput(input: string): Result<KeyInput, string> {
+function parseSequencePart(input: string): Result<KeyInput, string> {
 	if (tooManyPlusRg.test(input)) {
 		return Result.error("Invalid amount of pluses")
 	}
@@ -91,15 +97,15 @@ function parseInput(input: string): Result<KeyInput, string> {
 			: { key: parts[0] }
 
 	if (!key) {
-		return Result.error("Failed to parse keycode")
+		return Result.error(`Failed to parse keybind part: ${input} `)
 	}
 
 	const isKeyTooLong =
-		key.length > 1 || !specialKeys.includes(key as (typeof specialKeys)[number])
+		key.length > 1 && !specialKeys.includes(key as (typeof specialKeys)[number])
 	if (isKeyTooLong) {
 		return Result.error(
-			stripIndent(`Keycode is too long. 
-				If you want to chore keys together add a space between them.
+			stripIndent(`Keycode "${input}" is too long. 
+				If you want to sequence keys together add a space between them.
 				If you tried to use a special key, here is a list of allowed special keys:
 				${specialKeys.map((k) => `"${k}"`).join(", ")}`)
 		)
@@ -112,7 +118,8 @@ function parseInput(input: string): Result<KeyInput, string> {
 		: false
 	if (isModifierInvalid) {
 		return Result.error(
-			`Invalid modifier. Allowed ones are ${keyModifiers.map((k) => `"${k}"`).join(", ")}.`
+			stripIndent(`Invalid modifier. Allowed ones are: 
+					${keyModifiers.map((k) => `"${k}"`).join(", ")}.`)
 		)
 	}
 
