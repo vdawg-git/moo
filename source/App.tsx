@@ -23,6 +23,8 @@ import {
 } from "./smartPlaylists/smartPlaylist"
 import { manageNotifications } from "./state/stateReact"
 import { setupFiles } from "./filesystem"
+import { NextUpKeybinds } from "./components/sequenceKeybindsShower"
+import { manageKeybinds } from "./KeybindManager"
 
 const App = () => {
 	setCharRegisterSize(1)
@@ -36,6 +38,8 @@ const App = () => {
 		}
 	}, [])
 
+	const nextUpKeybinds = manageKeybinds()
+
 	return (
 		<ErrorBoundary
 			fallbackRender={({ error }) => <ErrorScreen error={error} />}
@@ -47,6 +51,7 @@ const App = () => {
 				<Navigator />
 
 				<ModalManager />
+				<NextUpKeybinds commandsToShow={nextUpKeybinds} />
 			</Viewport>
 		</ErrorBoundary>
 	)

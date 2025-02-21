@@ -1,9 +1,8 @@
+import { useSelector } from "@xstate/store/react"
+import { Text } from "tuir"
 import { All } from "#/pages/all"
 import { Playlist } from "#/pages/playlist"
 import { type ViewPage, type ViewPages, appState } from "#/state/state"
-import { useSelector } from "@xstate/store/react"
-import { Text } from "tuir"
-import { manageKeybinds } from "#/keybindingManagger"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
 const routes: Routes = {
@@ -17,8 +16,6 @@ export function Navigator() {
 		appState,
 		({ context: { view } }) => view.history[view.historyIndex]
 	)
-
-	manageKeybinds()
 
 	// biome-ignore lint/style/noNonNullAssertion: Should crash if undefined as it is unexpected
 	return renderRoute(view!)

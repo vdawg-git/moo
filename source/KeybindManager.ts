@@ -27,11 +27,11 @@ type SequencePart = {
  * Later we want to support multiple instances of this,
  * in different contexts ('when' property in the keybinds)
  */
-export function manageKeybinds() {
+export function manageKeybinds(): readonly AppCommand[] | undefined {
 	const [inputs$] = useState(new Subject<InputData>())
-	const [nextUpCommands, setNextUpCommands] = useState<readonly AppCommand[]>(
-		[]
-	)
+	const [nextUpCommands, setNextUpCommands] = useState<
+		readonly AppCommand[] | undefined
+	>([])
 
 	useInput((key, specialKeys) => inputs$.next({ key, specialKeys }))
 
@@ -46,7 +46,7 @@ export function manageKeybinds() {
 			.subscribe((inputResult) => {
 				const nextUp =
 					inputResult === undefined || inputResult.type === "command"
-						? []
+						? undefined
 						: inputResult.sequence.nextPossible
 
 				setNextUpCommands(nextUp)
@@ -135,13 +135,14 @@ function areKeyInputsMatching(
 	if (a.length !== b.length) return false
 
 	return a.every((inputA, index) => {
-		const toCompare = b[index]
+		// biome-ignore lint/style/noNonNullAssertion: We know that the arrays have the same length
+		const toCompare = b[index]!
 
 		return (
 			inputA.key === toCompare.key &&
 			toCompare.modifiers.length === inputA.modifiers.length &&
 			inputA.modifiers.every((aModifier) =>
-				b[index].modifiers.includes(aModifier)
+				toCompare.modifiers.includes(aModifier)
 			)
 		)
 	})
@@ -170,13 +171,13 @@ function tuirInputToKeyInput({ key, specialKeys }: InputData): KeyInput {
 		specialKeys.ctrl && !specialKeys.tab && ("ctrl" as const)
 	].filter(isTruthy)
 
-	const setSpecialKeys = Object.entries(specialKeys) as [
+	const specialKeysArray = Object.entries(specialKeys) as [
 		keyof SpecialKeySet,
 		boolean
 	][]
 
 	const input =
-		setSpecialKeys.find(
+		specialKeysArray.find(
 			([specialKey, isSet]) => isSet && specialKey !== "ctrl"
 		)?.[0] ?? //
 		key.replace(altKeycode, "").replace(" ", "space")
