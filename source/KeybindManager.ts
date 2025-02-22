@@ -42,8 +42,6 @@ export function manageKeybinds(): SequencePart | undefined {
 	// This might be the best approach but requires us to overwrite and provide all keymaps and logic.
 	// Which to some degree is nessecary anyways as the two-key vim keybinds wont work in list if the register buffer is set to `1`, which it is as otherwise the buffering behaviour is annoying.
 
-	// Ideally some UI which shows the possible next combinations
-	//
 	useEffect(() => {
 		const subscription = inputs$
 			.pipe(
