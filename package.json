@@ -35,7 +35,8 @@
 		"yaml": "^2.7.0",
 		"yoga-wasm-web": "^0.3.3",
 		"zod": "^3.24.1",
-		"zod-to-json-schema": "^3.24.1"
+		"zod-to-json-schema": "^3.24.1",
+		"zod-validation-error": "^3.4.0"
 	},
 	"devDependencies": {
 		"dotenv-cli": "^8.0.0",

@@ -8,6 +8,12 @@ import { CONFIG_DIRECTORY, IS_DEV } from "#/constants"
 import type { FilePath } from "#/types/types"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
+import {
+	isValidationError,
+	toValidationError,
+	type ValidationError
+} from "zod-validation-error"
+import { logg, enumarateError } from "#/logs"
 
 // biome-ignore lint/suspicious/noExplicitAny: .
 const zFilePath: z.Schema<FilePath> = z.string() as any
@@ -55,10 +61,24 @@ const defaultConfig: Partial<Config> = {
 
 const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")
 
-async function parseConfig(file: BunFile): Promise<Result<Config, unknown>> {
-	const config = Result.fromAsyncCatching(json5.parse(await file.text())).map(
-		(data) => Result.try(() => appConfigSchema.parse(data))
-	)
+async function parseConfig(
+	file: BunFile
+): Promise<Result<Config, ValidationError | Error>> {
+	const config = Result.fromAsyncCatching(json5.parse(await file.text()))
+		.map((data) =>
+			Result.try(() => appConfigSchema.parse(data)).mapError(
+				toValidationError()
+			)
+		)
+		.mapError((error) =>
+			error instanceof Error
+				? error
+				: (() => {
+						const newError = new Error("Parse config error")
+						newError.cause = error
+						return newError
+					})()
+		)
 
 	return config
 }
@@ -82,7 +102,11 @@ async function getConfig(): Promise<Config> {
 		.map((isExisting) =>
 			isExisting ? parseConfig(configFile) : writeDefaultConfig()
 		)
-		.getOrThrow()
+		.getOrElse((error) => {
+			console.error(isValidationError(error) ? error.message : error)
+			logg.error("Config parse error", enumarateError(error))
+			process.exit(1)
+		})
 }
 
 export const appConfig = await getConfig()

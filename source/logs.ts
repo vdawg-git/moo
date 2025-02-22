@@ -31,11 +31,13 @@ export const logg = createLogger({
 	exitOnError: true
 })
 
-export function enumarateError(error: Error) {
-	return {
-		name: error.name,
-		stack: error.stack,
-		message: error.message,
-		cause: error.cause
-	}
+export function enumarateError(error: unknown) {
+	return error instanceof Error
+		? {
+				name: error.name,
+				stack: error.stack,
+				message: error.message,
+				cause: error.cause
+			}
+		: { error }
 }
