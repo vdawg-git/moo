@@ -1,4 +1,4 @@
-import { useInput, type Key } from "tuir"
+import { useInput, useTextInput, type Key } from "tuir"
 import { appConfig } from "./config/config"
 import { useEffect, useState } from "react"
 import { map, scan, Subject } from "rxjs"
@@ -34,6 +34,13 @@ export function manageKeybinds(): SequencePart | undefined {
 	>(undefined)
 
 	useInput((key, specialKeys) => inputs$.next({ key, specialKeys }))
+
+	// we need a way to block regular UI inputs
+	// while a sequence keybind is active (shown to the user)
+	// --- or all elements are part of this keyboard system and register their keybinds dynamically .
+	// For example a list registers its bindings (and they show up in the UI then too, and the global ones register theirs too)
+	// This might be the best approach but requires us to overwrite and provide all keymaps and logic.
+	// Which to some degree is nessecary anyways as the two-key vim keybinds wont work in list if the register buffer is set to `1`, which it is as otherwise the buffering behaviour is annoying.
 
 	// Ideally some UI which shows the possible next combinations
 	//
