@@ -15,7 +15,7 @@ type InputData = { key: string; specialKeys: SpecialKeySet }
 type CommandOrSequence =
 	| { type: "command"; command: AppCommand }
 	| { type: "sequence"; sequence: SequencePart }
-type SequencePart = {
+export type SequencePart = {
 	pressed: readonly KeyInput[]
 	nextPossible: readonly AppCommand[]
 }
@@ -25,13 +25,13 @@ type SequencePart = {
  * All configurable keybinds are global right now.
  *
  * Later we want to support multiple instances of this,
- * in different contexts ('when' property in the keybinds)
+ * in different contexts (like the 'when' property in VS Code keybinds)
  */
-export function manageKeybinds(): readonly AppCommand[] | undefined {
+export function manageKeybinds(): SequencePart | undefined {
 	const [inputs$] = useState(new Subject<InputData>())
 	const [nextUpCommands, setNextUpCommands] = useState<
-		readonly AppCommand[] | undefined
-	>([])
+		SequencePart | undefined
+	>(undefined)
 
 	useInput((key, specialKeys) => inputs$.next({ key, specialKeys }))
 
@@ -47,7 +47,7 @@ export function manageKeybinds(): readonly AppCommand[] | undefined {
 				const nextUp =
 					inputResult === undefined || inputResult.type === "command"
 						? undefined
-						: inputResult.sequence.nextPossible
+						: inputResult.sequence
 
 				setNextUpCommands(nextUp)
 

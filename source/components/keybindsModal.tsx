@@ -39,11 +39,11 @@ export function KeybindsModal(): JSX.Element {
 	return (
 		<Box flexDirection="column" minWidth={30}>
 			{toDisplay.map(({ label, bindings, id }) => (
-				<Box key={id} justifyContent="space-between">
+				<Box key={id} alignItems="flex-start" justifyContent="space-between">
 					<Text color={"cyanBright"}>{label}</Text>
 
 					<Box flexDirection="column">
-						{bindings.map((binding) => (
+						{bindings.map((binding, index) => (
 							<Text key={binding}>{binding}</Text>
 						))}
 					</Box>
