@@ -21,15 +21,24 @@ export function NextUpKeybinds() {
 				borderColor={"yellow"}
 				backgroundColor={"black"}
 				position="absolute"
+				justifyContent="space-between"
+				minWidth={20}
 			>
-				{toDisplay.map(({ toPress, id, label }) => {
-					return (
+				<Box flexDirection="column">
+					{toDisplay.map(({ toPress, id }) => (
 						<Box key={id}>
 							<Text color={"cyan"}>{toPress} </Text>
-							<Text>{label}</Text>
 						</Box>
-					)
-				})}
+					))}
+				</Box>
+
+				<Box flexDirection="column">
+					{toDisplay.map(({ label, id }) => (
+						<Box key={id}>
+							<Text>{label} </Text>
+						</Box>
+					))}
+				</Box>
 			</Box>
 		)
 	)
