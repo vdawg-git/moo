@@ -1,7 +1,6 @@
 import { KeybindsModal } from "#/components/keybindsModal"
 import { openRunner } from "#/components/runner/runner"
 import type { KeyInput } from "#/config/shortcutParser"
-import { logg } from "#/logs"
 import { currentTrack$ } from "#/state/derivedState"
 import { appState } from "#/state/state"
 import { firstValueFrom } from "rxjs"
@@ -46,10 +45,7 @@ export const appCommands = [
 		// ids starting with `runner.` get filtered out by the runner itself
 		id: "runner.openCommands",
 		label: "Open runner",
-		keybinding: [
-			{ key: ":", modifiers: [] },
-			{ key: "P", modifiers: ["ctrl"] }
-		],
+		keybinding: [{ key: ":", modifiers: [] }],
 		description:
 			"Open the command runner from which you can access all commands for the app.",
 		callback: () => openRunner(">")
@@ -57,10 +53,7 @@ export const appCommands = [
 	{
 		id: "runner.openGoto",
 		label: "Go to..",
-		keybinding: [
-			{ key: ";", modifiers: [] },
-			{ key: "p", modifiers: ["ctrl"] }
-		],
+		keybinding: [{ key: ";", modifiers: [] }],
 		description:
 			"Open the switcher from where you can go to different parts of your library.",
 		callback: () => openRunner()
