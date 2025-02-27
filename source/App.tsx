@@ -38,7 +38,6 @@ const App = () => {
 		}
 	}, [])
 
-	const nextUpKeybinds = manageKeybinds()
 
 	return (
 		<ErrorBoundary
@@ -51,7 +50,7 @@ const App = () => {
 				<Navigator />
 
 				<ModalManager />
-				<NextUpKeybinds commandsToShow={nextUpKeybinds} />
+				<NextUpKeybinds  />
 			</Viewport>
 		</ErrorBoundary>
 	)

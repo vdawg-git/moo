@@ -13,31 +13,38 @@ export function NextUpKeybinds() {
 	const toDisplay = sequencePartMaybe && sequencePartToNextUp(sequencePartMaybe)
 
 	return (
-		toDisplay && (
+		toDisplay &&
+		toDisplay.length > 0 && (
 			<Box
-				marginX={1}
-				key={2}
-				borderStyle={"single"}
-				borderColor={"yellow"}
-				backgroundColor={"black"}
 				position="absolute"
-				justifyContent="space-between"
-				minWidth={20}
+				justifyContent="flex-end"
+				alignItems="flex-end"
+				height="100%"
+				width="100%"
 			>
-				<Box flexDirection="column">
-					{toDisplay.map(({ toPress, id }) => (
-						<Box key={id}>
-							<Text color={"cyan"}>{toPress} </Text>
-						</Box>
-					))}
-				</Box>
+				<Box
+					marginX={1}
+					key={2}
+					borderStyle={"single"}
+					borderColor={"yellow"}
+					justifyContent="space-between"
+					minWidth={26}
+				>
+					<Box flexDirection="column">
+						{toDisplay.map(({ toPress, id }) => (
+							<Box key={id}>
+								<Text color={"cyan"}>{toPress} </Text>
+							</Box>
+						))}
+					</Box>
 
-				<Box flexDirection="column">
-					{toDisplay.map(({ label, id }) => (
-						<Box key={id}>
-							<Text>{label} </Text>
-						</Box>
-					))}
+					<Box flexDirection="column">
+						{toDisplay.map(({ label, id }) => (
+							<Box key={id}>
+								<Text>{label} </Text>
+							</Box>
+						))}
+					</Box>
 				</Box>
 			</Box>
 		)
