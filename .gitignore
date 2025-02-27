@@ -1,6 +1,7 @@
 db.db
 logs.txt
 scratch*
+*.code-workspace
 
 
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
