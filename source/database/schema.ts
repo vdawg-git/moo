@@ -13,7 +13,7 @@ export const tracksTable = sqliteTable("tracks", {
 	sourceProvider: text().notNull(),
 
 	/** In milliseconds */
-	duration: integer(),
+	duration: integer().notNull(),
 
 	title: text(),
 	/** Track number in the album. See {@link trackNumberTotal} for the total number of tracks */
