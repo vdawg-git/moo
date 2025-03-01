@@ -5,6 +5,25 @@ import type { FilePath } from "#/types/types"
 
 export type TrackColumnKey = keyof (typeof tracksTable)["_"]["columns"]
 export type TrackColumn = (typeof tracksTable)["_"]["columns"][TrackColumnKey]
+/** File metadata used to detect wether the local track was modified. */
+export type TrackFileMeta = Pick<
+	typeof tracksTable.$inferSelect,
+	"mtime" | "size"
+>
+
+// Currently based on https://orm.drizzle.team/docs/drizzle-kit-migrate
+// and https://bun.sh/docs/bundler/executables#embed-assets-files
+// there doesn't seem to an easy way to handle migrations automatically.
+// But as the database currently only acts as a cache, we can safely recreate it if the version doesnt match
+//! Increase this if you change the schema.
+export const DATABASE_VERSION = 1
+export const versionTable = sqliteTable("version", {
+	version: integer()
+		.notNull()
+		.unique()
+		.primaryKey()
+		.$default(() => DATABASE_VERSION)
+})
 
 export const tracksTable = sqliteTable("tracks", {
 	id: text().primaryKey().$type<TrackId>(),
@@ -137,7 +156,11 @@ export const tracksTable = sqliteTable("tracks", {
 	bitsPerSample: integer(),
 	albumGain: integer(),
 	codecProfile: text(),
-	container: text()
+	container: text(),
+
+	// File metadata. Used to detect wether the file changed.
+	size: integer(),
+	mtime: integer()
 })
 
 export const artistsTable = sqliteTable("artists", {

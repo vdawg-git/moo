@@ -11,6 +11,8 @@ const isCompiled = import.meta?.dirname
 
 const nodeEnv = process.env.NODE_ENV
 
+const thisDirectoryPath = import.meta.dirname ?? __dirname
+
 // Compiled binaries have NODE_ENV="development" by default in Bun..
 export const IS_DEV = !isCompiled && nodeEnv !== "production"
 
@@ -20,7 +22,7 @@ export const APP_NAME = IS_DEV ? packageJson.name + "_dev" : packageJson.name
 // Also import.meta.dirname will be "/$bunfs/root" when the app is compiled
 export const APP_ROOT = isCompiled
 	? path.dirname(process.execPath)
-	: path.join(import.meta.dirname, "..")
+	: path.join(thisDirectoryPath, "..")
 
 const appPaths = envPaths(APP_NAME, { suffix: "" })
 

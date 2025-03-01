@@ -8,18 +8,19 @@ import { nullsToUndefined } from "#/helpers.js"
 import { logg } from "#/logs.js"
 import { schmemaToSql } from "#/smartPlaylists/toSql.js"
 // @ts-expect-error
-import setupSqlRaw from "../../drizzle/0000_fluffy_human_torch.sql" with {
-	type: "text"
-}
+import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 import { createLocalPlayer } from "../player/player.js"
 import {
+	DATABASE_VERSION,
 	albumsTable,
 	artistsTable,
 	composersTable,
 	movementsTable,
 	playlistTracksTable,
 	playlistsTable,
-	tracksTable
+	tracksTable,
+	versionTable,
+	type TrackFileMeta
 } from "./schema.js"
 import { upsert } from "./sqlHelper.js"
 import {
@@ -75,6 +76,31 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 							: undefined
 					)
 			).map(R.map(nullsToUndefined)),
+
+		getTracksFileMetadata: async (ids) => {
+			const toSelect = {
+				mtime: tracksTable.mtime,
+				size: tracksTable.size
+			} satisfies Record<keyof TrackFileMeta, unknown>
+
+			return Result.fromAsyncCatching(
+				db
+					.select({
+						id: tracksTable.id,
+						...toSelect
+					})
+					.from(tracksTable)
+					.where(ids && inArray(tracksTable.id, ids as TrackId[]))
+			).map(
+				R.reduce(
+					(accumulator, current) => {
+						accumulator[current.id] ??= R.omit(current, ["id"])
+						return accumulator
+					},
+					{} as Record<TrackId, TrackFileMeta>
+				)
+			)
+		},
 
 		getPlaylist: async (id) => {
 			return Result.fromAsyncCatching(
@@ -348,20 +374,32 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
  * as the database setup is needed for everything
  */
 async function initDatabase(db: BunSQLiteDatabase): Promise<void> {
-	const shouldWork = await db
-		.select({ id: tracksTable.id })
-		.from(tracksTable)
+	const shouldRecreate = await db
+		.select()
+		.from(versionTable)
 		.limit(1)
-		.then(() => true)
-		.catch(() => false)
+		.then((data) => data[0]?.version !== DATABASE_VERSION)
+		.catch(() => true)
 
-	if (shouldWork) return
+	if (!shouldRecreate) return
 
 	logg.debug("running database init..")
 
 	const setupCalls = (setupSqlRaw as string).split("--> statement-breakpoint")
 
-	return db.transaction((tx) => {
+	return db.transaction(async (tx) => {
+		// reset db
+		db.run("PRAGMA foreign_keys = OFF;")
+		const tables = db.all<{ name: string }>(
+			"SELECT name FROM sqlite_master WHERE type='table';"
+		)
+		for (const { name } of tables) {
+			db.run(`DROP TABLE IF EXISTS ${name};`)
+		}
+
+		tx.insert(versionTable).values({ version: DATABASE_VERSION })
 		setupCalls.forEach((setup) => tx.run(setup))
+
+		db.run("PRAGMA foreign_keys = ON;")
 	})
 }

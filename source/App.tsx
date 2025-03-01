@@ -63,15 +63,13 @@ export async function startApp() {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)
 	}
 
-	if (!IS_DEV) {
-		Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
-			.onFailure((error) => {
-				logg.error("Failed to update db at startup", { error })
-			})
-			.onSuccess(() => {
-				logg.debug("Updated db")
-			})
-	}
+	Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
+		.onFailure((error) => {
+			logg.error("Failed to update db at startup", { error })
+		})
+		.onSuccess(() => {
+			logg.debug("Updated db")
+		})
 
 	updateSmartPlaylists()
 	const watcher = watchPlaylists()

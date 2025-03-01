@@ -23,6 +23,8 @@ import { logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
 import type { FilePath } from "#/types/types"
 import { supportedFormats } from "./formats"
+import type { TrackFileMeta } from "#/database/schema"
+import { stat } from "node:fs/promises"
 
 export async function updateDatabase(
 	musicDirectories: readonly FilePath[],
@@ -151,8 +153,34 @@ export function watchAndUpdateDatabase(
 		.pipe(
 			buffer(watcherRelease$),
 			concatMap(async (changes) => {
+				const filesMetadata = await Result.fromAsync(
+					database.getTracksFileMetadata()
+				)
+					.onFailure(
+						(error) =>
+							addErrorNotification(
+								"Failed to update tracks in the background",
+								error,
+								"getting files metadata failed in watch update"
+							) as undefined
+					)
+					.getOrNull()
+
+				if (!filesMetadata) return
+
 				const parsed: TrackData[] = []
 				for (const file of new Set(changes)) {
+					const databaseMetadata = filesMetadata[file as unknown as TrackId]
+
+					const shouldSkip =
+						!!databaseMetadata &&
+						(await isSameAsInDatabase(file, databaseMetadata))
+
+					if (shouldSkip) {
+						logg.debug("skipped", { file })
+						continue
+					}
+
 					const result = await parseMusicFile(file)
 					result
 						.onSuccess((track) => {
@@ -164,7 +192,8 @@ export function watchAndUpdateDatabase(
 				}
 
 				return parsed
-			})
+			}),
+			filter(R.isNonNullish)
 		)
 		.subscribe((tracks) => database.upsertTracks(tracks))
 
@@ -325,4 +354,16 @@ function createMusicDirectoriesWatcher(
 		filter(isSupportedFile),
 		share()
 	)
+}
+
+async function isSameAsInDatabase(
+	filepath: FilePath,
+	metaddata: TrackFileMeta
+): Promise<boolean> {
+	return Result.fromAsyncCatching(stat(filepath))
+		.map(
+			({ mtime, size }) =>
+				mtime.valueOf() === metaddata.mtime && size === metaddata.size
+		)
+		.getOrDefault(false)
 }

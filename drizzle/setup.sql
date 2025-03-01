@@ -39,7 +39,7 @@ CREATE TABLE `playlists` (
 CREATE TABLE `tracks` (
 	`id` text PRIMARY KEY NOT NULL,
 	`sourceProvider` text NOT NULL,
-	`duration` integer,
+	`duration` integer NOT NULL,
 	`title` text,
 	`trackIndex` integer,
 	`trackIndexOf` integer,
@@ -115,6 +115,8 @@ CREATE TABLE `tracks` (
 	`albumGain` integer,
 	`codecProfile` text,
 	`container` text,
+	`size` integer,
+	`mtime` integer,
 	FOREIGN KEY (`artist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`albumartist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`album`) REFERENCES `albums`(`id`) ON UPDATE no action ON DELETE cascade

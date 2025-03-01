@@ -6,7 +6,12 @@ import type { Observable } from "rxjs"
 import type { FilePath } from "#/types/types"
 import { addErrorNotification } from "#/state/state"
 import type { PlaylistSchema } from "#/smartPlaylists/schema"
-import type { AlbumSimple, ArtistSimple, PlaylistSimple } from "./schema"
+import type {
+	AlbumSimple,
+	ArtistSimple,
+	PlaylistSimple,
+	TrackFileMeta
+} from "./schema"
 
 export interface Database {
 	getTrack: (id: TrackId) => Promise<Result<Track | undefined, Error>>
@@ -21,6 +26,10 @@ export interface Database {
 	deleteTracksInverted: (
 		ids: readonly TrackId[]
 	) => Promise<Result<void, Error>>
+
+	getTracksFileMetadata: (
+		ids?: readonly TrackId[]
+	) => Promise<Result<Record<TrackId, TrackFileMeta>, Error>>
 
 	getAlbum: (id: AlbumId) => Promise<Result<Album | undefined, Error>>
 	getAlbums: (
