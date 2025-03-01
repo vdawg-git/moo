@@ -1,6 +1,6 @@
 import { eq, inArray, notInArray, or } from "drizzle-orm"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
-import { isNonNullish } from "remeda"
+import * as R from "remeda"
 import { Subject } from "rxjs"
 import { Result } from "typescript-result"
 import { databasePath } from "#/constants.js"
@@ -25,6 +25,7 @@ import { upsert } from "./sqlHelper.js"
 import {
 	type AlbumId,
 	type ArtistId,
+	type BaseTrack,
 	type Database,
 	type Playlist,
 	type PlaylistId,
@@ -50,7 +51,13 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 		getTracks: async (ids = []) =>
 			Result.fromAsyncCatching(
 				db
-					.select()
+					.select({
+						album: tracksTable.album,
+						artist: tracksTable.artist,
+						duration: tracksTable.duration,
+						id: tracksTable.id,
+						title: tracksTable.title
+					} satisfies Record<keyof BaseTrack, unknown>)
 					.from(tracksTable)
 					.orderBy(
 						tracksTable.titlesort,
@@ -67,9 +74,7 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 							? inArray(tracksTable.id, ids as TrackId[])
 							: undefined
 					)
-			).map((data) =>
-				data.map((track) => new LocalTrack(nullsToUndefined(track)))
-			),
+			).map(R.map(nullsToUndefined)),
 
 		getPlaylist: async (id) => {
 			return Result.fromAsyncCatching(
@@ -96,8 +101,8 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 					displayName: playlist.displayName ?? undefined,
 					tracks: joined
 						.map((data) => data.tracks)
-						.filter(isNonNullish)
-						.map((track) => new LocalTrack(nullsToUndefined(track)))
+						.filter(R.isNonNullish)
+						.map(nullsToUndefined)
 				} satisfies Playlist
 			})
 		},
@@ -328,7 +333,7 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
 	for (const item of values) {
 		const before = sum[item[key] as string] as object | undefined
 		const current = Object.fromEntries(
-			Object.entries(item).filter(([_, value]) => isNonNullish(value))
+			Object.entries(item).filter(([_, value]) => R.isNonNullish(value))
 		)
 
 		sum[item[key] as string] = Object.assign(before ?? {}, current)
