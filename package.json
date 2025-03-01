@@ -9,7 +9,7 @@
 		"debug": "bun --inspect-wait=1111/a .",
 		"prod": "NODE_ENV=production bun .",
 		"writeSchemas": "bun run ./scripts/writeSchemas.ts",
-		"compile": "bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
+		"compile": "NODE_ENV=production bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
 		"release": "dotenv -- release-it"
 	},
 	"dependencies": {
