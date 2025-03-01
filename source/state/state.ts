@@ -9,7 +9,7 @@ import type { Except } from "type-fest"
 import { Result } from "typescript-result"
 import { database } from "#/database/database"
 import { enumarateError, logg } from "#/logs"
-import type { PlaylistId, Track } from "../database/types"
+import type { BaseTrack, PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 
 export interface AppState {
@@ -226,7 +226,7 @@ export type AppNotification = {
 type NotificationAdd = Except<AppNotification, "id">
 
 type Queue = {
-	tracks: readonly Track[]
+	tracks: readonly BaseTrack[]
 	source: PlaybackSource
 }
 

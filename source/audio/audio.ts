@@ -11,9 +11,9 @@ import {
 	tap
 } from "rxjs"
 import { match } from "ts-pattern"
-import type { Track } from "#/database/types"
 import { logg } from "#/logs"
 import { addErrorNotification, appState, appState$ } from "#/state/state"
+import { LocalTrack } from "#/database/database"
 
 const toPlay$: Observable<Track | undefined> = appState$.pipe(
 	map((state) => {
@@ -25,7 +25,8 @@ const toPlay$: Observable<Track | undefined> = appState$.pipe(
 		return queue.tracks[state.playback.index]
 	}),
 
-	distinctUntilChanged((previous, current) => previous?.id === current?.id)
+	distinctUntilChanged((previous, current) => previous?.id === current?.id),
+	map((track) => track && new LocalTrack(track))
 )
 
 /**
