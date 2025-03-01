@@ -2,7 +2,8 @@ import { readdir } from "node:fs/promises"
 import path from "node:path"
 import parseDate from "any-date-parser"
 import { parseBuffer, selectCover } from "music-metadata"
-import { mapValues } from "remeda"
+import * as R from "remeda"
+import { pipe } from "remeda"
 import {
 	buffer,
 	type Observable,
@@ -23,74 +24,111 @@ import { addErrorNotification } from "#/state/state"
 import type { FilePath } from "#/types/types"
 import { supportedFormats } from "./formats"
 
-function createMusicDirectoriesWatcher(
-	directories: readonly FilePath[]
-): Observable<FilePath> {
-	return merge(
-		...directories.map((directory) =>
-			createWatcher(directory, { recursive: true })
-		)
-	).pipe(
-		map(({ filePath }) => filePath),
-		distinctUntilChanged(),
-		filter(isSupportedFile),
-		share()
+export async function updateDatabase(
+	musicDirectories: readonly FilePath[],
+	database: Database
+): Promise<Result<void, Error | readonly Error[]>> {
+	return Result.fromAsync(scanMusicDirectories(musicDirectories)).map(
+		async (filePaths) => {
+			return Result.fromAsync(batchTrackUpdates(filePaths, database))
+				.map(({ upserted, errors }) => {
+					errors.length &&
+						addErrorNotification(
+							`Errors when updating tracks: ${errors.map((error) => String(error)).join("")}`
+						)
+
+					return database.deleteTracksInverted(upserted)
+				})
+				.onFailure((failure) => {
+					Array.isArray(failure)
+						? failure.forEach((error) =>
+								addErrorNotification(
+									"Error updating",
+									error,
+									"Error while  updateDatabase"
+								)
+							)
+						: addErrorNotification(
+								"Error updating tracks",
+								failure,
+								"Error while updateDatabase single"
+							)
+				})
+		}
 	)
+}
+
+type BatchUpdate = Result<
+	{ upserted: readonly TrackId[]; errors: readonly Error[] },
+	readonly Error[]
+>
+
+async function batchTrackUpdates(
+	filePaths: readonly FilePath[],
+	database: Database
+): Promise<BatchUpdate> {
+	const BATCH_AMOUNT = 25
+	const batches = R.chunk(filePaths, BATCH_AMOUNT)
+
+	const trackIds: TrackId[] = []
+	const errors: Error[] = []
+	for (const batch of batches) {
+		const { tracksData, parsingErrors } = pipe(
+			await Promise.all(batch.map(parseMusicFile)),
+			R.reduce(
+				(accumulator, result) => {
+					result.fold(
+						(data) => accumulator.tracksData.push(data),
+						(error) => accumulator.parsingErrors.push(error)
+					)
+					return accumulator
+				},
+				{ tracksData: [], parsingErrors: [] } as {
+					tracksData: TrackData[]
+					parsingErrors: Error[]
+				}
+			)
+		)
+
+		errors.push(...parsingErrors)
+
+		if (tracksData.length === 0) continue
+
+		const result = await database.upsertTracks(tracksData)
+		if (result.isError()) {
+			return Result.error([result.error, ...errors])
+		}
+
+		trackIds.push(...tracksData.map(({ id }) => id))
+	}
+
+	return Result.ok({ upserted: trackIds, errors })
 }
 
 export async function scanMusicDirectories(
 	directories: readonly FilePath[]
-): Promise<readonly Result<TrackData, Error>[]> {
-	const files = (await Promise.all(directories.map(scanMusicDirectory))).flat()
+): Promise<Result<readonly FilePath[], Error>> {
+	const files = Result.all(...directories.map(scanMusicDirectory)).map(
+		(scannedDirectories) => scannedDirectories.flat()
+	)
 
 	return files
 }
 
+/**
+ * Get the filepaths for the music files in the given directory.
+ *
+ * The files are not parsed here yet, as this should be done later in batches
+ * to prevent clogging up memory for huge dirs.
+ */
 async function scanMusicDirectory(
 	directory: FilePath
-): Promise<readonly Result<TrackData, Error>[]> {
-	return Result.fromAsyncCatching(readdir(directory, { recursive: true }))
-		.map((paths) =>
+): Promise<Result<readonly FilePath[], Error>> {
+	return Result.fromAsyncCatching(readdir(directory, { recursive: true })).map(
+		(paths) =>
 			(paths as FilePath[])
 				.filter(isSupportedFile)
 				.map((relativePath) => path.join(directory, relativePath) as FilePath)
-				.map(parseMusicFile)
-		)
-		.fold(
-			(ok) => Promise.all(ok),
-			(error) => [Result.error(error)]
-		)
-}
-
-export async function updateDatabase(
-	musicDirectories: readonly FilePath[],
-	database: Database
-): Promise<Result<void, Error>> {
-	return Result.fromAsync(scanMusicDirectories(musicDirectories)).map(
-		(trackResults) => {
-			const { tracks, errors } = trackResults
-				.map((track) => track.toTuple())
-				.reduce(
-					(accumulator, [track, error]) => {
-						if (track) {
-							accumulator.tracks.push(track)
-						}
-						if (error) {
-							accumulator.errors.push(error)
-						}
-
-						return accumulator
-					},
-					{ tracks: [] as TrackData[], errors: [] as Error[] }
-				)
-
-			if (errors.length > 0) {
-				addErrorNotification("Errors adding tracks:", { errors })
-			}
-			logg.debug(`Adding ${tracks.length} tracks to db...`)
-
-			return tracks.length > 0 ? database.addTracks(tracks) : undefined
-		}
 	)
 }
 
@@ -128,7 +166,7 @@ export function watchAndUpdateDatabase(
 				return parsed
 			})
 		)
-		.subscribe((tracks) => database.addTracks(tracks))
+		.subscribe((tracks) => database.upsertTracks(tracks))
 
 	return () => subscription.unsubscribe()
 }
@@ -145,15 +183,14 @@ async function parseMusicFile(
 		Bun.file(filePath)
 			.arrayBuffer()
 			.then((buffer) => new Uint8Array(buffer))
-			.then((buffer) =>
-				parseBuffer(buffer, { path: filePath }, { duration: true })
-			)
+			.then((buffer) => parseBuffer(buffer, { path: filePath }))
 	).map(async ({ common: { track, picture, ...tags }, format }) => {
 		const releasedate =
 			(tags.releasedate && parseDate.fromString(tags.releasedate)) || undefined
 
 		const coverData = selectCover(picture)
 		let coverName = coverData && `${Bun.hash(coverData.data)}.${coverData.type}`
+		// TODO put this code somewhere else where its cleaner
 		// not so nice, but where would this side-effect make more sense
 		if (coverName && coverData) {
 			const coverPath = path.join(
@@ -161,11 +198,17 @@ async function parseMusicFile(
 				"pictures/tracks/local/",
 				coverName
 			)
-			// TODO put this somewhere else
-			await Bun.write(coverPath, coverData.data).catch((error) => {
-				coverName = null
-				logg.error(`Failed to save cover image of ${filePath}`, error)
-			})
+
+			if (
+				await Bun.file(coverPath)
+					.exists()
+					.catch(() => false)
+			) {
+				await Bun.write(coverPath, coverData.data).catch((error) => {
+					coverName = null
+					logg.error(`Failed to save cover image of ${filePath}`, error)
+				})
+			}
 		}
 
 		const {
@@ -187,7 +230,7 @@ async function parseMusicFile(
 			container
 		} = format
 
-		const joinedTags = mapValues(
+		const joinedTags = R.mapValues(
 			{
 				comment: tags.comment,
 				genre: tags.genre,
@@ -267,4 +310,19 @@ function toHexString(uint8Array: Uint8Array<ArrayBufferLike>): string {
 	return Array.from(uint8Array)
 		.map((byte) => byte.toString(16).padStart(2, "0"))
 		.join("")
+}
+
+function createMusicDirectoriesWatcher(
+	directories: readonly FilePath[]
+): Observable<FilePath> {
+	return merge(
+		...directories.map((directory) =>
+			createWatcher(directory, { recursive: true })
+		)
+	).pipe(
+		map(({ filePath }) => filePath),
+		distinctUntilChanged(),
+		filter(isSupportedFile),
+		share()
+	)
 }

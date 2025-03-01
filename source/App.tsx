@@ -24,7 +24,6 @@ import {
 import { manageNotifications } from "./state/stateReact"
 import { setupFiles } from "./filesystem"
 import { NextUpKeybinds } from "./components/sequenceKeybindsShower"
-import { manageKeybinds } from "./KeybindManager"
 
 const App = () => {
 	setCharRegisterSize(1)
@@ -38,7 +37,6 @@ const App = () => {
 		}
 	}, [])
 
-
 	return (
 		<ErrorBoundary
 			fallbackRender={({ error }) => <ErrorScreen error={error} />}
@@ -50,7 +48,7 @@ const App = () => {
 				<Navigator />
 
 				<ModalManager />
-				<NextUpKeybinds  />
+				<NextUpKeybinds />
 			</Viewport>
 		</ErrorBoundary>
 	)
@@ -58,10 +56,6 @@ const App = () => {
 
 export async function startApp() {
 	await setupFiles()
-
-	if (!IS_DEV) {
-		updateDatabase(appConfig.musicDirectories, database)
-	}
 
 	logg.info("Starting app..", { is_dev: IS_DEV, dbPath: databasePath })
 

@@ -1,4 +1,4 @@
-import { eq, inArray, or } from "drizzle-orm"
+import { eq, inArray, notInArray, or } from "drizzle-orm"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import { isNonNullish } from "remeda"
 import { Subject } from "rxjs"
@@ -133,7 +133,7 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 				playlists: []
 			}),
 
-		addTracks: async (tracks) => {
+		upsertTracks: async (tracks) => {
 			const result = await addTracks(db)(tracks)
 			result.onSuccess(() => {
 				changed$.next("")
@@ -142,7 +142,12 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 			return result
 		},
 
-		// TODO remove deleted songs
+		deleteTracksInverted: async (ids) =>
+			Result.fromAsyncCatching(
+				db
+					.delete(tracksTable)
+					.where(notInArray(tracksTable.id, ids as TrackId[]))
+			),
 
 		changed$
 	} satisfies Database
@@ -196,7 +201,7 @@ export class LocalTrack extends Track {
 	}
 }
 
-const addTracks: (database: BunSQLiteDatabase) => Database["addTracks"] = (
+const addTracks: (database: BunSQLiteDatabase) => Database["upsertTracks"] = (
 	db
 ) => {
 	return async (tracks) => {

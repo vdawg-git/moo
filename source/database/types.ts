@@ -13,6 +13,14 @@ export interface Database {
 	getTracks: (
 		ids?: readonly TrackId[]
 	) => Promise<Result<readonly Track[], Error>>
+	/**
+	 * Deletes all tracks which are *not* part of the provided IDs.
+	 *
+	 * This is used to clean up the database after updating the tracks from the music directories.
+	 * */
+	deleteTracksInverted: (
+		ids: readonly TrackId[]
+	) => Promise<Result<void, Error>>
 
 	getAlbum: (id: AlbumId) => Promise<Result<Album | undefined, Error>>
 	getAlbums: (
@@ -55,7 +63,14 @@ export interface Database {
 		>
 	>
 
-	addTracks: (tracks: readonly TrackData[]) => Promise<Result<void, Error>>
+	/**
+	 * Upserts tracks.
+	 *
+	 * This is used to update and the tracks from the music directories.
+	 *
+	 * Calling this will trigger {@linkcode changed$}.
+	 * */
+	upsertTracks: (tracks: readonly TrackData[]) => Promise<Result<void, Error>>
 
 	/** Emits when the database changes. */
 	changed$: Observable<string>
