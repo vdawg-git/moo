@@ -122,14 +122,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 					}}
 					onSelect={onSelect}
 					onOtherInput={(input, specialKey) => {
-						updateInputValueRef.current?.((oldValue) => {
-							logg.debug("xxx", {
-								value: oldValue ?? "ooo",
-								specialKey: specialKey ?? "yo"
-							})
-
-							return oldValue + input
-						})
+						updateInputValueRef.current?.((oldValue) => oldValue + input)
 
 						if (input !== "") {
 							nodemap.control.goToNode("textinput")

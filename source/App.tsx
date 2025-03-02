@@ -68,7 +68,7 @@ export async function startApp() {
 			logg.error("Failed to update db at startup", { error })
 		})
 		.onSuccess(() => {
-			logg.debug("Updated db")
+			logg.info("Updated db")
 		})
 
 	updateSmartPlaylists()
