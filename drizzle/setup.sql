@@ -121,3 +121,9 @@ CREATE TABLE `tracks` (
 	FOREIGN KEY (`albumartist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`album`) REFERENCES `albums`(`id`) ON UPDATE no action ON DELETE cascade
 );
+--> statement-breakpoint
+CREATE TABLE `version` (
+	`version` integer PRIMARY KEY NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `version_version_unique` ON `version` (`version`);

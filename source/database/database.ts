@@ -5,7 +5,7 @@ import { Subject } from "rxjs"
 import { Result } from "typescript-result"
 import { databasePath } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
-import { logg } from "#/logs.js"
+import { logg, enumarateError } from "#/logs.js"
 import { schmemaToSql } from "#/smartPlaylists/toSql.js"
 // @ts-expect-error
 import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
@@ -378,12 +378,18 @@ async function initDatabase(db: BunSQLiteDatabase): Promise<void> {
 		.select()
 		.from(versionTable)
 		.limit(1)
-		.then((data) => data[0]?.version !== DATABASE_VERSION)
-		.catch(() => true)
+		.then((data) => {
+			const isSame = data[0]?.version !== DATABASE_VERSION
+			return !isSame
+		})
+		.catch((error) => {
+			logg.error("error checking database for init", enumarateError(error))
+			return true
+		})
 
 	if (!shouldRecreate) return
 
-	logg.debug("running database init..")
+	logg.info("running database init..")
 
 	const setupCalls = (setupSqlRaw as string).split("--> statement-breakpoint")
 
