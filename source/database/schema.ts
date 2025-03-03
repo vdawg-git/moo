@@ -159,8 +159,8 @@ export const tracksTable = sqliteTable("tracks", {
 	container: text(),
 
 	// File metadata. Used to detect wether the file changed.
-	size: integer(),
-	mtime: integer()
+	size: integer().notNull(),
+	mtime: integer().notNull()
 })
 
 export const artistsTable = sqliteTable("artists", {
