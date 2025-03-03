@@ -1,21 +1,13 @@
-import path from "node:path"
-import {
-	Box,
-	type Color,
-	List,
-	Text,
-	useKeymap,
-	useList,
-	useListItem
-} from "tuir"
-import { appConfig } from "#/config/config"
-import type { Track } from "../database/types"
+import path from "node:path";
+import { Box, List, Text, useKeymap, useList, useListItem } from "tuir";
+import { appConfig } from "#/config/config";
+import type { BaseTrack } from "../database/types";
 
 type PlaylistProps = {
-	tracks: readonly Track[]
-	onChange: (index: number) => void
-	playingIndex?: number | undefined
-}
+	tracks: readonly BaseTrack[];
+	onChange: (index: number) => void;
+	playingIndex?: number | undefined;
+};
 
 export function Tracklist({ tracks, onChange, playingIndex }: PlaylistProps) {
 	const { listView, items } = useList(tracks, {
@@ -23,39 +15,49 @@ export function Tracklist({ tracks, onChange, playingIndex }: PlaylistProps) {
 		unitSize: 1,
 		navigation: "vi-vertical",
 		centerScroll: false,
-		fallthrough: false
-	})
+		fallthrough: false,
+	});
 
 	return (
 		<Box flexDirection="column">
 			{items.length === 0 && <Text>No tracks here :(</Text>}
 
-			<List listView={listView}>
-				{items.map((item, index) => (
-					<TrackItem
-						isPlaying={index === playingIndex}
-						key={item.id}
-						onSelect={() => onChange(index)}
-					/>
-				))}
-			</List>
+			<List
+				listView={listView}
+				batchMap={{
+					batchSize: 200,
+					items: tracks,
+					map: (item, index) => (
+						<TrackItem
+							isPlaying={index === playingIndex}
+							key={item.id}
+							onSelect={() => onChange(index)}
+						/>
+					),
+				}}
+			/>
 		</Box>
-	)
+	);
 }
 
 type TrackItemProps = {
-	onSelect: () => void
-	isPlaying: boolean
-}
+	onSelect: () => void;
+	isPlaying: boolean;
+};
 
 function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
-	const { isFocus, item: track, control, itemIndex } = useListItem<Track[]>()
-	const color = isFocus ? "blue" : undefined
-	const titleDisplay = track.title ?? path.basename(track.id)
+	const {
+		isFocus,
+		item: track,
+		control,
+		itemIndex,
+	} = useListItem<BaseTrack[]>();
+	const color = isFocus ? "blue" : undefined;
+	const titleDisplay = track.title ?? path.basename(track.id);
 
-	const { useEvent } = useKeymap({ submit: { key: "return" } })
-	useEvent("submit", onSelect)
-	const playIcon = isPlaying ? appConfig.icons.playingIndicator : ""
+	const { useEvent } = useKeymap({ submit: { key: "return" } });
+	useEvent("submit", onSelect);
+	const playIcon = isPlaying ? appConfig.icons.playingIndicator : "";
 
 	return (
 		<Box
@@ -72,5 +74,5 @@ function TrackItem({ onSelect, isPlaying }: TrackItemProps): React.ReactNode {
 				{titleDisplay}
 			</Text>
 		</Box>
-	)
+	);
 }

@@ -74,7 +74,7 @@ export async function startApp() {
 	updateSmartPlaylists()
 	const watcher = watchPlaylists()
 	preserveScreen()
-	const instance = render(<App />, { patchConsole: false })
+	const instance = render(<App />, { patchConsole: false, throttle: 16 })
 	await instance.waitUntilExit()
 
 	watcher.unsubscribe()
