@@ -34,6 +34,8 @@ import {
 	type TrackId
 } from "./types.js"
 import { databaseLogger } from "./logger.js"
+import { sortTracks } from "./naturalSorting.js"
+import { baseTrackSelector, trackSortSelector } from "./selectors.js"
 
 export const database = connectDatabase()
 
@@ -53,29 +55,18 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 			Result.fromAsyncCatching(
 				db
 					.select({
-						album: tracksTable.album,
-						artist: tracksTable.artist,
-						duration: tracksTable.duration,
-						id: tracksTable.id,
-						title: tracksTable.title
-					} satisfies Record<keyof BaseTrack, unknown>)
+						...baseTrackSelector,
+						...trackSortSelector
+					})
 					.from(tracksTable)
-					.orderBy(
-						tracksTable.titlesort,
-						tracksTable.title,
-						tracksTable.artistsort,
-						tracksTable.artist,
-						tracksTable.albumartistsort,
-						tracksTable.albumartist,
-						tracksTable.albumsort,
-						tracksTable.album
-					)
 					.where(
 						ids.length > 0
 							? inArray(tracksTable.id, ids as TrackId[])
 							: undefined
 					)
-			).map(R.map(nullsToUndefined)),
+			)
+				.map(R.map(nullsToUndefined))
+				.map(sortTracks),
 
 		getTracksFileMetadata: async (ids) => {
 			const toSelect = {
@@ -105,7 +96,10 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 		getPlaylist: async (id) => {
 			return Result.fromAsyncCatching(
 				db
-					.select()
+					.select({
+						playlist: playlistsTable,
+						track: baseTrackSelector
+					})
 					.from(playlistsTable)
 					.leftJoin(
 						playlistTracksTable,
@@ -117,18 +111,20 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 					)
 					.where(eq(playlistsTable.id, id))
 			).map((joined) => {
-				const playlist = joined[0]?.playlists
+				const playlist = joined[0]?.playlist
 				if (!playlist) {
 					return Result.error(new Error(`Could not find playlist ${id}`))
 				}
+				const tracks = R.pipe(
+					joined.flatMap(({ track }) => track ?? []),
+					R.map(nullsToUndefined),
+					sortTracks
+				)
 
 				return {
 					id: playlist.id as PlaylistId,
 					displayName: playlist.displayName ?? undefined,
-					tracks: joined
-						.map((data) => data.tracks)
-						.filter(R.isNonNullish)
-						.map(nullsToUndefined)
+					tracks
 				} satisfies Playlist
 			})
 		},
