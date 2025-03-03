@@ -92,3 +92,9 @@ On Arch you can use the AUR via `yay -S moo` .
 ```
 
 The executable app will be compiled into `./dist/moo`
+
+
+## Credits
+- [Tuir](https://github.com/max5961/tuir): React TUI library which powers the app.
+- [Kew](https://github.com/ravachol/kew): Design inspiration
+- [Musikcube](https://github.com/clangen/musikcube): Design inspiration
