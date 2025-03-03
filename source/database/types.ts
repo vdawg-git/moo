@@ -125,6 +125,8 @@ export abstract class Track {
 		this.events$ = this.player.events$
 		this.duration = properties.duration ?? 0
 		this.sourceProvider = sourceProvider
+		this.size = properties.size ?? 0
+		this.mtime = properties.mtime ?? 0
 	}
 
 	// We wrap the player like that as it needs to know the track id anyway,
@@ -291,6 +293,9 @@ export abstract class Track {
 	readonly albumGain?: number
 	readonly codecProfile?: string
 	readonly container?: string
+
+	readonly mtime: number
+	readonly size: number
 }
 
 /** Raw track data to be fed into the database */

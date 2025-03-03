@@ -19,7 +19,7 @@ import { Result } from "typescript-result"
 import { DATA_DIRECTORY } from "#/constants"
 import type { Database, TrackData, TrackId } from "#/database/types"
 import { createWatcher } from "#/filesystem"
-import { logg } from "#/logs"
+import { logg, enumarateError } from "#/logs"
 import { addErrorNotification } from "#/state/state"
 import type { FilePath } from "#/types/types"
 import { supportedFormats } from "./formats"
@@ -39,7 +39,9 @@ export async function updateDatabase(
 							`Errors when updating tracks: ${errors.map((error) => String(error)).join("")}`
 						)
 
-					return database.deleteTracksInverted(upserted)
+					return database.deleteTracksInverted(
+						filePaths as unknown as TrackId[]
+					)
 				})
 				.onFailure((failure) => {
 					Array.isArray(failure)
@@ -70,13 +72,29 @@ async function batchTrackUpdates(
 	database: Database
 ): Promise<BatchUpdate> {
 	const BATCH_AMOUNT = 25
+
 	const batches = R.chunk(filePaths, BATCH_AMOUNT)
+	const tracksMetadataResult = await database.getTracksFileMetadata()
+	if (tracksMetadataResult.isError()) {
+		return Result.error([tracksMetadataResult.error])
+	}
+	const tracksMetadata = tracksMetadataResult.getOrThrow()
 
 	const trackIds: TrackId[] = []
 	const errors: Error[] = []
 	for (const batch of batches) {
+		const filtered = await Promise.all(
+			batch.map(async (file) => {
+				const metadata = tracksMetadata[file as unknown as TrackId]
+
+				return metadata && (await isSameAsInDatabase(file, metadata))
+					? undefined
+					: file
+			})
+		).then(R.filter(R.isNonNullish))
+
 		const { tracksData, parsingErrors } = pipe(
-			await Promise.all(batch.map(parseMusicFile)),
+			await Promise.all(filtered.map(parseMusicFile)),
 			R.reduce(
 				(accumulator, result) => {
 					result.fold(
@@ -107,7 +125,7 @@ async function batchTrackUpdates(
 	return Result.ok({ upserted: trackIds, errors })
 }
 
-export async function scanMusicDirectories(
+async function scanMusicDirectories(
 	directories: readonly FilePath[]
 ): Promise<Result<readonly FilePath[], Error>> {
 	const files = Result.all(...directories.map(scanMusicDirectory)).map(
@@ -177,7 +195,6 @@ export function watchAndUpdateDatabase(
 						(await isSameAsInDatabase(file, databaseMetadata))
 
 					if (shouldSkip) {
-						logg.debug("skipped", { file })
 						continue
 					}
 
@@ -214,6 +231,13 @@ async function parseMusicFile(
 			.then((buffer) => new Uint8Array(buffer))
 			.then((buffer) => parseBuffer(buffer, { path: filePath }))
 	).map(async ({ common: { track, picture, ...tags }, format }) => {
+		const fileMetaResult = await Result.fromAsyncCatching(stat(filePath))
+		if (fileMetaResult.isError()) {
+			return fileMetaResult
+		}
+		const { mtime: mtimeDate, size } = fileMetaResult.getOrThrow()
+		const mtime = mtimeDate.valueOf()
+
 		const releasedate =
 			(tags.releasedate && parseDate.fromString(tags.releasedate)) || undefined
 
@@ -325,7 +349,10 @@ async function parseMusicFile(
 			bitsPerSample,
 			albumGain,
 			codecProfile,
-			container
+			container,
+
+			mtime,
+			size
 		} satisfies TrackData
 	})
 }
@@ -365,5 +392,8 @@ async function isSameAsInDatabase(
 			({ mtime, size }) =>
 				mtime.valueOf() === metaddata.mtime && size === metaddata.size
 		)
+		.onFailure((error) => {
+			logg.error("failed to stat", { error: enumarateError(error) })
+		})
 		.getOrDefault(false)
 }
