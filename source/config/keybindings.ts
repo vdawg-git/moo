@@ -1,47 +1,69 @@
-import { appCommands, type AppCommand } from "#/commands/commands"
+import * as R from "remeda"
+import { pipe } from "remeda"
+import type { WritableDeep } from "type-fest"
 import { z } from "zod"
-import { displayKeybinding, shortcutSchema } from "./shortcutParser"
+import {
+	appCommandsBase,
+	type AppCommandData,
+	type AppCommandID
+} from "#/commands/commandsBase"
+import type { AppCommandsMap } from "#/commands/appCommands"
+import {
+	type KeyBinding,
+	type KeyInput,
+	displayKeybinding,
+	shortcutSchema
+} from "./shortcutParser"
 
-const optionalShortcut = shortcutSchema.nullable()
+const keybindsRawShape = pipe(
+	R.entries(appCommandsBase),
+	R.map(([id, { description, keybindings }]) => {
+		const defaultDisplay: string =
+			(keybindings.length as number) === 0
+				? "none"
+				: keybindings.map((binding) => displayKeybinding(binding)).join("\n")
 
-const keybinds = appCommands.map(({ id, description, keybinding }) =>
-	z
-		.object({ id: z.literal(id), key: optionalShortcut })
-		.describe(
-			description + "\n" + `Default: "${displayKeybinding(keybinding)}"`
-		)
+		return z
+			.object({ command: z.literal(id), key: shortcutSchema } as const)
+			.describe(description + "\n" + `Default: "${defaultDisplay}"`)
+	})
 )
-// biome-ignore lint/style/noNonNullAssertion: Zod workaround for its non-empty array argument
-const toUnionize = [keybinds[0]!, keybinds[1]!, ...keybinds.slice(2)] as const
+const toDiscriminate = z.discriminatedUnion("command", [
+	// biome-ignore lint/style/noNonNullAssertion: We need to do that bc of Zod's typing
+	keybindsRawShape[0]!,
+	...keybindsRawShape.slice(1)
+])
 
 export const keybindingsSchema = z
-	.array(z.union(toUnionize))
+	.array(toDiscriminate)
 	.describe(
 		'The keybindings of the app. If a keybinding is not set its default value will be used, so you dont have to set any. You can unset a keybind by setting it to "null". Setting it to "" will not work.'
 	)
 	.default([])
-	.transform((userBinds, ctx) => {
-		const userSetCommandIds = userBinds.map(({ id }) => id)
-		// Commands set by the user should be overriden (thus the defaults removed)
-		const defaultCommands = appCommands.filter(
-			({ id }) => !userSetCommandIds.includes(id)
-		)
+	.transform<AppCommandsMap>((userBinds, ctx) => {
+		// save to an object as later on we also want to support `value` for commands with arguments
+		const reduced: Map<AppCommandID, readonly { key: KeyBinding }[]> =
+			userBinds.reduce(
+				(accumulator, { command: id, key }) => {
+					const isSet = accumulator.get(id) !== undefined
+					if (!isSet) {
+						accumulator.set(id, [])
+					}
+					// biome-ignore lint/style/noNonNullAssertion: <explanation>
+					accumulator.get(id)!.push({ key })
+					return accumulator
+				},
+				new Map() as Map<AppCommandID, { key: KeyBinding }[]>
+			)
 
-		const userSetCommands: AppCommand[] = userBinds.flatMap((userBind) => {
-			if (!userBind.key) return []
+		// clone the original as to not mutate it,
+		// then override the keybindings with user-defined ones.
+		const result = new Map(Object.entries(R.clone(appCommandsBase)))
+		for (const [command, binds] of reduced.entries()) {
+			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			const data = result.get(command)! as WritableDeep<AppCommandData>
+			data.keybindings = binds.map(({ key }) => key) as KeyInput[][]
+		}
 
-			const matchingCommand = appCommands.find(({ id }) => id === userBind.id)
-			if (!matchingCommand) {
-				// should not happen, as the IDs get checked during parsing
-				ctx.addIssue({
-					message: "Invalid ID passed. This is a bug. Please report it.",
-					code: z.ZodIssueCode.custom
-				})
-				return []
-			}
-
-			return { ...matchingCommand, keybinding: userBind.key }
-		})
-
-		return [...defaultCommands, ...userSetCommands]
+		return result as AppCommandsMap
 	})

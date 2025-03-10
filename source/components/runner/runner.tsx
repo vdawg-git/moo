@@ -338,19 +338,5 @@ function RunnerListItem({ item }: RunnerItemProps): React.ReactNode {
 	)
 }
 
-/** Gets the pressed letters. Ignores special keys like return */
-function keyInputUnionToText(
-	inputs: KeyInput | KeyInput[]
-): string | undefined {
-	const string = recursion(inputs)
-	return string === "" ? undefined : string
-
-	function recursion(inputs: KeyInput | KeyInput[]): string {
-		return Array.isArray(inputs)
-			? inputs.map(keyInputUnionToText).join("")
-			: (inputs.input ?? "")
-	}
-}
-
 type SpecialKeys = keyof (typeof Key & { ctrl: undefined })
 type PressedSpecialKeys = Set<SpecialKeys>

@@ -24,6 +24,7 @@ import {
 import { manageNotifications } from "./state/stateReact"
 import { setupFiles } from "./filesystem"
 import { NextUpKeybinds } from "./components/sequenceKeybindsShower"
+import { registerGlobalCommands } from "./commands/commandFunctions"
 
 const App = () => {
 	setCharRegisterSize(1)
@@ -66,6 +67,7 @@ export async function startApp() {
 	Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
 		.onFailure((error) => {
 			logg.error("Failed to update db at startup", { error })
+			throw new Error("Failed to update database")
 		})
 		.onSuccess(() => {
 			logg.info("Updated db")
@@ -75,16 +77,8 @@ export async function startApp() {
 	const watcher = watchPlaylists()
 	preserveScreen()
 	const instance = render(<App />, { patchConsole: false, throttle: 8 })
+	registerGlobalCommands()
 	await instance.waitUntilExit()
 
 	watcher.unsubscribe()
-}
-
-async function writeToStdout(content: string) {
-	return new Promise<void>((resolve, reject) => {
-		process.stdout.write(content, (error) => {
-			if (error) reject(error)
-			else resolve()
-		})
-	})
 }

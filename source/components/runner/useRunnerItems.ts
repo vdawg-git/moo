@@ -1,4 +1,4 @@
-import { appCommands } from "#/commands/commands"
+import { appCommands } from "#/commands/appCommands"
 import { appConfig } from "#/config/config"
 import { database } from "#/database/database"
 import { observeQuery } from "#/database/useQuery"
@@ -18,6 +18,7 @@ import {
 import { P, match } from "ts-pattern"
 import { Result } from "typescript-result"
 import type { RunnerItem } from "./runner"
+import { keybindsState } from "#/keybindManager/keybindsState"
 
 type SearchMode = "Playlists" | "Go to" | "Commands"
 
@@ -191,14 +192,16 @@ type ParsedInput = {
 
 /** A function because otherwise we have circular imports  */
 function getRunnerCommands(): RunnerItem[] {
-	return appCommands
-		.filter((command) => !command.id.startsWith("runner."))
-		.map(({ label, callback, id }) => ({
+	return keybindsState
+		.getAllCommands()
+		.entries()
+		.map(([id, { label, callback }]) => ({
 			id,
 			label,
 			onSelect: callback,
 			icon: appConfig.icons.command
 		}))
+		.toArray()
 }
 
 async function getPossibleGotos(): Promise<readonly RunnerItem[]> {

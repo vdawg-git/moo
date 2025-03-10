@@ -45,7 +45,7 @@ export const appConfigSchema = z
 		/** The icons used by the app. */
 		icons: iconsSchema,
 
-		/** All keybindings. Defaults and those overriden by the user. */
+		/** All keybindings. Default ones and those overriden by the user. */
 		keybindings: keybindingsSchema
 	})
 	.strict("Unknown properties found in the config!")

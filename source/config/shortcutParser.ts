@@ -8,6 +8,9 @@ import { stripIndent } from "#/helpers"
  * Should be used as an array as keybindings are sequenced.
  */
 export type KeyInput = { key: string; modifiers: KeyModifier[] }
+
+/** A keybinding is an array of {@linkcode KeyInput} */
+export type KeyBinding = readonly KeyInput[]
 /**
  * Shift wont get registered.
  * Instead only the uppercase letters get send from the terminal.
@@ -51,7 +54,7 @@ const tooManyPlusRg = /\+{3,}/
 export const shortcutSchema = z
 	.string()
 	.min(1)
-	.transform<KeyInput[]>((toParse, ctx) => {
+	.transform<KeyBinding>((toParse, ctx) => {
 		const inputs = pipe(
 			toParse, //
 			removeDuplicateWhitespace,
@@ -147,7 +150,7 @@ function splitOnPlus(text: string): string[] {
  *
  * Can then be parsed by {@link shortcutSchema}.
  */
-export function displayKeybinding(keySequence: readonly KeyInput[]): string {
+export function displayKeybinding(keySequence: KeyBinding): string {
 	return keySequence
 		.map(({ key, modifiers }) =>
 			modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key

@@ -1,6 +1,12 @@
 import path from "node:path"
+import { useCallback, useEffect, useState } from "react"
 import { Box, List, Text, useKeymap, useList, useListItem } from "tuir"
+import type { GeneralCommand } from "#/commands/appCommands"
 import { appConfig } from "#/config/config"
+import {
+	registerKeybinds,
+	unregisterKeybinds
+} from "#/keybindManager/KeybindManager"
 import type { BaseTrack } from "../database/types"
 
 type PlaylistProps = {
@@ -10,13 +16,90 @@ type PlaylistProps = {
 }
 
 export function Tracklist({ tracks, onChange, playingIndex }: PlaylistProps) {
-	const { listView, items } = useList(tracks, {
+	const { listView, items, control } = useList(tracks, {
 		windowSize: "fit",
 		unitSize: 1,
-		navigation: "vi-vertical",
+		navigation: "none",
 		centerScroll: false,
 		fallthrough: false
 	})
+
+	const uid = useState(crypto.randomUUID())
+
+	const goDown = useCallback(() => control.nextItem(), [control])
+	const goUp = useCallback(() => control.prevItem(), [control])
+	const goBottom = useCallback(
+		() => control.goToIndex(items.length - 1),
+		[control, items]
+	)
+	const goTop = useCallback(() => control.goToIndex(0), [control])
+	const scrollDown = useCallback(() => control.scrollDown(), [control])
+	const scrollUp = useCallback(() => control.scrollUp(), [control])
+
+	useEffect(() => {
+		const commands: GeneralCommand[] = [
+			{
+				id: "down" + uid,
+				callback: goDown,
+				label: "Go to the next track list item",
+				keybindings: [
+					[{ key: "j", modifiers: [] }],
+					[{ key: "down", modifiers: [] }]
+				]
+			},
+			{
+				id: "up" + uid,
+				callback: goUp,
+				label: "Go to the previous track list item",
+				keybindings: [
+					[{ key: "k", modifiers: [] }],
+					[{ key: "down", modifiers: [] }]
+				]
+			},
+			{
+				id: "bottom" + uid,
+				callback: goBottom,
+				label: "Go to the last list item",
+				keybindings: [[{ key: "G", modifiers: [] }]]
+			},
+			{
+				id: "top" + uid,
+				callback: goTop,
+				label: "Go to the first list item",
+				keybindings: [
+					[
+						{ key: "g", modifiers: [] },
+						{ key: "g", modifiers: [] }
+					]
+				]
+			},
+			{
+				id: "scrollDown" + uid,
+				callback: scrollDown,
+				label: "Scroll the track list down",
+				keybindings: [[{ key: "d", modifiers: ["ctrl"] }]]
+			},
+			{
+				id: "scrollUp" + uid,
+				callback: scrollUp,
+				label: "Scroll the track list up",
+				keybindings: [
+					[{ key: "u", modifiers: ["ctrl"] }],
+					[
+						{ key: "g", modifiers: [] },
+						{ key: "l", modifiers: [] },
+						{ key: "g", modifiers: [] }
+					]
+				]
+			}
+		]
+
+		registerKeybinds(commands)
+
+		return () => {
+			unregisterKeybinds(commands)
+		}
+	}, [goDown, goUp, goBottom, goTop, scrollDown, scrollUp, uid])
 
 	return (
 		<Box flexDirection="column">

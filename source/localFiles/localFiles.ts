@@ -387,6 +387,7 @@ async function isSameAsInDatabase(
 	filepath: FilePath,
 	metaddata: TrackFileMeta
 ): Promise<boolean> {
+	// TODO fix-me
 	return Result.fromAsyncCatching(stat(filepath))
 		.map(
 			({ mtime, size }) =>

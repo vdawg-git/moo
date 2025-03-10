@@ -1,6 +1,8 @@
 import { Box, Text } from "tuir"
-import { manageKeybinds, type SequencePart } from "#/KeybindManager"
-import { displayKeybinding } from "#/config/shortcutParser"
+import {
+	type SequencePart,
+	manageKeybinds
+} from "#/keybindManager/KeybindManager"
 
 type NextUpKeybind = { label: string; toPress: string; id: string }
 
@@ -29,6 +31,7 @@ export function NextUpKeybinds() {
 					borderColor={"yellow"}
 					justifyContent="space-between"
 					minWidth={26}
+					backgroundColor={"black"}
 				>
 					<Box flexDirection="column">
 						{toDisplay.map(({ toPress, id }) => (
@@ -52,12 +55,12 @@ export function NextUpKeybinds() {
 }
 
 function sequencePartToNextUp({
-	nextPossible,
+	nextUp: nextPossible,
 	pressed: { length: pressedAmount }
 }: SequencePart): readonly NextUpKeybind[] {
-	return nextPossible.map(({ id, label, keybinding }) => ({
+	return nextPossible.map(({ command: { id, label }, keys }) => ({
 		id,
 		label,
-		toPress: displayKeybinding(keybinding.slice(pressedAmount))
+		toPress: keys.slice(pressedAmount)
 	}))
 }
