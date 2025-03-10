@@ -1,6 +1,10 @@
 {
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "default": "https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/main/other/schemas/mooConfig.json"
+    },
     "musicDirectories": {
       "type": "array",
       "items": {
@@ -87,26 +91,18 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
                 "const": "runner.openCommands"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
+                "type": "string",
+                "minLength": 1,
                 "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
@@ -115,24 +111,16 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
                 "const": "runner.openGoto"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/keybindings/items/anyOf/0/properties/key/anyOf/0"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
+                "$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
@@ -141,24 +129,16 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
                 "const": "player.next"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/keybindings/items/anyOf/0/properties/key/anyOf/0"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
+                "$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
@@ -167,24 +147,16 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
                 "const": "player.playPrevious"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/keybindings/items/anyOf/0/properties/key/anyOf/0"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
+                "$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
@@ -193,24 +165,16 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
                 "const": "player.togglePlayback"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/keybindings/items/anyOf/0/properties/key/anyOf/0"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
+                "$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
@@ -219,24 +183,16 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
                 "const": "player.seekForward"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/keybindings/items/anyOf/0/properties/key/anyOf/0"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
+                "$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
@@ -245,24 +201,16 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
                 "const": "player.seekBackward"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/keybindings/items/anyOf/0/properties/key/anyOf/0"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
+                "$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
@@ -271,28 +219,20 @@
           {
             "type": "object",
             "properties": {
-              "id": {
+              "command": {
                 "type": "string",
-                "const": "goTo.playlists"
+                "const": "showKeybinds"
               },
               "key": {
-                "anyOf": [
-                  {
-                    "$ref": "#/properties/keybindings/items/anyOf/0/properties/key/anyOf/0"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
+                "$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
               }
             },
             "required": [
-              "id",
+              "command",
               "key"
             ],
             "additionalProperties": false,
-            "description": "Open a modal to quickly switch to a playlist.\nDefault: \"g p\""
+            "description": "Show all keybinds\nDefault: \"?\""
           }
         ]
       },

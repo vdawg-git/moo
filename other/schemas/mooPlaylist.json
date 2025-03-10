@@ -1090,6 +1090,30 @@
                             "container"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "size": {
+                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
+                            }
+                          },
+                          "required": [
+                            "size"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "mtime": {
+                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
+                            }
+                          },
+                          "required": [
+                            "mtime"
+                          ],
+                          "additionalProperties": false
                         }
                       ]
                     },
