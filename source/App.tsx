@@ -58,6 +58,17 @@ const App = () => {
 export async function startApp() {
 	await setupFiles()
 
+	if (IS_DEV) {
+		const { initialize, connectToDevTools } = await import(
+			//@ts-ignore
+			"react-devtools-core"
+		)
+
+		initialize()
+		// Must be called before packages like react or react-native are imported
+		connectToDevTools()
+	}
+
 	logg.info("Starting app..", { is_dev: IS_DEV, dbPath: databasePath })
 
 	if (appConfig.watchDirectories) {

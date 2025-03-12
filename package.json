@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
-		"dev": "bun --watch .",
+		"dev": "DEV=true bun --watch .",
 		"debug": "bun --inspect-wait=1111/a .",
 		"prod": "NODE_ENV=production bun .",
 		"writeSchemas": "bun run ./scripts/writeSchemas.ts",
@@ -46,10 +46,12 @@
 		"@types/bun": "latest",
 		"@types/node": "latest",
 		"@types/react": "^18.3.18",
-		"react-devtools-core": "^6.1.1",
 		"release-it": "^18.1.2",
 		"drizzle-kit": "^0.30.4",
 		"type-fest": "^4.35.0"
+	},
+	"optionalDependencies": {
+		"react-devtools-core": "^6.1.1"
 	},
 	"peerDependencies": {
 		"typescript": "^5.7.3"
