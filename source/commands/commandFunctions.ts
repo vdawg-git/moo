@@ -1,8 +1,7 @@
 import { appConfig } from "#/config/config"
-import * as R from "remeda"
+import { registerKeybinds } from "#/keybindManager/KeybindManager"
 import type { AppCommand } from "./appCommands"
 import type { AppCommandID, appCommandsBase } from "./commandsBase"
-import { registerKeybinds } from "#/keybindManager/KeybindManager"
 import { getCommandCallback } from "./commandsCallbacks"
 
 /**
@@ -26,9 +25,10 @@ export function registerGlobalCommands() {
 export function pickCommands(
 	ids: readonly AppCommandID[]
 ): readonly AppCommand[] {
-	return appConfig.keybindings
-		.entries()
-		.filter(([id]) => ids.includes(id))
-		.map(([id, data]) => ({ id, ...data, callback: getCommandCallback(id) }))
-		.toArray()
+	return (
+		ids
+			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			.map((id) => [id, appConfig.keybindings.get(id)!] as const)
+			.map(([id, data]) => ({ id, ...data, callback: getCommandCallback(id) }))
+	)
 }
