@@ -1,16 +1,17 @@
+import { useSelector } from "@xstate/store/react"
 import { useEffect, useState } from "react"
 import { isTruthy } from "remeda"
 import { Subject, map, scan } from "rxjs"
 import { P, match } from "ts-pattern"
 import { type Key, useInput } from "tuir"
-import type { AppCommand, GeneralCommand } from "#/commands/appCommands"
+import type { GeneralCommand } from "#/commands/appCommands"
 import type { KeyBinding, KeyInput } from "#/config/shortcutParser"
+import { appState } from "#/state/state"
 import {
 	type KeybindCommand,
 	type KeybindNextUp,
 	keybindsState
 } from "./keybindsState"
-import { logg } from "#/logs"
 
 /** This is a mirror of the internal `SpecialKeys`,
  * which does not get exported, but used in `useInput` */
@@ -32,12 +33,18 @@ export type SequencePart = {
  * in different contexts (like the 'when' property in VS Code keybinds)
  */
 export function manageKeybinds(): SequencePart | undefined {
+	const isDisabled = useSelector(
+		appState,
+		(snapshot) => snapshot.context.disableGlobalKeybinds
+	)
 	const [inputs$] = useState(new Subject<InputData>())
 	const [nextUpCommands, setKeySequence] = useState<SequencePart | undefined>(
 		undefined
 	)
 
-	useInput((key, specialKeys) => inputs$.next({ key, specialKeys }))
+	useInput((key, specialKeys) => inputs$.next({ key, specialKeys }), {
+		isActive: !isDisabled
+	})
 
 	useEffect(() => {
 		const subscription = inputs$
@@ -149,9 +156,10 @@ export function registerKeybinds(toRegister: readonly GeneralCommand[]) {
 	)
 }
 export function unregisterKeybinds(toUnregister: readonly GeneralCommand[]) {
-	toUnregister.forEach(({ keybindings, label, callback, id }) =>
+	toUnregister.forEach(({ keybindings, id }) =>
+		// a command can have multiple keybindings
 		keybindings.forEach((sequence) =>
-			keybindsState.removeSequence(sequence, { callback, id, label })
+			keybindsState.removeSequence(sequence, id)
 		)
 	)
 }

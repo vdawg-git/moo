@@ -16,9 +16,13 @@ import {
 	useNodeMap,
 	useTextInput
 } from "tuir"
+import { pickCommands } from "#/commands/commandFunctions"
+import {
+	registerKeybinds,
+	unregisterKeybinds
+} from "#/keybindManager/KeybindManager"
 import { type AppModalContentProps, appState } from "#/state/state"
 import { useRunnerItems } from "./useRunnerItems"
-import { logg } from "#/logs"
 
 /**
  * This component is a bit complicated,
@@ -92,8 +96,33 @@ function Runner({ modal, initialValue }: RunnerProps) {
 	}
 
 	useEffect(() => {
-		mode && modal.changeTitle(mode)
+		if (!mode) return
+		modal.changeTitle(mode)
+
+		// TODO the command still shows, even though it is removed from the keybindingsState
+		// but maybe there is another registration with different keybindings in my config
+		// Need to check later
+		const toUnregister =
+			mode === "Commands" && pickCommands(["runner.openCommands"])
+
+		if (toUnregister) {
+			unregisterKeybinds(toUnregister)
+		}
+
+		return () => {
+			if (toUnregister) {
+				registerKeybinds(toUnregister)
+			}
+		}
 	}, [mode, modal.changeTitle])
+
+	useEffect(() => {
+		appState.send({ type: "disableGlobalKeybinds", disabled: true })
+
+		return () => {
+			appState.send({ type: "disableGlobalKeybinds", disabled: false })
+		}
+	}, [])
 
 	return (
 		<Box

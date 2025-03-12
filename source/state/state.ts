@@ -41,6 +41,11 @@ export interface AppState {
 
 	notifications: AppNotification[]
 	modals: AppModal[]
+	/**
+	 * Wether the {@linkcode KeybindingsManager} should stop listening to input.
+	 * Used to disable it when a textinput or the runner is focused
+	 */
+	disableGlobalKeybinds: boolean
 }
 
 export const appState = createStoreWithProducer(produce, {
@@ -133,6 +138,10 @@ export const appState = createStoreWithProducer(produce, {
 			context.notifications = []
 		},
 
+		disableGlobalKeybinds: (context, { disabled }: { disabled: boolean }) => {
+			context.disableGlobalKeybinds = disabled
+		},
+
 		// navigation
 
 		navigateTo: (context, { goTo }: { goTo: ViewPage }) => {
@@ -154,6 +163,8 @@ export const appState = createStoreWithProducer(produce, {
 			if (context.view.historyIndex + 1 >= context.view.history.length) return
 			context.view.historyIndex += 1
 		},
+
+		// Modals
 
 		addModal: (context, { modal }: { modal: AppModal }) => {
 			if (context.modals.find(({ id }) => modal.id === id)) {
@@ -188,7 +199,8 @@ function createInitalState(): AppState {
 			history: [{ route: "home" }]
 		},
 		notifications: [],
-		modals: []
+		modals: [],
+		disableGlobalKeybinds: false
 	}
 }
 
@@ -323,7 +335,7 @@ export async function playNewPlayback({
 
 async function fetchPlaybackSource(
 	source: PlaybackSource
-): Promise<Result<readonly Track[], Error>> {
+): Promise<Result<readonly BaseTrack[], Error>> {
 	return match(source)
 		.with({ type: "all" }, () => database.getTracks())
 
@@ -340,6 +352,9 @@ async function fetchPlaybackSource(
 		.exhaustive()
 }
 
+/**
+ * The appstate as an observable with `shareReplay`.
+ */
 export const appState$: Observable<AppState> = new Observable<AppState>(
 	(subscriber) => {
 		const subscription = appState.subscribe((snapshot) =>
