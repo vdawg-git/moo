@@ -94,7 +94,7 @@ class KeybindTrie {
 		}
 	}
 
-	removeSequence(sequence: KeyBinding, { id }: KeybindCommand) {
+	removeSequence(sequence: KeyBinding, id: string) {
 		const stack: [TrieNode, string][] = []
 		let node = this.root
 
