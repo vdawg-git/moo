@@ -9,7 +9,8 @@ export function Playbar() {
 
 	return (
 		<Box flexDirection="column" width={"100%"}>
-			<Box borderStyle={"round"} height={4} borderDimColor paddingX={1}>
+			{/* not sure why a height of 5 works here and 4 not */}
+			<Box borderStyle={"round"} height={5} borderDimColor paddingX={1}>
 				<Box flexGrow={1}>
 					{currentTrack ? (
 						<TrackDisplay track={currentTrack} />
