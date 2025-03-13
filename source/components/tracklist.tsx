@@ -83,14 +83,7 @@ export function Tracklist({ tracks, onChange, playingIndex }: PlaylistProps) {
 				id: "scrollUp" + uid,
 				callback: scrollUp,
 				label: "Scroll the track list up",
-				keybindings: [
-					[{ key: "u", modifiers: ["ctrl"] }],
-					[
-						{ key: "g", modifiers: [] },
-						{ key: "l", modifiers: [] },
-						{ key: "g", modifiers: [] }
-					]
-				]
+				keybindings: [[{ key: "u", modifiers: ["ctrl"] }]]
 			}
 		]
 
