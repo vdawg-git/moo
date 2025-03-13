@@ -14,6 +14,12 @@ import { match } from "ts-pattern"
 import { logg } from "#/logs"
 import { addErrorNotification, appState, appState$ } from "#/state/state"
 import { LocalTrack } from "#/database/database"
+import type { Track } from "#/database/types"
+import { pickCommands } from "#/commands/commandFunctions"
+import {
+	registerKeybinds,
+	unregisterKeybinds
+} from "#/keybindManager/KeybindManager"
 
 const toPlay$: Observable<Track | undefined> = appState$.pipe(
 	map((state) => {
@@ -28,6 +34,26 @@ const toPlay$: Observable<Track | undefined> = appState$.pipe(
 	distinctUntilChanged((previous, current) => previous?.id === current?.id),
 	map((track) => track && new LocalTrack(track))
 )
+
+// Registers playback commands
+appState$
+	.pipe(
+		map((state) => !!state.playback.queue),
+		distinctUntilChanged()
+	)
+	.subscribe((hasQueue) => {
+		const toRegister = pickCommands([
+			"player.togglePlayback",
+			"player.next",
+			"player.playPrevious"
+		])
+
+		if (hasQueue) {
+			registerKeybinds(toRegister)
+		} else {
+			unregisterKeybinds(toRegister)
+		}
+	})
 
 /**
  * Listen to state changes and play the applicable track.

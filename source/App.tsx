@@ -8,7 +8,7 @@ import {
 	setMouseReporting
 } from "tuir"
 import { Result } from "typescript-result"
-import { registerAudioPlayback } from "./audio/audio"
+import { registerAudioPlayback } from "./playback/audio"
 import { ErrorScreen } from "./components/errorScreen"
 import { ModalManager } from "./components/modalManager"
 import { Navigator } from "./components/navigator"
