@@ -1,3 +1,5 @@
+import { useCallback } from "react"
+import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
 import { Tracklist } from "#/components/tracklist"
 import { appConfig } from "#/config/config"
@@ -6,8 +8,6 @@ import type { PlaylistId } from "#/database/types"
 import { useQuery } from "#/database/useQuery"
 import { playNewPlayback } from "#/state/state"
 import { usePlayingIndex } from "#/state/useSelectors"
-import { useCallback } from "react"
-import { Box, Text } from "tuir"
 
 type PlaylistProps = {
 	id: PlaylistId
@@ -34,7 +34,7 @@ export function Playlist({ id }: PlaylistProps) {
 					response.data.fold(
 						(playlist) => (
 							<Tracklist
-								tracks={playlist?.tracks}
+								tracks={playlist.tracks}
 								onChange={(index) =>
 									playNewPlayback({
 										source: { type: "playlist", id },
