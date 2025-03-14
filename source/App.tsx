@@ -5,7 +5,8 @@ import {
 	preserveScreen,
 	render,
 	setCharRegisterSize,
-	setMouseReporting
+	setMouseReporting,
+	setConsole
 } from "tuir"
 import { Result } from "typescript-result"
 import { handleAudioPlayback } from "./playback/audio"
@@ -13,7 +14,7 @@ import { ErrorScreen } from "./components/errorScreen"
 import { ModalManager } from "./components/modalManager"
 import { Navigator } from "./components/navigator"
 import { appConfig } from "./config/config"
-import { databasePath, IS_DEV } from "./constants"
+import { databasePath, IS_DEV, LOGS_DIRECTORY } from "./constants"
 import { database } from "./database/database"
 import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { enumarateError, logg } from "./logs"
@@ -25,6 +26,7 @@ import { manageNotifications } from "./state/stateReact"
 import { setupFiles } from "./filesystem"
 import { NextUpKeybinds } from "./components/sequenceKeybindsShower"
 import { registerGlobalCommands } from "./commands/commandFunctions"
+import path from "node:path"
 
 const App = () => {
 	setCharRegisterSize(1)
@@ -56,6 +58,9 @@ const App = () => {
 }
 
 export async function startApp() {
+	const consoleLogsPath = path.join(LOGS_DIRECTORY, "console.log")
+	setConsole({ enabled: true, path: consoleLogsPath })
+	console.log("teeeeesxt")
 	await setupFiles()
 
 	if (IS_DEV) {
@@ -92,4 +97,5 @@ export async function startApp() {
 	await instance.waitUntilExit()
 
 	watcher.unsubscribe()
+	setConsole({ enabled: false, path: consoleLogsPath })
 }

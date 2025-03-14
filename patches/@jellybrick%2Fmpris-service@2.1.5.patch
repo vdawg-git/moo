@@ -1,3 +1,9 @@
+diff --git a/node_modules/@jellybrick/mpris-service/.bun-tag-480bdcc5c3f0594 b/.bun-tag-480bdcc5c3f0594
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/@jellybrick/mpris-service/.bun-tag-9ac28c1a3fc4c4aa b/.bun-tag-9ac28c1a3fc4c4aa
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/package.json b/package.json
 index 3229a80fd42f46d4aa9e46517233986d342ce4a6..4b3dd363bb9b10953b344a225ce83155eb860202 100644
 --- a/package.json
@@ -12,14 +18,14 @@ index 3229a80fd42f46d4aa9e46517233986d342ce4a6..4b3dd363bb9b10953b344a225ce83155
      "coverage": "gulp && dbus-run-session -- jest --coverage",
 diff --git a/node_modules/@jellybrick/mpris-service/src/index.d.ts b/src/index.d.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9a746e8b9b2f702cc1e8f816d04ff0f5b94bb616
+index 0000000000000000000000000000000000000000..a7f6eb951236e9ab8c10c5d31addae206722b74a
 --- /dev/null
 +++ b/src/index.d.ts
 @@ -0,0 +1,475 @@
 +declare module "@jellybrick/mpris-service" {
 +	// The player creation options
 +	// @see https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html
-+	declare interface PlayerOptions {
++	export declare interface PlayerOptions {
 +		/** Name on the bus to export to as `org.mpris.MediaPlayer2.{name}`. */
 +		name: `org.mpris.MediaPlayer2.${string}`
 +		/** A friendly name to identify the media player to users. */
@@ -28,7 +34,7 @@ index 0000000000000000000000000000000000000000..9a746e8b9b2f702cc1e8f816d04ff0f5
 +		supportedInterfaces: ("player" | "playlists" | "trackList")[]
 +	}
 +
-+	interface Events {
++	export interface MprisEventsCatalog {
 +		/**
 +		 * Brings the media player's user interface to the front using any appropriate mechanism available.
 +		 */
@@ -476,9 +482,9 @@ index 0000000000000000000000000000000000000000..9a746e8b9b2f702cc1e8f816d04ff0f5
 +		 * @param event The event to listen to
 +		 * @param listener The listener to call when the event is emitted
 +		 */
-+		on<T extends keyof Events>(
++		on<T extends keyof MprisEventsCatalog>(
 +			event: T,
-+			listener: (data: Events[T]) => void
++			listener: (data: MprisEventsCatalog[T]) => void
 +		): void
 +	}
 +

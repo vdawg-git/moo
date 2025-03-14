@@ -5,6 +5,7 @@ import {
 	auditTime,
 	combineLatest,
 	distinctUntilChanged,
+	filter,
 	map,
 	pairwise,
 	startWith,
@@ -21,7 +22,10 @@ import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/KeybindManager"
-import MprisService from "@jellybrick/mpris-service"
+import MprisService, {
+	type MprisEventsCatalog
+} from "@jellybrick/mpris-service"
+import * as R from "remeda"
 
 const mpris = new MprisService({
 	name: "org.mpris.MediaPlayer2.moo",
@@ -106,9 +110,7 @@ function handlePlayer() {
 	const playEventsSubscription = toPlay$
 		.pipe(
 			switchMap((track) => track?.events$ ?? EMPTY),
-			tap((playEvent) =>
-				logg.debug(`playevent: ${playEvent.type}`, playEvent, "playevent")
-			)
+			tap((playEvent) => logg.debug("playevent", { playEvent }))
 		)
 		.subscribe((event) =>
 			match(event)
@@ -157,26 +159,39 @@ function handlePlayer() {
 }
 
 function handleMpris() {
-	currentTrack$.subscribe((track) => {
+	currentTrack$.pipe(filter(R.isNonNullish)).subscribe((track) => {
+		// mpris-service logs warnings when passing undefined as it tries to parse it into values,
+		// so we conditonally spread the object
 		mpris.metadata = {
-			"xesam:title": track?.title ?? track?.id,
-			"xesam:album": track?.album,
-			"xesam:artist": track?.artist ? [track.artist] : undefined,
-			"mpris:artUrl": track?.picture && `file://${track.picture}`
-			// Setting duration crashes
-			// "mpris:length": track?.duration,
-			// I dont get what I should pass as ID, but it works without it
-			// "mpris:trackid": track?.id,
+			"xesam:title": track.title ?? track?.id,
+			...(track.album && { "xesam:album": track.album }),
+			...(track.artist && {
+				"xesam:artist": track.artist ? [track.artist] : undefined
+			}),
+			...(track.picture && {
+				"mpris:artUrl": track.picture && `file://${track.picture}`
+			})
 		}
 		mpris.canQuit = true
+
+		// Setting duration crashes
+		// "mpris:length": track?.duration,
+		// I dont get what I should pass as ID, but it works without it
+		// "mpris:trackid": track?.id,
 	})
 
-	combineLatest([currentTrack$, playState$]).subscribe(([track, playState]) => {
+	playState$.subscribe((playState) => {
 		const hasPlayback = playState !== "stopped"
 
 		mpris.canPause = playState === "playing"
-		mpris.canPlay = hasPlayback && playState === "playing"
+		mpris.canPlay = hasPlayback && playState === "paused"
 		mpris.canGoPrevious = hasPlayback
+		mpris.playbackStatus =
+			playState === "playing"
+				? "Playing"
+				: playState === "paused"
+					? "Paused"
+					: "Stopped"
 		mpris.canGoNext = hasPlayback
 		mpris.canControl = hasPlayback
 	})
@@ -190,8 +205,32 @@ function handleMpris() {
 					: "None"
 	})
 
-	mpris.on("next", () => appState.send({ type: "nextTrack" }))
-	mpris.on("previous", () => appState.send({ type: "previousTrack" }))
-	mpris.on("playpause", () => appState.send({ type: "togglePlayback" }))
-	mpris.on("quit", () => appState.send({ type: "stopPlayback" }))
+	const handlers: {
+		[T in keyof MprisEventsCatalog]?: (data: MprisEventsCatalog[T]) => void
+	} = {
+		next: () => appState.send({ type: "nextTrack" }),
+		previous: () => {
+			appState.send({ type: "previousTrack" })
+		},
+		playpause: () => {
+			appState.send({ type: "togglePlayback" })
+		},
+		pause: () => {
+			appState.send({ type: "togglePlayback" })
+		},
+		play: () => {
+			appState.send({ type: "togglePlayback" })
+		},
+		stop: () => appState.send({ type: "togglePlayback" }),
+		quit: () => appState.send({ type: "stopPlayback" })
+	}
+
+	for (const [event, handler] of Object.entries(handlers)) {
+		//@ts-expect-error
+		mpris.on(event, (data) => {
+			logg.debug("mpris event", { event, data })
+			//@ts-expect-error
+			handler(data)
+		})
+	}
 }
