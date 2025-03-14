@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",
+		"@jellybrick/mpris-service": "^2.1.5",
 		"@libsql/client": "^0.14.0",
 		"@xstate/store": "^2.6.2",
 		"any-date-parser": "^2.0.3",
@@ -58,6 +59,7 @@
 		"typescript": "^5.7.3"
 	},
 	"patchedDependencies": {
-		"yoga-wasm-web@0.3.3": "patches/yoga-wasm-web@0.3.3.patch"
+		"yoga-wasm-web@0.3.3": "patches/yoga-wasm-web@0.3.3.patch",
+		"@jellybrick/mpris-service@2.1.5": "patches/@jellybrick%2Fmpris-service@2.1.5.patch"
 	}
 }

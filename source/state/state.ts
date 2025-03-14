@@ -53,6 +53,14 @@ export const appState = createStoreWithProducer(produce, {
 	on: {
 		// playback
 
+		stopPlayback: (context) => {
+			context.playback.queue = undefined
+			context.playback.index = 0
+			context.playback.manuallyAdded = []
+			context.playback.playState = "stopped"
+			context.playback.progress = 0
+		},
+
 		playNewPlayback: (
 			context,
 			{ queue, index = 0 }: { queue: Queue; index?: number }

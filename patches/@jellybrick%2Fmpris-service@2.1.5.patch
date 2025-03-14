@@ -1,0 +1,493 @@
+diff --git a/package.json b/package.json
+index 3229a80fd42f46d4aa9e46517233986d342ce4a6..4b3dd363bb9b10953b344a225ce83155eb860202 100644
+--- a/package.json
++++ b/package.json
+@@ -3,6 +3,7 @@
+   "version": "2.1.5",
+   "description": "Node.js implementation for the MPRIS D-Bus Interface Specification to create a mediaplayer service",
+   "main": "dist/index.js",
++  "types": "src/index.d.ts",
+   "scripts": {
+     "test": "gulp && dbus-run-session -- jest",
+     "coverage": "gulp && dbus-run-session -- jest --coverage",
+diff --git a/node_modules/@jellybrick/mpris-service/src/index.d.ts b/src/index.d.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9a746e8b9b2f702cc1e8f816d04ff0f5b94bb616
+--- /dev/null
++++ b/src/index.d.ts
+@@ -0,0 +1,475 @@
++declare module "@jellybrick/mpris-service" {
++	// The player creation options
++	// @see https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html
++	declare interface PlayerOptions {
++		/** Name on the bus to export to as `org.mpris.MediaPlayer2.{name}`. */
++		name: `org.mpris.MediaPlayer2.${string}`
++		/** A friendly name to identify the media player to users. */
++		identity: string
++		/** The interfaces this player supports. Can include `'player'`, `'playlists'`, and `'trackList'`. */
++		supportedInterfaces: ("player" | "playlists" | "trackList")[]
++	}
++
++	interface Events {
++		/**
++		 * Brings the media player's user interface to the front using any appropriate mechanism available.
++		 */
++		raise: void
++
++		/**
++		 * Causes the media player to stop running.
++		 */
++		quit: void
++
++		/**
++		 * Skips to the next track in the tracklist.
++		 */
++		next: void
++
++		/**
++		 * Skips to the previous track in the tracklist.
++		 */
++		previous: void
++
++		/**
++		 * Pauses playback.
++		 */
++		pause: void
++
++		/**
++		 * Pauses playback. If playback is already paused, resumes playback. If playback is stopped, starts playback.
++		 */
++		playpause: void
++
++		/**
++		 * Stops playback.
++		 */
++		stop: void
++
++		/**
++		 * Starts or resumes playback.
++		 */
++		play: void
++
++		/**
++		 * Seeks forward in the current track by the specified number of microseconds. With event data `offset`.
++		 */
++		seek: number
++
++		/**
++		 * Sets the current track position in microseconds. With event data `{ trackId, position }`.
++		 */
++		position: { trackId: string; position: number }
++
++		/**
++		 * Opens the Uri given as an argument. With event data `{ uri }`.
++		 */
++		open: string
++
++		/**
++		 * Sets the volume of the player. With event data `volume` (between 0.0 and 1.0).
++		 */
++		volume: number
++
++		/**
++		 * Sets whether shuffle is enabled on the player. With event data `shuffleStatus` (boolean).
++		 */
++		shuffle: boolean
++
++		/**
++		 * Sets the playback rate of the player. A value of 1.0 is the normal rate. With event data `rate`.
++		 */
++		rate: number
++
++		/**
++		 * Sets the loop status of the player to either 'None', 'Track', or 'Playlist'. With event data `loopStatus`.
++		 */
++		loopStatus: "None" | "Track" | "Playlist"
++
++		/**
++		 * Starts playing the given playlist. With event data `playlistId`.
++		 */
++		activatePlaylist: { playlistId: string }
++	}
++
++	type Playlist = {
++		Id: string
++		Name: string
++		Icon: string
++	}
++
++	type Track = {
++		"mpris:trackid": string
++		"mpris:length": number
++		"mpris:artUrl": string
++		"xesam:title": string
++		"xesam:album": string
++		"xesam:artist": string[]
++	}
++
++	declare class Player {
++		/**
++		 * Construct a new Player and export it on the DBus session bus.
++		 *
++		 * For more information about the properties of this class, see [the MPRIS DBus Interface Specification](https://specifications.freedesktop.org/mpris-spec/latest/).
++		 *
++		 * Method Call Events
++		 * ------------------
++		 *
++		 * The Player is an `EventEmitter` that emits events when the corresponding
++		 * methods are called on the DBus interface over the wire.
++		 *
++		 * The Player emits events whenever the corresponding methods on the DBus
++		 * interface are called.
++		 *
++		 * * `raise` - Brings the media player's user interface to the front using any appropriate mechanism available.
++		 * * `quit` - Causes the media player to stop running.
++		 * * `next` - Skips to the next track in the tracklist.
++		 * * `previous` - Skips to the previous track in the tracklist.
++		 * * `pause` - Pauses playback.
++		 * * `playPause` - Pauses playback.  If playback is already paused, resumes playback. If playback is stopped, starts playback.
++		 * * `stop` - Stops playback.
++		 * * `play` - Starts or resumes playback.
++		 * * `seek` - Seeks forward in the current track by the specified number of microseconds. With event data `offset`.
++		 * * `position` - Sets the current track position in microseconds. With event data `{ trackId, position }`.
++		 * * `open` - Opens the Uri given as an argument. With event data `{ uri }`.
++		 * * `volume` - Sets the volume of the player. With event data `volume` (between 0.0 and 1.0).
++		 * * `shuffle` - Sets whether shuffle is enabled on the player. With event data `shuffleStatus` (boolean).
++		 * * `rate` - Sets the playback rate of the player. A value of 1.0 is the normal rate. With event data `rate`.
++		 * * `loopStatus` - Sets the loop status of the player to either 'None', 'Track', or 'Playlist'. With event data `loopStatus`.
++		 * * `activatePlaylist` -  Starts playing the given playlist. With event data `playlistId`.
++		 *
++		 * The Player may also emit an `error` event with the underlying Node `Error`
++		 * as the event data. After receiving this event, the Player may be
++		 * disconnected.
++		 *
++		 * ```
++		 * player.on('play', () => {
++		 *   realPlayer.play();
++		 * });
++		 *
++		 * player.on('shuffle', (enableShuffle) => {
++		 *   realPlayer.setShuffle(enableShuffle);
++		 *   player.shuffle = enableShuffle;
++		 * });
++		 * ```
++		 *
++		 * Player Properties
++		 * -----------------
++		 *
++		 * Player properties (documented below) should be kept up to date to reflect
++		 * the state of your real player. These properties can be gotten by the client
++		 * through the `org.freedesktop.DBus.Properties` interface which will return
++		 * the value currently set on the player. Setting these properties on the
++		 * player to a different value will emit the `PropertiesChanged` signal on the
++		 * properties interface to notify clients that properties of the player have
++		 * changed.
++		 *
++		 * ```
++		 * realPlayer.on('shuffle:changed', (shuffleEnabled) => {
++		 *   player.shuffle = shuffleEnabled;
++		 * });
++		 *
++		 * realPlayer.on('play', () => {
++		 *   player.playbackStatus = 'Playing';
++		 * });
++		 * ```
++		 *
++		 * Player Position
++		 * ---------------
++		 *
++		 * Clients can get the position of your player by getting the `Position`
++		 * property of the `org.mpris.MediaPlayer2.Player` interface. Since position
++		 * updates continuously, {@link Player#getPosition} is implemented as a getter
++		 * you can override on your Player. This getter will be called when a client
++		 * requests the position and should return the position of your player for the
++		 * client in microseconds.
++		 *
++		 * ```
++		 * player.getPosition() {
++		 *   return realPlayer.getPositionInMicroseconds();
++		 * }
++		 * ```
++		 *
++		 * When your real player seeks to a new location, such as when someone clicks
++		 * on the time bar, you can notify clients of the new position by calling the
++		 * {@link Player#seeked} method. This will raise the `Seeked` signal on the
++		 * `org.mpris.MediaPlayer2.Player` interface with the given current time of the
++		 * player in microseconds.
++		 *
++		 * ```
++		 * realPlayer.on('seeked', (positionInMicroseconds) => {
++		 *   player.seeked(positionInMicroseconds);
++		 * });
++		 * ```
++		 *
++		 * Clients can request to set position using the `Seek` and `SetPosition`
++		 * methods of the `org.mpris.MediaPlayer2.Player` interface. These requests are
++		 * implemented as events on the Player similar to the other requests.
++		 *
++		 * ```
++		 * player.on('seek', (offset) => {
++		 *   // note that offset may be negative
++		 *   let currentPosition = realPlayer.getPositionInMicroseconds();
++		 *   let newPosition = currentPosition + offset;
++		 *   realPlayer.setPosition(newPosition);
++		 * });
++		 *
++		 * player.on('position', (event) => {
++		 *   // check that event.trackId is the current track before continuing.
++		 *   realPlayer.setPosition(event.position);
++		 * });
++		 * ```
++		 *
++		 * @class Player
++		 * @param {
++		 *   name: String,
++		 *   identity: String,
++		 *   supportedMimeTypes: string[],
++		 *   supportedInterfaces: string[]
++		 * } options - Options for the player.
++		 * @param {String} options.name - Name on the bus to export to as `org.mpris.MediaPlayer2.{name}`.
++		 * @param {String} options.identity - Identity for the player to display on the root media player interface.
++		 * @param {Array} options.supportedMimeTypes - Mime types this player can open with the `org.mpris.MediaPlayer2.Open` method.
++		 * @param {Array} options.supportedInterfaces - The interfaces this player supports. Can include `'player'`, `'playlists'`, and `'trackList'`.
++		 * @property {String} identity - A friendly name to identify the media player to users.
++		 * @property {Boolean} fullscreen - Whether the media player is occupying the fullscreen.
++		 * @property {Array} supportedUriSchemes - The URI schemes supported by the media player.
++		 * @property {Array} supportedMimeTypes - The mime-types supported by the media player.
++		 * @property {Boolean} canQuit - Whether the player can quit.
++		 * @property {Boolean} canRaise - Whether the player can raise.
++		 * @property {Boolean} canSetFullscreen - Whether the player can be set to fullscreen.
++		 * @property {Boolean} hasTrackList - Indicates whether the /org/mpris/MediaPlayer2 object implements the org.mpris.MediaPlayer2.TrackList interface.
++		 * @property {String} desktopEntry - The basename of an installed .desktop file which complies with the Desktop entry specification, with the ".desktop" extension stripped.
++		 * @property {String} playbackStatus - The current playback status. May be "Playing", "Paused" or "Stopped".
++		 * @property {String} loopStatus - The current loop/repeat status. May be "None", "Track", or "Playlist".
++		 * @property {Boolean} shuffle - Whether the player is shuffling.
++		 * @property {Object} metadata - The metadata of the current element. If there is a current track, this must have a "mpris:trackid" entry (of D-Bus type "o") at the very least, which contains a D-Bus path that uniquely identifies this track.
++		 * @property {Number} volume - The volume level. (Double)
++		 * @property {Boolean} canControl - Whether the media player may be controlled over this interface.
++		 * @property {Boolean} canPause - Whether playback can be paused using Pause or PlayPause.
++		 * @property {Boolean} canPlay - Whether playback can be started using Play or PlayPause.
++		 * @property {Boolean} canSeek - Whether the client can control the playback position using Seek and SetPosition.
++		 * @property {Boolean} canGoNext - Whether the client can call the Next method on this interface and expect the current track to change.
++		 * @property {Boolean} canGoPrevious - Whether the client can call the Previous method on this interface and expect the current track to change.
++		 * @property {Number} rate - The current playback rate. (Double)
++		 * @property {Number} minimumRate - The minimum value which the Rate property can take. (Double)
++		 * @property {Number} maximumRate - The maximum value which the Rate property can take. (Double)
++		 * @property {Array} playlists - The current playlists set by {@link Player#setPlaylists}. (Not a DBus property).
++		 * @property {String} activePlaylist - The id of the currently-active playlist.
++		 */
++		constructor(options: PlayerOptions)
++
++		/**
++		 * A friendly name to identify the media player to users.
++		 */
++		identity: string
++
++		/**
++		 * Whether the media player is occupying the fullscreen.
++		 */
++		fullscreen: boolean
++
++		/**
++		 * The URI schemes supported by the media player.
++		 */
++		supportedUriSchemes: string[]
++
++		/**
++		 * The mime-types supported by the media player.
++		 */
++		supportedMimeTypes: string[]
++
++		/**
++		 * Whether the player can quit.
++		 */
++		canQuit: boolean
++
++		/**
++		 * Whether the player can raise.
++		 */
++		canRaise: boolean
++
++		/**
++		 * Whether the player can be set to fullscreen.
++		 */
++		canSetFullscreen: boolean
++
++		/**
++		 * Indicates whether the /org/mpris/MediaPlayer2 object implements the org.mpris.MediaPlayer2.TrackList interface.
++		 */
++		hasTrackList: boolean
++
++		/**
++		 * The basename of an installed .desktop file which complies with the Desktop entry specification, with the ".desktop" extension stripped.
++		 */
++		desktopEntry: string
++
++		/**
++		 * The current playback status.
++		 */
++		playbackStatus: "Playing" | "Paused" | "Stopped"
++
++		/**
++		 * The status of the loop
++		 */
++		loopStatus: "None" | "Track" | "Playlist"
++
++		/**
++		 * Whether the player is shuffling.
++		 */
++		shuffle: boolean
++
++		/**
++		 * The current volume.
++		 * The volume level. This is a double value between 0.0 and 1.0 (both inclusive), with 0.0 being the minimum and 1.0 being the maximum volume.
++		 * (Double)
++		 */
++		volume: number
++
++		/**
++		 * Whether the media player may be controlled over this interface.
++		 */
++		canControl: boolean
++
++		/**
++		 * Whether playback can be paused using Pause or PlayPause.
++		 */
++		canPause: boolean
++
++		/**
++		 * Whether playback can be started using Play or PlayPause.
++		 */
++		canPlay: boolean
++
++		/**
++		 * Whether the client can control the playback position using Seek and SetPosition.
++		 */
++		canSeek: boolean
++
++		/**
++		 * Whether the client can call the Next method on this interface and expect the current track to change.
++		 */
++		canGoNext: boolean
++
++		/**
++		 * Whether the client can call the Previous method on this interface and expect the current track to change.
++		 */
++		canGoPrevious: boolean
++
++		/**
++		 * The current playback rate. (Double)
++		 */
++		rate: number
++
++		/**
++		 * The minimum value which the Rate property can take. (Double)
++		 */
++		minimumRate: number
++
++		/**
++		 * The maximum value which the Rate property can take. (Double)
++		 */
++		maximumRate: number
++
++		/**
++		 * The current playlists set by {@link Player#setPlaylists}. (Not a DBus property).
++		 */
++		playlists: Playlist[]
++
++		/**
++		 * The id of the currently-active playlist.
++		 */
++		activePlaylist: string
++
++		/**
++		 * The can edit track list status.
++		 */
++		tracks: Track[]
++
++		/**
++		 * The metadata of the current element.
++		 * If there is a current track, this must have a "mpris:trackid" entry (of D-Bus type "o") at the very least, which contains a D-Bus path that uniquely identifies this track.
++		 * @see http://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/
++		 */
++		metadata: {
++			"mpris:trackid"?: string
++			"mpris:length"?: number
++			"mpris:artUrl"?: string
++			"xesam:title"?: string
++			"xesam:album"?: string
++			"xesam:artist"?: string[]
++			"xesam:genre"?: string[]
++		}
++
++		/**
++		 * Seek to a position
++		 * Clients can request to set position using the `Seek` and `SetPosition`
++		 * methods of the `org.mpris.MediaPlayer2.Player` interface. These requests are
++		 * implemented as events on the Player similar to the other requests.
++		 *
++		 *
++		 */
++		seek(position: number): void
++
++		/**
++		 * Seek to a position in the player
++		 *
++		 * @param position - positionInMicroseconds
++		 */
++		seeked(position: number): void
++
++		/**
++		 * Get the current position
++		 * Clients can get the position of your player by getting the `Position`
++		 * property of the `org.mpris.MediaPlayer2.Player` interface. Since position
++		 * updates continuously, {@link Player#getPosition} is implemented as a getter
++		 * you can override on your Player. This getter will be called when a client
++		 * requests the position and should return the position of your player for the
++		 * client in microseconds.
++		 */
++		getPosition(): number
++
++		/**
++		 * Get a valid object path with the `subpath` as the basename which is suitable
++		 * for use as an id.
++		 *
++		 * @name Player#objectPath
++		 * @function
++		 * @param {String} subpath - The basename of this path
++		 * @returns {String} - A valid object path that can be used as an id.
++		 */
++		objectPath(subpath: string): string
++
++		/**
++		 * Set the active playlist
++		 * @param playlist The playlist id to set as active
++		 */
++		setActivePlaylist(playlist: string): void
++
++		/**
++		 * Set Playlists
++		 * @param playlists The playlists to set
++		 */
++		setPlaylists(playlists: Playlist[]): void
++
++		/**
++		 * Emit an event
++		 * @param event The event to listen to
++		 * @param listener The listener to call when the event is emitted
++		 */
++		on<T extends keyof Events>(
++			event: T,
++			listener: (data: Events[T]) => void
++		): void
++	}
++
++	declare class TrackList {
++		/**
++		 * The track list
++		 */
++		tracks: number
++	}
++
++	export = Player
++}

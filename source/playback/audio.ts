@@ -3,6 +3,7 @@ import {
 	type Observable,
 	Subject,
 	auditTime,
+	combineLatest,
 	distinctUntilChanged,
 	map,
 	pairwise,
@@ -20,17 +21,40 @@ import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/KeybindManager"
+import MprisService from "@jellybrick/mpris-service"
 
-const toPlay$: Observable<Track | undefined> = appState$.pipe(
-	map((state) => {
-		if (state.playback.playState !== "playing") return undefined
+const mpris = new MprisService({
+	name: "org.mpris.MediaPlayer2.moo",
+	supportedInterfaces: ["player"],
+	identity: "moo"
+})
 
-		const queue = state.playback.queue
-		if (!queue) return undefined
+const playback$ = appState$.pipe(map((state) => state.playback))
+const loop$ = playback$.pipe(
+	map((state) => state.loopState),
+	distinctUntilChanged()
+)
 
-		return queue.tracks[state.playback.index]
+const currentTrack$ = playback$.pipe(
+	map(({ isPlayingFromManualQueue, queue, manuallyAdded, index }) => {
+		if (isPlayingFromManualQueue) {
+			return manuallyAdded[index]
+		}
+
+		return queue?.tracks[index]
 	}),
+	distinctUntilChanged((previous, current) => previous?.id === current?.id)
+)
+const playState$ = playback$.pipe(
+	map((playback) => playback.playState),
+	distinctUntilChanged()
+)
 
+const toPlay$: Observable<Track | undefined> = combineLatest([
+	currentTrack$,
+	playState$
+]).pipe(
+	map(([track, playState]) => (playState !== "playing" ? undefined : track)),
 	distinctUntilChanged((previous, current) => previous?.id === current?.id),
 	map((track) => track && new LocalTrack(track))
 )
@@ -60,7 +84,13 @@ appState$
  *
  * Returns the subscription which can be unsubscribed from.
  */
-export function registerAudioPlayback() {
+export function handleAudioPlayback() {
+	handleMpris()
+
+	return handlePlayer()
+}
+
+function handlePlayer() {
 	/**
 	 * Progress has its own stream,
 	 * so that we are able to throttle it here,
@@ -117,11 +147,51 @@ export function registerAudioPlayback() {
 				return
 			}
 
-			current?.play()
+			current.play()
 		})
 
 	return () =>
 		[playSubscription, playEventsSubscription, progressSubscription].forEach(
 			(subscription) => subscription.unsubscribe()
 		)
+}
+
+function handleMpris() {
+	currentTrack$.subscribe((track) => {
+		mpris.metadata = {
+			"xesam:title": track?.title ?? track?.id,
+			"xesam:album": track?.album,
+			"xesam:artist": track?.artist ? [track.artist] : undefined,
+			"mpris:artUrl": track?.picture
+			// Setting duration crashes
+			// "mpris:length": track?.duration,
+			// I dont get what I should pass as ID, but it works without it
+			// "mpris:trackid": track?.id,
+		}
+		mpris.canQuit = true
+	})
+
+	combineLatest([currentTrack$, playState$]).subscribe(([track, playState]) => {
+		const hasPlayback = playState !== "stopped"
+
+		mpris.canPause = playState === "playing"
+		mpris.canPlay = hasPlayback && playState === "playing"
+		mpris.canGoPrevious = hasPlayback
+		mpris.canGoNext = hasPlayback
+		mpris.canControl = hasPlayback
+	})
+
+	loop$.subscribe((loop) => {
+		mpris.loopStatus =
+			loop === "loop_track"
+				? "Track"
+				: loop === "loop_queue"
+					? "Playlist"
+					: "None"
+	})
+
+	mpris.on("next", () => appState.send({ type: "nextTrack" }))
+	mpris.on("previous", () => appState.send({ type: "previousTrack" }))
+	mpris.on("playpause", () => appState.send({ type: "togglePlayback" }))
+	mpris.on("quit", () => appState.send({ type: "stopPlayback" }))
 }

@@ -8,7 +8,7 @@ import {
 	setMouseReporting
 } from "tuir"
 import { Result } from "typescript-result"
-import { registerAudioPlayback } from "./playback/audio"
+import { handleAudioPlayback } from "./playback/audio"
 import { ErrorScreen } from "./components/errorScreen"
 import { ModalManager } from "./components/modalManager"
 import { Navigator } from "./components/navigator"
@@ -29,7 +29,7 @@ import { registerGlobalCommands } from "./commands/commandFunctions"
 const App = () => {
 	setCharRegisterSize(1)
 	useEffect(() => {
-		const unsubscribes = [registerAudioPlayback(), manageNotifications()]
+		const unsubscribes = [handleAudioPlayback(), manageNotifications()]
 		setMouseReporting(true)
 
 		return () => {
