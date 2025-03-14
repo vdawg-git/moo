@@ -241,27 +241,36 @@ async function parseMusicFile(
 		const releasedate =
 			(tags.releasedate && parseDate.fromString(tags.releasedate)) || undefined
 
-		const coverData = selectCover(picture)
-		let coverName = coverData && `${Bun.hash(coverData.data)}.${coverData.type}`
-		// TODO put this code somewhere else where its cleaner
-		// not so nice, but where would this side-effect make more sense
-		if (coverName && coverData) {
-			const coverPath = path.join(
-				DATA_DIRECTORY,
-				"pictures/tracks/local/",
-				coverName
-			)
+		const coverData =
+			picture &&
+			R.pipe(selectCover(picture), (maybePicture) => {
+				if (!maybePicture) return undefined
+				const name = `${Bun.hash(maybePicture.data)}.${maybePicture.format.split("/").at(-1)}`
+				const filePath = path.join(
+					DATA_DIRECTORY,
+					"pictures/tracks/local/",
+					name
+				) as FilePath
 
-			if (
-				await Bun.file(coverPath)
-					.exists()
-					.catch(() => false)
-			) {
-				await Bun.write(coverPath, coverData.data).catch((error) => {
-					coverName = null
-					logg.error(`Failed to save cover image of ${filePath}`, error)
-				})
-			}
+				return {
+					name,
+					data: maybePicture.data,
+					filePath
+				}
+			})
+
+		const shouldWriteCover =
+			!!coverData &&
+			(await Bun.file(coverData.filePath)
+				.exists()
+				.then((is) => !is)
+				.catch(() => false))
+
+		// not so nice, but where would this side-effect make more sense
+		if (shouldWriteCover) {
+			await Bun.write(coverData.filePath, coverData.data).catch((error) => {
+				logg.error(`Failed to save cover image of ${filePath}`, error)
+			})
 		}
 
 		const {
@@ -326,7 +335,7 @@ async function parseMusicFile(
 				?.map((r) => r.rating ?? 0)
 				.reduce((previous, current) => Math.max(previous, current)),
 
-			picture: (coverName as FilePath | null) ?? undefined,
+			picture: coverData?.filePath,
 
 			trackNumber: track?.no ?? undefined,
 			trackNumberTotal: track?.of ?? undefined,

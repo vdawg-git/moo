@@ -162,7 +162,7 @@ function handleMpris() {
 			"xesam:title": track?.title ?? track?.id,
 			"xesam:album": track?.album,
 			"xesam:artist": track?.artist ? [track.artist] : undefined,
-			"mpris:artUrl": track?.picture
+			"mpris:artUrl": track?.picture && `file://${track.picture}`
 			// Setting duration crashes
 			// "mpris:length": track?.duration,
 			// I dont get what I should pass as ID, but it works without it
