@@ -35,6 +35,7 @@ export async function startApp() {
 	}
 
 	Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
+		.map(() => updateSmartPlaylists())
 		.onFailure((error) => {
 			logg.error("Failed to update db at startup", { error })
 			throw new Error("Failed to update database")
@@ -43,7 +44,6 @@ export async function startApp() {
 			logg.info("Updated db")
 		})
 
-	updateSmartPlaylists()
 	const watcher = watchPlaylists()
 	preserveScreen()
 	const instance = render(<App />, { patchConsole: false, throttle: 8 })
