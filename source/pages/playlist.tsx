@@ -9,7 +9,6 @@ import { useQuery } from "#/database/useQuery"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlayingIndex } from "#/state/useSelectors"
 import { PlaylistTitle } from "#/components/playlilstTitle"
-import { logg } from "#/logs"
 
 type PlaylistProps = {
 	id: PlaylistId
