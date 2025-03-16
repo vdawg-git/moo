@@ -12,7 +12,7 @@ import {
 	of,
 	take
 } from "rxjs"
-import { match } from "ts-pattern"
+import { match, P } from "ts-pattern"
 import type { JsonValue } from "type-fest"
 import { type AsyncResult, Result } from "typescript-result"
 import { z } from "zod"
@@ -140,7 +140,7 @@ function parseEvent(event: z.infer<typeof mpvEvent>): PlayerEvent | undefined {
 					// reached end of the playback (end of file)
 					.with("eof", () => ({ type: "finishedTrack" }))
 					// user pressed `pause`
-					.with("stop", () => undefined)
+					.with(P.union("stop", "quit"), () => undefined)
 					.otherwise(() => ({
 						type: "error",
 						error: `Track ended unexpected: ${reason}`
