@@ -17,6 +17,7 @@ import {
 } from "#/keybindManager/KeybindManager"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack } from "../database/types"
+import { logg } from "#/logs"
 
 type PlaylistProps = {
 	tracks: readonly BaseTrack[]
@@ -118,8 +119,10 @@ export function Tracklist({
 				batchMap={{
 					batchSize: 200,
 					items: tracks,
-					map: (item, index) => (
+					map: (track, index) => (
 						<TrackItem
+							track={track}
+							index={index}
 							state={
 								index === playingIndex
 									? playState === "playing"
@@ -127,7 +130,7 @@ export function Tracklist({
 										: "paused"
 									: undefined
 							}
-							key={item.id}
+							key={track.id}
 							onSelect={() => onChange(index)}
 						/>
 					)
@@ -140,15 +143,19 @@ export function Tracklist({
 type TrackItemProps = {
 	state: "playing" | "paused" | undefined
 	onSelect: () => void
+	// we pass those instead of using them from `useListItem`, as sometimes the item is undefined
+	// still not sure though if this is really the bug, but it looks like it
+	track: BaseTrack
+	index: number
 }
 
-function TrackItem({ onSelect, state }: TrackItemProps): React.ReactNode {
-	const {
-		isFocus,
-		item: track,
-		control,
-		itemIndex
-	} = useListItem<BaseTrack[]>()
+function TrackItem({
+	onSelect,
+	state,
+	track,
+	index
+}: TrackItemProps): React.ReactNode {
+	const { isFocus, control } = useListItem<BaseTrack[]>()
 	const hasPlaybackIndex = !!state
 	const bgColor: Color | undefined =
 		isFocus && hasPlaybackIndex ? "green" : isFocus ? "blue" : undefined
@@ -158,6 +165,10 @@ function TrackItem({ onSelect, state }: TrackItemProps): React.ReactNode {
 			: hasPlaybackIndex
 				? "green"
 				: undefined
+	if (!track) {
+		logg.debug("undefined track item", { track, items })
+		return <Text backgroundColor={"red"}>wut</Text>
+	}
 	const titleDisplay = track.title ?? path.basename(track.id)
 
 	const { useEvent } = useKeymap({ submit: { key: "return" } })
@@ -168,7 +179,7 @@ function TrackItem({ onSelect, state }: TrackItemProps): React.ReactNode {
 		<Box
 			width="100"
 			backgroundColor={bgColor}
-			onClick={() => (isFocus ? onSelect() : control.goToIndex(itemIndex))}
+			onClick={() => (isFocus ? onSelect() : control.goToIndex(index))}
 		>
 			<Text color={textColor}>
 				{icon}

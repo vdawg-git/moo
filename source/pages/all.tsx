@@ -6,6 +6,8 @@ import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlayingIndex } from "#/state/useSelectors"
+import { PlaylistTitle } from "#/components/playlilstTitle"
+import { logg } from "#/logs"
 
 export function All() {
 	const response = useQuery("all", database.getTracks)
@@ -19,10 +21,8 @@ export function All() {
 	return (
 		<>
 			<Box flexGrow={1} flexDirection="column">
-				<Text color={"magenta"} bold>
-					All tracks{" "}
-					<Text color={"gray"}>{amount ? `(${amount} tracks)` : ""}</Text>
-				</Text>
+				<PlaylistTitle title={"All tracks"} tracksAmount={amount ?? 0} />
+
 				{response.isLoading ? (
 					<Text>Loading...</Text>
 				) : (

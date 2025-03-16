@@ -3,12 +3,13 @@ import { useCallback } from "react"
 import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
 import { Tracklist } from "#/components/tracklist"
-import { appConfig } from "#/config/config"
 import { database } from "#/database/database"
 import type { PlaylistId } from "#/database/types"
 import { useQuery } from "#/database/useQuery"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlayingIndex } from "#/state/useSelectors"
+import { PlaylistTitle } from "#/components/playlilstTitle"
+import { logg } from "#/logs"
 
 type PlaylistProps = {
 	id: PlaylistId
@@ -28,10 +29,7 @@ export function Playlist({ id }: PlaylistProps) {
 	return (
 		<>
 			<Box flexGrow={1} flexDirection="column">
-				<Text color={"magenta"} bold>
-					{appConfig.icons.playlist} {displayName}{" "}
-					<Text color={"gray"}>{amount ? `(${amount} tracks)` : ""}</Text>
-				</Text>
+				<PlaylistTitle title={displayName} tracksAmount={amount ?? 0} />
 
 				{response.isLoading ? (
 					<Text>Loading...</Text>

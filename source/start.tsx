@@ -14,6 +14,8 @@ import {
 } from "./smartPlaylists/smartPlaylist"
 
 export async function startApp() {
+	logg.info("Starting app..", { isDev: IS_DEV, dbPath: databasePath })
+
 	const consoleLogsPath = path.join(LOGS_DIRECTORY, "console.log")
 	setConsole({ enabled: true, path: consoleLogsPath })
 
@@ -27,8 +29,6 @@ export async function startApp() {
 		// Must be called before packages like react or react-native are imported
 		connectToDevTools()
 	}
-
-	logg.info("Starting app..", { is_dev: IS_DEV, dbPath: databasePath })
 
 	if (appConfig.watchDirectories) {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)
