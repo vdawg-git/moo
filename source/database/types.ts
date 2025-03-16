@@ -93,7 +93,14 @@ export interface Database {
 // Is GraphQL overkill or good here I wonder
 export type BaseTrack = Pick<
 	Track,
-	"album" | "artist" | "title" | "duration" | "id" | "picture"
+	| "album"
+	| "artist"
+	| "title"
+	| "duration"
+	| "id"
+	| "picture"
+	| "genre"
+	| "albumartist"
 >
 
 /**

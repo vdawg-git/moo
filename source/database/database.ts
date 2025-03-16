@@ -26,7 +26,6 @@ import { upsert } from "./sqlHelper.js"
 import {
 	type AlbumId,
 	type ArtistId,
-	type BaseTrack,
 	type Database,
 	type Playlist,
 	type PlaylistId,

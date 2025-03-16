@@ -1,5 +1,5 @@
 import { appConfig } from "#/config/config"
-import type { Track } from "#/database/types"
+import type { BaseTrack, Track } from "#/database/types"
 import { appState } from "#/state/state"
 import { useCurrentTrack, usePlaybackState } from "#/state/useSelectors"
 import { Box, Text } from "tuir"
@@ -9,8 +9,7 @@ export function Playbar() {
 
 	return (
 		<Box flexDirection="column" width={"100%"}>
-			{/* not sure why a height of 5 works here and 4 not */}
-			<Box borderStyle={"round"} height={5} borderDimColor paddingX={1}>
+			<Box borderStyle={"round"} height={4} borderDimColor paddingX={1}>
 				<Box flexGrow={1}>
 					{currentTrack ? (
 						<TrackDisplay track={currentTrack} />
@@ -60,7 +59,7 @@ function MediaControl() {
 	)
 }
 
-function TrackDisplay({ track }: { track: Track }) {
+function TrackDisplay({ track }: { track: BaseTrack }) {
 	const artist = track.artist ?? track.albumartist
 
 	return (

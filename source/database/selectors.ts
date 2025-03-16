@@ -8,7 +8,9 @@ export const baseTrackSelector = {
 	duration: tracksTable.duration,
 	id: tracksTable.id,
 	title: tracksTable.title,
-	picture: tracksTable.picture
+	picture: tracksTable.picture,
+	genre: tracksTable.genre,
+	albumartist: tracksTable.albumartist
 } satisfies Record<keyof BaseTrack, SQLiteColumn>
 
 export const trackSortSelector = {

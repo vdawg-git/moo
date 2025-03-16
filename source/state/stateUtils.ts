@@ -1,9 +1,15 @@
-import type { Track } from "#/database/types"
+import type { BaseTrack } from "#/database/types"
 import type { AppState } from "./state"
 
-export function getCurrentTrackFromState(state: AppState): Track | undefined {
-	const index = state.playback.index
-	const tracks = state.playback.queue?.tracks
+export function getCurrentTrackFromState({
+	index,
+	queue,
+	manuallyAdded,
+	isPlayingFromManualQueue
+}: AppState["playback"]): BaseTrack | undefined {
+	if (isPlayingFromManualQueue) {
+		return manuallyAdded[index]
+	}
 
-	return tracks?.[index]
+	return queue?.tracks[index]
 }
