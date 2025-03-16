@@ -9,7 +9,7 @@ import {
 	setConsole
 } from "tuir"
 import { Result } from "typescript-result"
-import { handleAudioPlayback } from "./playback/audio"
+import { handleAudioPlayback } from "./playback/playback"
 import { ErrorScreen } from "./components/errorScreen"
 import { ModalManager } from "./components/modalManager"
 import { Navigator } from "./components/navigator"
@@ -41,26 +41,19 @@ const App = () => {
 	}, [])
 
 	return (
-		<ErrorBoundary
-			fallbackRender={({ error }) => <ErrorScreen error={error} />}
-			onError={(error) => {
-				logg.error("react error", enumarateError(error))
-			}}
-		>
-			<Viewport flexDirection="column">
-				<Navigator />
+		<Viewport flexDirection="column">
+			<Navigator />
 
-				<ModalManager />
-				<NextUpKeybinds />
-			</Viewport>
-		</ErrorBoundary>
+			<ModalManager />
+			<NextUpKeybinds />
+		</Viewport>
 	)
 }
 
 export async function startApp() {
 	const consoleLogsPath = path.join(LOGS_DIRECTORY, "console.log")
 	setConsole({ enabled: true, path: consoleLogsPath })
-	console.log("teeeeesxt")
+
 	await setupFiles()
 
 	if (IS_DEV) {

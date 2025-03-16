@@ -1,6 +1,6 @@
 import { useSelector } from "@xstate/store/react"
 import { appState, type PlaybackSource } from "./state"
-import type { Track } from "#/database/types"
+import type { BaseTrack } from "#/database/types"
 import type { PlayingState } from "#/types/types"
 import { deepEquals } from "bun"
 import { getCurrentTrackFromState } from "./stateUtils"
@@ -10,9 +10,9 @@ import { getCurrentTrackFromState } from "./stateUtils"
 // You can also just use `useSelector` from XState directly
 // /
 
-export const useCurrentTrack: () => Track | undefined = () =>
+export const useCurrentTrack: () => BaseTrack | undefined = () =>
 	useSelector(appState, (snapshot) => {
-		return getCurrentTrackFromState(snapshot.context)
+		return getCurrentTrackFromState(snapshot.context.playback)
 	})
 
 export const usePlaybackState: () => PlayingState = () =>
