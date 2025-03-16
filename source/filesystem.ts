@@ -3,7 +3,7 @@ import { mkdir, readdir } from "node:fs/promises"
 import path from "node:path"
 import { Observable, distinctUntilChanged, share } from "rxjs"
 import { Result } from "typescript-result"
-import { playlistsDirectory } from "./constants"
+import { DATA_DIRECTORY, playlistsDirectory } from "./constants"
 import { examplePlaylist } from "./smartPlaylists/examplePlaylist"
 import type { FilePath } from "./types/types"
 
@@ -72,9 +72,13 @@ type FileChanged = {
  * including an example playlist
  */
 export async function setupFiles() {
-	const exists = (await ensureDirectoryExists(playlistsDirectory)).getOrThrow()
+	await ensureDirectoryExists(DATA_DIRECTORY)
 
-	if (!exists) {
+	const playlistsDirExists = (
+		await ensureDirectoryExists(playlistsDirectory)
+	).getOrThrow()
+
+	if (!playlistsDirExists) {
 		return Bun.write(
 			path.join(playlistsDirectory, "example.yml"),
 			examplePlaylist

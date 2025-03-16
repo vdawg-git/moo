@@ -1,10 +1,10 @@
 import os from "node:os"
 import type { MprisEventsCatalog } from "@jellybrick/mpris-service"
 import * as R from "remeda"
-import { currentTrack$, loop$, playState$ } from "#/state/derivedState"
 import { filter } from "rxjs"
-import { appState } from "#/state/state"
 import { logg } from "#/logs"
+import { currentTrack$, loop$, playState$ } from "#/state/derivedState"
+import { appState } from "#/state/state"
 
 /** Handles mpris. Does nothing if not compiled for Linux */
 export async function handleMpris() {

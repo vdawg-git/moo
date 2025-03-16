@@ -3,7 +3,7 @@ import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import * as R from "remeda"
 import { Subject } from "rxjs"
 import { Result } from "typescript-result"
-import { databasePath } from "#/constants.js"
+import { DATA_DIRECTORY, databasePath, IS_DEV } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
 import { logg, enumarateError } from "#/logs.js"
 import { schmemaToSql } from "#/smartPlaylists/toSql.js"
@@ -185,6 +185,13 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
  * of the database
  */
 function connectDatabase(): Database {
+	logg.info("database init", {
+		databasePath: databasePath,
+		dbVersion: DATABASE_VERSION,
+		isDev: IS_DEV,
+		dataDir: DATA_DIRECTORY
+	})
+
 	const db = drizzle(databasePath, { logger: databaseLogger })
 
 	const waitForInit = initDatabase(db)
