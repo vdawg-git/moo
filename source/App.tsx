@@ -1,32 +1,30 @@
+import path from "node:path"
 import { useEffect } from "react"
-import { ErrorBoundary } from "react-error-boundary"
 import {
 	Viewport,
 	preserveScreen,
 	render,
 	setCharRegisterSize,
-	setMouseReporting,
-	setConsole
+	setConsole,
+	setMouseReporting
 } from "tuir"
 import { Result } from "typescript-result"
-import { handleAudioPlayback } from "./playback/playback"
-import { ErrorScreen } from "./components/errorScreen"
+import { registerGlobalCommands } from "./commands/commandFunctions"
 import { ModalManager } from "./components/modalManager"
 import { Navigator } from "./components/navigator"
+import { NextUpKeybinds } from "./components/sequenceKeybindsShower"
 import { appConfig } from "./config/config"
-import { databasePath, IS_DEV, LOGS_DIRECTORY } from "./constants"
+import { IS_DEV, LOGS_DIRECTORY, databasePath } from "./constants"
 import { database } from "./database/database"
+import { setupFiles } from "./filesystem"
 import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
-import { enumarateError, logg } from "./logs"
+import { logg } from "./logs"
+import { handleAudioPlayback } from "./playback/playback"
 import {
 	updateSmartPlaylists,
 	watchPlaylists
 } from "./smartPlaylists/smartPlaylist"
 import { manageNotifications } from "./state/stateReact"
-import { setupFiles } from "./filesystem"
-import { NextUpKeybinds } from "./components/sequenceKeybindsShower"
-import { registerGlobalCommands } from "./commands/commandFunctions"
-import path from "node:path"
 
 const App = () => {
 	setCharRegisterSize(1)

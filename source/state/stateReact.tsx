@@ -1,16 +1,16 @@
-import { distinctUntilChanged, filter, map } from "rxjs"
-import { appState, appState$ } from "./state"
-import {
-	notificationModalId,
-	NotificationModal
-} from "#/components/notifications"
 import { deepEquals } from "bun"
+import { distinctUntilChanged, filter, map } from "rxjs"
+import {
+	NotificationModal,
+	notificationModalId
+} from "#/components/notifications"
+import { appState, appState$ } from "./state"
 
 /**
  * Will get refactored once its bigger
  */
 export function manageNotifications() {
-	const modals = appState$
+	const subscription = appState$
 		.pipe(
 			filter(
 				(state) =>
@@ -31,5 +31,5 @@ export function manageNotifications() {
 			})
 		})
 
-	return () => [modals].forEach((subscription) => subscription.unsubscribe())
+	return () => subscription.unsubscribe()
 }
