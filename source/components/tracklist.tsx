@@ -17,7 +17,6 @@ import {
 } from "#/keybindManager/KeybindManager"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack } from "../database/types"
-import { logg } from "#/logs"
 
 type PlaylistProps = {
 	tracks: readonly BaseTrack[]
@@ -165,10 +164,7 @@ function TrackItem({
 			: hasPlaybackIndex
 				? "green"
 				: undefined
-	if (!track) {
-		logg.debug("undefined track item", { track, items })
-		return <Text backgroundColor={"red"}>wut</Text>
-	}
+
 	const titleDisplay = track.title ?? path.basename(track.id)
 
 	const { useEvent } = useKeymap({ submit: { key: "return" } })
