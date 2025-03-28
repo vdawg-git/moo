@@ -1,14 +1,13 @@
-import { useSelector } from "@xstate/store/react"
 import { useCallback } from "react"
 import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
+import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
 import type { PlaylistId } from "#/database/types"
 import { useQuery } from "#/database/useQuery"
-import { appState, playNewPlayback } from "#/state/state"
-import { usePlayingIndex } from "#/state/useSelectors"
-import { PlaylistTitle } from "#/components/playlilstTitle"
+import { playNewPlayback } from "#/state/state"
+import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 
 type PlaylistProps = {
 	id: PlaylistId
@@ -18,10 +17,7 @@ export function Playlist({ id }: PlaylistProps) {
 	const query = useCallback(() => database.getPlaylist(id), [id])
 	const response = useQuery(["playlist", id], query)
 	const playingIndex = usePlayingIndex({ type: "playlist", id })
-	const playState = useSelector(
-		appState,
-		(snapshot) => snapshot.context.playback.playState
-	)
+	const playback = usePlaybackData()
 	const amount = response.data?.getOrNull()?.tracks.length
 	const displayName = response.data?.getOrNull()?.displayName ?? id
 
@@ -43,7 +39,8 @@ export function Playlist({ id }: PlaylistProps) {
 										index
 									})
 								}
-								playState={playState}
+								shuffleMap={playback.shuffleMap}
+								playState={playback.playState}
 								playingIndex={playingIndex}
 							/>
 						),

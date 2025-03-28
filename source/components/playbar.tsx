@@ -1,7 +1,7 @@
 import { appConfig } from "#/config/config"
 import type { BaseTrack, Track } from "#/database/types"
 import { appState } from "#/state/state"
-import { useCurrentTrack, usePlaybackState } from "#/state/useSelectors"
+import { useCurrentTrack, usePlaybackData } from "#/state/useSelectors"
 import { Box, Text } from "tuir"
 
 export function Playbar() {
@@ -29,31 +29,42 @@ export function Playbar() {
 }
 
 function MediaControl() {
-	const playbackState = usePlaybackState()
-	const hasPlayback = playbackState !== "stopped"
+	const { playState, shuffleMap } = usePlaybackData()
+	const hasPlayback = playState !== "stopped"
+	const isShuffling = !!shuffleMap
 
 	return (
-		<Box>
-			<Box
-				paddingX={1}
-				onClick={() => appState.send({ type: "previousTrack" })}
-			>
-				<Text dimColor={!hasPlayback}>{appConfig.icons.previous}</Text>
+		<Box flexDirection="column">
+			<Box>
+				<Box
+					paddingX={1}
+					onClick={() => appState.send({ type: "previousTrack" })}
+				>
+					<Text dimColor={!hasPlayback}>{appConfig.icons.previous}</Text>
+				</Box>
+
+				<Box
+					onClick={() => appState.send({ type: "togglePlayback" })}
+					paddingX={1}
+				>
+					<Text dimColor={!hasPlayback}>
+						{playState === "playing"
+							? appConfig.icons.pause
+							: appConfig.icons.play}
+					</Text>
+				</Box>
+
+				<Box paddingX={1} onClick={() => appState.send({ type: "nextTrack" })}>
+					<Text dimColor={!hasPlayback}>{appConfig.icons.next}</Text>
+				</Box>
 			</Box>
 
-			<Box
-				onClick={() => appState.send({ type: "togglePlayback" })}
-				paddingX={1}
-			>
-				<Text dimColor={!hasPlayback}>
-					{playbackState === "playing"
-						? appConfig.icons.pause
-						: appConfig.icons.play}
-				</Text>
-			</Box>
-
-			<Box paddingX={1} onClick={() => appState.send({ type: "nextTrack" })}>
-				<Text dimColor={!hasPlayback}>{appConfig.icons.next}</Text>
+			<Box>
+				<Box onClick={() => appState.send({ type: "toggleShuffle" })}>
+					<Text dimColor={!isShuffling}>
+						{isShuffling ? appConfig.icons.shuffle : appConfig.icons.linear}
+					</Text>
+				</Box>
 			</Box>
 		</Box>
 	)

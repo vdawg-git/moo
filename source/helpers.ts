@@ -18,3 +18,43 @@ const stripIndentRegex = /^[ \t]+/gm
 export function stripIndent(string: string): string {
 	return string.replace(stripIndentRegex, "")
 }
+
+export function shuffleWithMap<T>(
+	toShuffle: readonly T[],
+	protectIndexes: readonly number[] = []
+): {
+	shuffled: readonly T[]
+	shuffleMap: readonly number[]
+} {
+	const indices = toShuffle.map((_, index) => index)
+	const shuffledIndices = [...indices]
+
+	// Fisher–Yates shuffle
+	for (let index = shuffledIndices.length - 1; index > 0; index--) {
+		const jndex = Math.floor(Math.random() * (index + 1))
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		;[shuffledIndices[index]!, shuffledIndices[jndex]!] = [
+			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			shuffledIndices[jndex]!,
+			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			shuffledIndices[index]!
+		]
+	}
+
+	// biome-ignore lint/style/noNonNullAssertion: <explanation>
+	const shuffled = shuffledIndices.map((index) => toShuffle[index]!)
+
+	return { shuffled, shuffleMap: shuffledIndices }
+}
+
+export function unshuffleFromMap<T>(
+	shuffled: readonly T[],
+	shuffleMap: readonly number[]
+): readonly T[] {
+	const unshuffled = Array(shuffled.length)
+
+	shuffleMap.forEach((originalIndex, shuffledIndex) => {
+		unshuffled[originalIndex] = shuffled[shuffledIndex]
+	})
+	return unshuffled
+}

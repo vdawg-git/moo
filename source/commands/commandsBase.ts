@@ -72,6 +72,12 @@ export const appCommandsBase = Object.freeze({
 		description: "Seeks backward a couple of seconds."
 	},
 
+	"player.toggleShuffle": {
+		label: "Toggle shuffle",
+		keybindings: [[{ key: "s", modifiers: [] }]] as KeyBinding[],
+		description: "Toggles the shuffle mode on/off."
+	},
+
 	showKeybinds: {
 		label: "Show keybindings",
 		keybindings: [[{ key: "?", modifiers: [] }]] as KeyBinding[],

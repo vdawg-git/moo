@@ -31,7 +31,9 @@ const lookupFunction: Readonly<Record<AppCommandID, () => void>> =
 			// A bit longer bc when we seek forward
 			// and then decide to go back, some seconds have already passed
 			return track?.seek(-7)
-		}
+		},
+
+		"player.toggleShuffle": () => appState.send({ type: "toggleShuffle" })
 	})
 
 export function getCommandCallback(id: AppCommandID): () => void {

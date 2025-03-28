@@ -11,6 +11,7 @@ import { database } from "#/database/database"
 import { enumarateError, logg } from "#/logs"
 import type { BaseTrack, PlaylistId, Track } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
+import { shuffleWithMap, unshuffleFromMap } from "#/helpers"
 
 export interface AppState {
 	playback: {
@@ -27,7 +28,13 @@ export interface AppState {
 		index: number
 		playState: PlayingState
 		loopState: LoopState
-		isShuffling: boolean
+		/**
+		 * Is set if shuffling is on.
+		 *
+		 * This maps the indexes of each item to the new position.
+		 * When shuffle gets unset, this is used to revert back to the original order.
+		 */
+		shuffleMap: readonly number[] | undefined
 		isPlayingFromManualQueue: boolean
 		/** Time in seconds */
 		progress: number
@@ -59,17 +66,28 @@ export const appState = createStoreWithProducer(produce, {
 			context.playback.manuallyAdded = []
 			context.playback.playState = "stopped"
 			context.playback.progress = 0
+			context.playback.shuffleMap = context.playback.shuffleMap ? [] : undefined
 		},
 
 		playNewPlayback: (
 			context,
 			{ queue, index = 0 }: { queue: Queue; index?: number }
 		) => {
-			context.playback.isPlayingFromManualQueue = false
-			context.playback.index = index
-			context.playback.playState = "playing"
-			context.playback.queue = queue
+			if (context.playback.shuffleMap) {
+				const { tracks } = queue
+				const { shuffled, shuffleMap } = shuffleWithMap(tracks)
+				context.playback.shuffleMap = shuffleMap
+				context.playback.index = shuffleMap.findIndex((i) => i === index)
+				context.playback.queue = { tracks: shuffled, source: queue.source }
+			} else {
+				context.playback.index = index
+				context.playback.queue = queue
+			}
 
+			context.playback.isPlayingFromManualQueue = false
+			context.playback.playState = "playing"
+
+			// remove the currently playing song from the manual queue
 			if (context.playback.isPlayingFromManualQueue) {
 				context.playback.manuallyAdded.shift()
 			}
@@ -131,6 +149,37 @@ export const appState = createStoreWithProducer(produce, {
 
 		setPlayProgress: (context, { newTime }: { newTime: number }) => {
 			context.playback.progress = newTime
+		},
+
+		toggleShuffle: (context) => {
+			const { shuffleMap } = context.playback
+			logg.debug("toggleShuffle", {
+				shuffleMap,
+				tracks: context.playback.queue?.tracks
+			})
+
+			if (!context.playback.queue) {
+				context.playback.shuffleMap = shuffleMap ? undefined : []
+				return
+			}
+
+			const tracks = context.playback.queue.tracks
+
+			/* has shuffle on */
+			if (shuffleMap) {
+				context.playback.queue.tracks = unshuffleFromMap(tracks, shuffleMap)
+				// biome-ignore lint/style/noNonNullAssertion: <explanation>
+				context.playback.index = shuffleMap[context.playback.index]!
+				context.playback.shuffleMap = undefined
+			} else {
+				const playIndex = context.playback.index
+				const { shuffled, shuffleMap: newShuffleMap } = shuffleWithMap(tracks)
+				context.playback.shuffleMap = newShuffleMap
+				context.playback.queue.tracks = shuffled
+
+				const newIndex = newShuffleMap.findIndex((i) => i === playIndex)
+				context.playback.index = newIndex
+			}
 		},
 
 		// notifications
@@ -198,7 +247,7 @@ function createInitalState(): AppState {
 			index: 0,
 			playState: "stopped",
 			loopState: "none",
-			isShuffling: false,
+			shuffleMap: undefined,
 			isPlayingFromManualQueue: false,
 			progress: 0
 		},

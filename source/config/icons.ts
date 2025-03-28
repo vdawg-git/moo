@@ -1,3 +1,4 @@
+import { shuffle } from "remeda"
 import { z } from "zod"
 
 export const iconsSchema = z
@@ -31,7 +32,9 @@ export const iconsSchema = z
 		command: z
 			.string()
 			.default("❯")
-			.describe("Icon used to indicate a command.")
+			.describe("Icon used to indicate a command."),
+		shuffle: z.string().default("󰒝").describe("Icon used for shuffling."),
+		linear: z.string().default("󰒞").describe("Icon used for linear playback.")
 	})
 	.default({})
 	.describe("Change the icons used in the app.")

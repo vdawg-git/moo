@@ -1,8 +1,7 @@
 import { useSelector } from "@xstate/store/react"
-import { appState, type PlaybackSource } from "./state"
-import type { BaseTrack } from "#/database/types"
-import type { PlayingState } from "#/types/types"
 import { deepEquals } from "bun"
+import type { BaseTrack } from "#/database/types"
+import { type AppState, type PlaybackSource, appState } from "./state"
 import { getCurrentTrackFromState } from "./stateUtils"
 
 // /
@@ -15,8 +14,8 @@ export const useCurrentTrack: () => BaseTrack | undefined = () =>
 		return getCurrentTrackFromState(snapshot.context.playback)
 	})
 
-export const usePlaybackState: () => PlayingState = () =>
-	useSelector(appState, (snapshot) => snapshot.context.playback.playState)
+export const usePlaybackData: () => AppState["playback"] = () =>
+	useSelector(appState, (snapshot) => snapshot.context.playback)
 
 /**
  * Returns the index of the currently playing track from the given source.

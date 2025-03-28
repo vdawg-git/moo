@@ -1,6 +1,7 @@
-import { distinctUntilChanged, map, shareReplay } from "rxjs"
+import { distinctUntilChanged, map, shareReplay, type Observable } from "rxjs"
 import { appState$ } from "./state"
 import { getCurrentTrackFromState } from "./stateUtils"
+import { LocalTrack } from "#/database/database"
 
 const playback$ = appState$.pipe(
 	map((state) => state.playback),
@@ -12,9 +13,10 @@ export const loop$ = playback$.pipe(
 	shareReplay()
 )
 
-export const currentTrack$ = playback$.pipe(
+export const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
 	map(getCurrentTrackFromState),
 	distinctUntilChanged((previous, current) => previous?.id === current?.id),
+	map((trackMaybe) => (trackMaybe ? new LocalTrack(trackMaybe) : trackMaybe)),
 	shareReplay()
 )
 export const playState$ = playback$.pipe(

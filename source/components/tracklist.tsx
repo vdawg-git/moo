@@ -21,14 +21,21 @@ import type { BaseTrack } from "../database/types"
 type PlaylistProps = {
 	tracks: readonly BaseTrack[]
 	onChange: (index: number) => void
+	/** The playing index, not corrected yet when shuffle is on */
 	playingIndex?: number | undefined
+	/**
+	 * If the playlist is shuffled, this is the map of the indexes.
+	 * Used to get the correct index of the currently playing track in the list.
+	 */
+	shuffleMap: readonly number[] | undefined
 	playState: PlayingState
 }
 
 export function Tracklist({
 	tracks,
 	onChange,
-	playingIndex,
+	playingIndex: basePlayIndex,
+	shuffleMap,
 	playState
 }: PlaylistProps) {
 	const { listView, items, control } = useList(tracks, {
@@ -40,6 +47,7 @@ export function Tracklist({
 	})
 
 	const uid = useState(crypto.randomUUID())
+	const playIndex = shuffleMap ? shuffleMap[basePlayIndex ?? 0] : basePlayIndex
 
 	const goDown = useCallback(() => control.nextItem(), [control])
 	const goUp = useCallback(() => control.prevItem(), [control])
@@ -123,7 +131,7 @@ export function Tracklist({
 							track={track}
 							index={index}
 							state={
-								index === playingIndex
+								index === playIndex
 									? playState === "playing"
 										? "playing"
 										: "paused"

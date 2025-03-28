@@ -11,7 +11,8 @@ export function registerGlobalCommands() {
 	const toRegister = pickCommands([
 		"showKeybinds",
 		"runner.openCommands",
-		"runner.openGoto"
+		"runner.openGoto",
+		"player.toggleShuffle"
 	])
 
 	registerKeybinds(toRegister)

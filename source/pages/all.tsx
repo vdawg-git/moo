@@ -5,12 +5,12 @@ import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { appState, playNewPlayback } from "#/state/state"
-import { usePlayingIndex } from "#/state/useSelectors"
+import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import { PlaylistTitle } from "#/components/playlilstTitle"
-import { logg } from "#/logs"
 
 export function All() {
 	const response = useQuery("all", database.getTracks)
+	const playback = usePlaybackData()
 	const playingIndex = usePlayingIndex({ type: "all" })
 	const playState = useSelector(
 		appState,
@@ -31,6 +31,7 @@ export function All() {
 							<Tracklist
 								tracks={tracks}
 								playState={playState}
+								shuffleMap={playback.shuffleMap}
 								onChange={(index) =>
 									playNewPlayback({
 										source: { type: "all" },
