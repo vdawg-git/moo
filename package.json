@@ -60,6 +60,7 @@
 	},
 	"patchedDependencies": {
 		"yoga-wasm-web@0.3.3": "patches/yoga-wasm-web@0.3.3.patch",
-		"@jellybrick/mpris-service@2.1.5": "patches/@jellybrick%2Fmpris-service@2.1.5.patch"
+		"@jellybrick/mpris-service@2.1.5": "patches/@jellybrick%2Fmpris-service@2.1.5.patch",
+		"@jellybrick/dbus-next@0.10.3": "patches/@jellybrick%2Fdbus-next@0.10.3.patch"
 	}
 }

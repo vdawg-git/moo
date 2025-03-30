@@ -1,0 +1,82 @@
+diff --git a/lib/address-x11.js b/lib/address-x11.js
+index c4fbfa38cd25c940983fc5e2ef0b4a5a36f5ac61..64f9991decda854851036bf73145d3918e24e82d 100644
+--- a/lib/address-x11.js
++++ b/lib/address-x11.js
+@@ -4,40 +4,44 @@ const os = require('os');
+ function getDbusAddressFromWindowSelection (callback) {
+   // read dbus adress from window selection
+   // TODO: implement this somewhere
+-  const x11 = require('x11');
+-  if (x11 === null) {
+-    throw new Error('cannot get session bus address from window selection: dbus-next was installed without x11 support');
+-  }
++  // 
++  // ! this is commected out as a patch, 
++  // as it breaks compilation, even though it is not used anywhere
++  
++  // const x11 = require('x11');
++  // if (x11 === null) {
++  //   throw new Error('cannot get session bus address from window selection: dbus-next was installed without x11 support');
++  // }
+ 
+-  // read machine uuid
+-  fs.readFile('/var/lib/dbus/machine-id', 'ascii', function (err, uuid) {
+-    if (err) return callback(err);
+-    const hostname = os.hostname().split('-')[0];
+-    x11.createClient(function (err, display) {
+-      if (err) return callback(err);
+-      const X = display.client;
+-      const selectionName = `_DBUS_SESSION_BUS_SELECTION_${
+-        hostname
+-      }_${uuid.trim()}`;
+-      X.InternAtom(false, selectionName, function (err, id) {
+-        if (err) return callback(err);
+-        X.GetSelectionOwner(id, function (err, win) {
+-          if (err) return callback(err);
+-          X.InternAtom(false, '_DBUS_SESSION_BUS_ADDRESS', function (
+-            err,
+-            propId
+-          ) {
+-            if (err) return callback(err);
+-            win = display.screen[0].root;
+-            X.GetProperty(0, win, propId, 0, 0, 10000000, function (err, val) {
+-              if (err) return callback(err);
+-              callback(null, val.data.toString());
+-            });
+-          });
+-        });
+-      });
+-    });
+-  });
++  // // read machine uuid
++  // fs.readFile('/var/lib/dbus/machine-id', 'ascii', function (err, uuid) {
++  //   if (err) return callback(err);
++  //   const hostname = os.hostname().split('-')[0];
++  //   x11.createClient(function (err, display) {
++  //     if (err) return callback(err);
++  //     const X = display.client;
++  //     const selectionName = `_DBUS_SESSION_BUS_SELECTION_${
++  //       hostname
++  //     }_${uuid.trim()}`;
++  //     X.InternAtom(false, selectionName, function (err, id) {
++  //       if (err) return callback(err);
++  //       X.GetSelectionOwner(id, function (err, win) {
++  //         if (err) return callback(err);
++  //         X.InternAtom(false, '_DBUS_SESSION_BUS_ADDRESS', function (
++  //           err,
++  //           propId
++  //         ) {
++  //           if (err) return callback(err);
++  //           win = display.screen[0].root;
++  //           X.GetProperty(0, win, propId, 0, 0, 10000000, function (err, val) {
++  //             if (err) return callback(err);
++  //             callback(null, val.data.toString());
++  //           });
++  //         });
++  //       });
++  //     });
++  //   });
++  // });
+ }
+ 
+ function getDbusAddressFromFs () {
