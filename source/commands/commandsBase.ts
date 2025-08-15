@@ -78,6 +78,12 @@ export const appCommandsBase = Object.freeze({
 		description: "Toggles the shuffle mode on/off."
 	},
 
+	"sync.open": {
+		label: "Open the sync  page",
+		keybindings: [] as KeyBinding[],
+		description: "Opens the sync page to sync your library to other devices."
+	},
+
 	showKeybinds: {
 		label: "Show keybindings",
 		keybindings: [[{ key: "?", modifiers: [] }]] as KeyBinding[],

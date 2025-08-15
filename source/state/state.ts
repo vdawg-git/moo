@@ -321,7 +321,7 @@ export type PlaybackSource =
  * This dictates the navigation
  * Each key is a route. The value is the data that is passed to the page
  * */
-// We use an interface because it is extensible (for plugins),
+// We use an interface because it is extensible (for plugins maybe one day),
 // and it is easier to make a union type of the keys than making
 // an interface out of an union type
 export interface ViewPages {
@@ -329,6 +329,7 @@ export interface ViewPages {
 	home: undefined
 	playlist: { id: PlaylistId }
 	search: undefined
+	sync: undefined
 }
 
 export type ViewPage = {
@@ -350,6 +351,7 @@ export function addErrorNotification(
 		...logableError,
 		...(!tag && { msg: message })
 	})
+
 	addNotification({ message, type: "error" })
 }
 

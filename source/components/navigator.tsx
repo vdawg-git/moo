@@ -3,12 +3,14 @@ import { Text } from "tuir"
 import { All } from "#/pages/all"
 import { Playlist } from "#/pages/playlist"
 import { type ViewPage, type ViewPages, appState } from "#/state/state"
+import { SyncPage } from "#/pages/sync"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
 const routes: Routes = {
 	home: () => <All />,
 	playlist: ({ id }) => <Playlist id={id} />,
-	search: () => <Text>Search</Text>
+	search: () => <Text>Search</Text>,
+	sync: () => <SyncPage />
 }
 
 export function Navigator() {

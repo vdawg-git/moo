@@ -33,7 +33,10 @@ const lookupFunction: Readonly<Record<AppCommandID, () => void>> =
 			return track?.seek(-7)
 		},
 
-		"player.toggleShuffle": () => appState.send({ type: "toggleShuffle" })
+		"player.toggleShuffle": () => appState.send({ type: "toggleShuffle" }),
+
+		"sync.open": () =>
+			appState.send({ type: "navigateTo", goTo: { route: "sync" } })
 	})
 
 export function getCommandCallback(id: AppCommandID): () => void {
