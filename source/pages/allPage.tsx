@@ -32,7 +32,7 @@ export function All() {
 								tracks={tracks}
 								playState={playState}
 								shuffleMap={playback.shuffleMap}
-								onChange={(index) =>
+								onPlay={(index) =>
 									playNewPlayback({
 										source: { type: "all" },
 										index

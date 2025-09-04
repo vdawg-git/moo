@@ -1,14 +1,14 @@
 import { mapValues } from "remeda"
-import type { NullToUndefined } from "./types/utillities"
+import type { NullsToUndefined } from "./types/utillities"
 
 /** Converts all _top-level_ values from null to undefined */
 export function nullsToUndefined<T extends object>(
 	object: T
-): NullToUndefined<T> {
+): NullsToUndefined<T> {
 	return mapValues(
 		object,
 		(value) => value ?? undefined
-	) as unknown as NullToUndefined<T>
+	) as unknown as NullsToUndefined<T>
 }
 
 const stripIndentRegex = /^[ \t]+/gm
@@ -23,8 +23,8 @@ export function shuffleWithMap<T>(
 	toShuffle: readonly T[],
 	protectIndexes: readonly number[] = []
 ): {
-	shuffled: readonly T[]
-	shuffleMap: readonly number[]
+	shuffled: T[]
+	shuffleMap: number[]
 } {
 	const indices = toShuffle.map((_, index) => index)
 	const shuffledIndices = [...indices]
@@ -50,7 +50,7 @@ export function shuffleWithMap<T>(
 export function unshuffleFromMap<T>(
 	shuffled: readonly T[],
 	shuffleMap: readonly number[]
-): readonly T[] {
+): T[] {
 	const unshuffled = Array(shuffled.length)
 
 	shuffleMap.forEach((originalIndex, shuffledIndex) => {
@@ -58,3 +58,12 @@ export function unshuffleFromMap<T>(
 	})
 	return unshuffled
 }
+
+/**
+ * Gets a value from an object.
+ * Throws if undefined
+ */
+export function getOrThrow<T extends obje, K extends keyof T>(
+	object: T,
+	key: keyof T
+): T[K] {}

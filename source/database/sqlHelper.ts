@@ -6,7 +6,7 @@ import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
  * Upsert a table, updating the columns if the key already exists.
  *
  *
- * For the SQL ransaction to trigger this needs to return the operation directly
+ * For the SQL transaction to trigger this needs to return the operation directly
  * and not a Result type
  * */
 export async function upsert<

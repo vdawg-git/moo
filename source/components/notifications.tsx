@@ -1,5 +1,6 @@
 import { appConfig } from "#/config/config"
-import { appState, type AppNotification } from "#/state/state"
+import { appState } from "#/state/state"
+import type { AppNotification } from "#/state/types"
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { match } from "ts-pattern"

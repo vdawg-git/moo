@@ -44,12 +44,14 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 	// A lot of the api is not needed yet,
 	// so they are just placeholders for now
 	return {
-		getAlbum: async () => Result.ok(undefined),
-		getAlbums: async (ids = []) => Result.ok([]),
-		getArtist: async () => Result.ok(undefined),
-		getArtists: async () => Result.ok([]),
-
-		getTrack: async () => Result.ok(undefined),
+		getTrack: async (id) =>
+			Result.fromAsyncCatching(
+				db
+					.select({ ...baseTrackSelector })
+					.from(tracksTable)
+					.where(eq(tracksTable.id, id))
+					.then(([track]) => track && nullsToUndefined(track))
+			),
 		getTracks: async (ids = []) =>
 			Result.fromAsyncCatching(
 				db
@@ -174,6 +176,19 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 					.delete(tracksTable)
 					.where(notInArray(tracksTable.id, ids as TrackId[]))
 			),
+
+		getAlbum: async () => {
+			throw new Error("getAlbum is not implemented")
+		},
+		getAlbums: async (ids = []) => {
+			throw new Error("getAlbums is not implemented")
+		},
+		getArtist: async () => {
+			throw new Error("getArtist is not implemented")
+		},
+		getArtists: async () => {
+			throw new Error("getArtists is not implemented")
+		},
 
 		changed$
 	} satisfies Database

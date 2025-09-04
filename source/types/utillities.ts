@@ -3,11 +3,11 @@
  *
  * Useful when mapping database types.
  * */
-export type NullToUndefined<T> = {
+export type NullsToUndefined<T> = {
 	[Key in keyof T]: T[Key] extends string & { __brand: string }
 		? T[Key]
 		: T[Key] extends object
-			? NullToUndefined<T[Key]>
+			? NullsToUndefined<T[Key]>
 			: keyof T[Key] extends null
 				? Exclude<T[Key], null> | undefined
 				: T[Key]

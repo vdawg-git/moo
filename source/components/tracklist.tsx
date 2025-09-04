@@ -1,5 +1,5 @@
 import path from "node:path"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useId, useState } from "react"
 import {
 	Box,
 	type Color,
@@ -9,18 +9,21 @@ import {
 	useList,
 	useListItem
 } from "tuir"
-import type { GeneralCommand } from "#/commands/appCommands"
+import { appCommands, type GeneralCommand } from "#/commands/appCommands"
 import { appConfig } from "#/config/config"
 import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/KeybindManager"
 import type { PlayingState } from "#/types/types"
-import type { BaseTrack } from "../database/types"
+import type { BaseTrack, TrackId } from "../database/types"
+import { appState } from "#/state/state"
+import { logg } from "#/logs"
+import { useRegisterListNavigationCommands } from "#/hooks/hooks"
 
 type PlaylistProps = {
 	tracks: readonly BaseTrack[]
-	onChange: (index: number) => void
+	onPlay: (index: number) => void
 	/** The playing index, not corrected yet when shuffle is on */
 	playingIndex?: number | undefined
 	/**
@@ -33,7 +36,7 @@ type PlaylistProps = {
 
 export function Tracklist({
 	tracks,
-	onChange,
+	onPlay,
 	playingIndex: basePlayIndex,
 	shuffleMap,
 	playState
@@ -46,76 +49,14 @@ export function Tracklist({
 		fallthrough: false
 	})
 
-	const uid = useState(crypto.randomUUID())
+	const uid = useId()
 	const playIndex = shuffleMap ? shuffleMap[basePlayIndex ?? 0] : basePlayIndex
 
-	const goDown = useCallback(() => control.nextItem(), [control])
-	const goUp = useCallback(() => control.prevItem(), [control])
-	const goBottom = useCallback(
-		() => control.goToIndex(items.length - 1),
-		[control, items]
-	)
-	const goTop = useCallback(() => control.goToIndex(0), [control])
-	const scrollDown = useCallback(() => control.scrollDown(), [control])
-	const scrollUp = useCallback(() => control.scrollUp(), [control])
-
-	useEffect(() => {
-		const commands: GeneralCommand[] = [
-			{
-				id: "down" + uid,
-				callback: goDown,
-				label: "Go to the next track list item",
-				keybindings: [
-					[{ key: "j", modifiers: [] }],
-					[{ key: "down", modifiers: [] }]
-				]
-			},
-			{
-				id: "up" + uid,
-				callback: goUp,
-				label: "Go to the previous track list item",
-				keybindings: [
-					[{ key: "k", modifiers: [] }],
-					[{ key: "down", modifiers: [] }]
-				]
-			},
-			{
-				id: "bottom" + uid,
-				callback: goBottom,
-				label: "Go to the last list item",
-				keybindings: [[{ key: "G", modifiers: [] }]]
-			},
-			{
-				id: "top" + uid,
-				callback: goTop,
-				label: "Go to the first list item",
-				keybindings: [
-					[
-						{ key: "g", modifiers: [] },
-						{ key: "g", modifiers: [] }
-					]
-				]
-			},
-			{
-				id: "scrollDown" + uid,
-				callback: scrollDown,
-				label: "Scroll the track list down",
-				keybindings: [[{ key: "d", modifiers: ["ctrl"] }]]
-			},
-			{
-				id: "scrollUp" + uid,
-				callback: scrollUp,
-				label: "Scroll the track list up",
-				keybindings: [[{ key: "u", modifiers: ["ctrl"] }]]
-			}
-		]
-
-		registerKeybinds(commands)
-
-		return () => {
-			unregisterKeybinds(commands)
-		}
-	}, [goDown, goUp, goBottom, goTop, scrollDown, scrollUp, uid])
+	useRegisterListNavigationCommands({
+		control,
+		itemsLength: items.length,
+		uid: uid + "-tracklist"
+	})
 
 	return (
 		<Box flexDirection="column">
@@ -129,7 +70,6 @@ export function Tracklist({
 					map: (track, index) => (
 						<TrackItem
 							track={track}
-							index={index}
 							state={
 								index === playIndex
 									? playState === "playing"
@@ -138,7 +78,8 @@ export function Tracklist({
 									: undefined
 							}
 							key={track.id}
-							onSelect={() => onChange(index)}
+							onPlay={() => onPlay(index)}
+							onFocus={() => registerQueueCommands(track.id)}
 						/>
 					)
 				}}
@@ -147,31 +88,35 @@ export function Tracklist({
 	)
 }
 
-type TrackItemProps = {
+export type TrackItemProps = {
 	state: "playing" | "paused" | undefined
-	onSelect: () => void
+	onPlay: () => void
+	/**
+	 * Gets executed when the element gets focused.
+	 * If a function is returned it will be called onBlur
+	 */
+	onFocus?: () => undefined | (() => void)
 	// we pass those instead of using them from `useListItem`, as sometimes the item is undefined
 	// still not sure though if this is really the bug, but it looks like it
 	track: BaseTrack
-	index: number
+	/** Sets the default color. Gets overriden by the `state` color  */
+	color?: Color
 }
 
-function TrackItem({
-	onSelect,
+export function TrackItem({
+	onPlay: onSelect,
 	state,
 	track,
-	index
+	onFocus,
+	color
 }: TrackItemProps): React.ReactNode {
-	const { isFocus, control } = useListItem<BaseTrack[]>()
+	const { isFocus, control, listIndex } = useListItem<BaseTrack[]>()
+
 	const hasPlaybackIndex = !!state
 	const bgColor: Color | undefined =
 		isFocus && hasPlaybackIndex ? "green" : isFocus ? "blue" : undefined
 	const textColor: Color | undefined =
-		bgColor && hasPlaybackIndex
-			? "black"
-			: hasPlaybackIndex
-				? "green"
-				: undefined
+		bgColor && hasPlaybackIndex ? "black" : hasPlaybackIndex ? "green" : color
 
 	const titleDisplay = track.title ?? path.basename(track.id)
 
@@ -179,11 +124,17 @@ function TrackItem({
 	useEvent("submit", onSelect)
 	const icon = state === "playing" ? appConfig.icons.playingIndicator : ""
 
+	useEffect(() => {
+		if (!isFocus) return
+
+		return onFocus?.()
+	}, [isFocus, onFocus])
+
 	return (
 		<Box
 			width="100"
 			backgroundColor={bgColor}
-			onClick={() => (isFocus ? onSelect() : control.goToIndex(index))}
+			onClick={() => (isFocus ? onSelect() : control.goToIndex(listIndex))}
 		>
 			<Text color={textColor}>
 				{icon}
@@ -195,4 +146,45 @@ function TrackItem({
 			</Text>
 		</Box>
 	)
+}
+
+/**
+ * Returns the unregister function,
+ * which should be called when unmounting
+ * */
+function registerQueueCommands(trackId: TrackId): () => void {
+	const commands: GeneralCommand[] = [
+		{
+			label: "Play next",
+			id: "play_next" + trackId,
+			callback: () =>
+				appState.send({
+					type: "addToManualQueueFirst",
+					trackId: trackId
+				}),
+			keybindings: [
+				[
+					{ key: "q", modifiers: [] },
+					{ key: "f", modifiers: [] }
+				]
+			]
+		},
+		{
+			label: "Play last",
+			id: "play_last" + trackId,
+			callback: () =>
+				appState.send({
+					type: "addToManualQueueFirst",
+					trackId: trackId
+				}),
+			keybindings: [
+				[
+					{ key: "q", modifiers: [] },
+					{ key: "l", modifiers: [] }
+				]
+			]
+		}
+	]
+
+	return registerKeybinds(commands)
 }

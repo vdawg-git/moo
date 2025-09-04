@@ -1,7 +1,7 @@
 import { Box, Text } from "tuir"
 import {
 	type SequencePart,
-	manageKeybinds
+	useManageKeybinds
 } from "#/keybindManager/KeybindManager"
 
 type NextUpKeybind = { label: string; toPress: string; id: string }
@@ -10,7 +10,7 @@ type NextUpKeybind = { label: string; toPress: string; id: string }
  * Shows which keybinds can be pressed next.
  */
 export function NextUpKeybinds() {
-	const sequencePartMaybe = manageKeybinds()
+	const sequencePartMaybe = useManageKeybinds()
 
 	const toDisplay = sequencePartMaybe && sequencePartToNextUp(sequencePartMaybe)
 
@@ -30,8 +30,6 @@ export function NextUpKeybinds() {
 					borderStyle={"single"}
 					borderColor={"yellow"}
 					justifyContent="space-between"
-					minWidth={26}
-					backgroundColor={"black"}
 				>
 					<Box flexDirection="column">
 						{toDisplay.map(({ toPress, id }) => (

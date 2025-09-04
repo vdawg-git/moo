@@ -12,6 +12,7 @@ import {
 	type KeybindNextUp,
 	keybindsState
 } from "./keybindsState"
+import { logg } from "#/logs"
 
 /** This is a mirror of the internal `SpecialKeys`,
  * which does not get exported, but used in `useInput` */
@@ -32,7 +33,7 @@ export type SequencePart = {
  * Later we want to support multiple instances of this,
  * in different contexts (like the 'when' property in VS Code keybinds)
  */
-export function manageKeybinds(): SequencePart | undefined {
+export function useManageKeybinds(): SequencePart | undefined {
 	const isDisabled = useSelector(
 		appState,
 		(snapshot) => snapshot.context.disableGlobalKeybinds
@@ -148,12 +149,15 @@ function tuirInputToKeyInput({ key, specialKeys }: InputData): KeyInput {
 	return { key: input, modifiers }
 }
 
+/** Returns the unregister function */
 export function registerKeybinds(toRegister: readonly GeneralCommand[]) {
 	toRegister.forEach(({ keybindings, label, callback, id }) =>
 		keybindings.forEach((sequence) =>
 			keybindsState.addSequence(sequence, { callback, id, label })
 		)
 	)
+
+	return () => unregisterKeybinds(toRegister)
 }
 export function unregisterKeybinds(toUnregister: readonly GeneralCommand[]) {
 	toUnregister.forEach(({ keybindings, id }) =>

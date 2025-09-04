@@ -14,7 +14,7 @@ import type {
 } from "./schema"
 
 export interface Database {
-	getTrack: (id: TrackId) => Promise<Result<Track | undefined, Error>>
+	getTrack: (id: TrackId) => Promise<Result<BaseTrack | undefined, Error>>
 	getTracks: (
 		ids?: readonly TrackId[]
 	) => Promise<Result<readonly BaseTrack[], Error>>
@@ -90,7 +90,6 @@ export interface Database {
  *
  * Consumes a lot less memories than fetching all metadata.
  */
-// Is GraphQL overkill or good here I wonder
 export type BaseTrack = Pick<
 	Track,
 	| "album"
@@ -114,7 +113,7 @@ export abstract class Track {
 	 * Currently we only support local music
 	 */
 	readonly id: TrackId
-	/** Manages the playing of the track (a local track is different than a streamed one)  */
+	/** Manages the playing of the track (a local track is different than a streamed one [we dont have streaming yet, and might never will])  */
 	private readonly player: Player
 	/** The events for the playback of this track */
 	readonly events$: Player["events$"]
@@ -137,7 +136,7 @@ export abstract class Track {
 	}
 
 	// We wrap the player like that as it needs to know the track id anyway,
-	// like that we can control always the correct player with the correct id
+	// like that we can always control the correct player with the correct id
 	// and a simpler interface
 
 	play() {

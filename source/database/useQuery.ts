@@ -1,7 +1,7 @@
 // A basic TanStack Query/SWR implementation.
 // We'll use this to cache the results of our database queries.
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { isNullish } from "remeda"
 import {
 	type Observable,
@@ -9,20 +9,23 @@ import {
 	map,
 	merge,
 	of,
+	shareReplay,
 	startWith,
 	switchMap,
 	tap
 } from "rxjs"
 import { Result } from "typescript-result"
 import { database } from "./database"
+import type { JsonValue } from "type-fest"
+import { logg } from "#/logs"
 
 const cache: Record<string, unknown> = {}
 
+/** To refetch the query when the database changes */
 const refresh$ = database.changed$
 
 export function useQuery<T>(
 	key: string | string[],
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	query: () => Promise<Result<T, any>>
 ): QueryResult<T>
 export function useQuery<T>(
@@ -32,7 +35,6 @@ export function useQuery<T>(
 export function useQuery<T>(
 	key: string | string[],
 	/** ! Make sure to wrap the query in `useCallback` */
-	// biome-ignore lint/suspicious/noExplicitAny: we dont need the error type here
 	query: () => Promise<T> | Promise<Result<T, any>>
 ): QueryResult<T> {
 	const combinedKey = Array.isArray(key) ? key.join("-") : key
@@ -40,26 +42,29 @@ export function useQuery<T>(
 	const [state, setState] = useState<QueryResult<T>>({
 		data: undefined,
 		isLoading: true as const,
-		isFetching: true
+		isFetching: true,
+		isFetched: false
 	})
+	const queryCallback = useCallback(query, [])
 
 	useEffect(() => {
-		const subscription = observeQuery(combinedKey, query).subscribe(setState)
+		const subscription = observeQuery(combinedKey, queryCallback).subscribe(
+			setState
+		)
 
 		return () => subscription.unsubscribe()
-	}, [combinedKey, query])
+	}, [combinedKey, queryCallback])
 
 	return state
 }
 
 /** Runs and caches a query */
 export function observeQuery<T>(
-	key: string | string[],
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	query: () => Promise<T> | Promise<Result<T, any>>
+	key: JsonValue,
+	query: () => Promise<Result<T, any>> | Promise<T>
 ): Observable<QueryResult<T>> {
-	const cacheKey = Array.isArray(key) ? key.join("-") : key
-	const initialCacheValue = cache[cacheKey] as T
+	const cacheKey = JSON.stringify(key)
+	const initialCacheValue = cache[cacheKey] as T | undefined
 
 	const query$ = refresh$.pipe(switchMap(() => query().catch(Result.error)))
 	const stream$ = merge(
@@ -75,12 +80,14 @@ export function observeQuery<T>(
 				? {
 						data: data as Result<T, unknown>,
 						isFetching: false as const,
-						isLoading: false as const
+						isLoading: false as const,
+						isFetched: true as const
 					}
 				: {
-						data: Result.ok(data),
+						data: Result.ok(data) as Result<T, unknown>,
 						isFetching: false,
-						isLoading: false as const
+						isLoading: false as const,
+						isFetched: true as const
 					}
 		),
 		tap(({ data }) => {
@@ -90,15 +97,28 @@ export function observeQuery<T>(
 		}),
 		startWith(
 			isNullish(initialCacheValue)
-				? { data: undefined, isFetching: true, isLoading: true as const }
+				? {
+						data: undefined,
+						isFetching: true,
+						isLoading: true as const,
+						isFetched: false as const
+					}
 				: // we dont need to refetch stale data, as we just query our own db and we have a change notification with a refetch for that
 					{
-						data: Result.ok(initialCacheValue),
+						data: Result.ok(initialCacheValue) as Result<T, unknown>,
 						isFetching: false,
-						isLoading: false as const
+						isLoading: false as const,
+						isFetched: true as const
 					}
-		)
-		// shareReplay({ refCount: true }),
+		),
+		tap((data) =>
+			logg.debug("observeQueryEnd", {
+				key: cacheKey,
+				...data,
+				data: data.data?.toString()
+			})
+		),
+		shareReplay({ refCount: true })
 	)
 }
 
@@ -109,6 +129,7 @@ export type QueryResult<T> =
 			isFetching: boolean
 			/** Used the first time data is queried */
 			isLoading: true
+			isFetched: false
 	  }
 	| {
 			data: Result<T, unknown>
@@ -116,4 +137,5 @@ export type QueryResult<T> =
 			isFetching: boolean
 			/** Used the first time data is queried */
 			isLoading: false
+			isFetched: true
 	  }

@@ -144,6 +144,14 @@ async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
 			appState.send({ type: "navigateTo", goTo: { route: "home" } })
 	}
 
+	const queue: RunnerItem = {
+		id: "queue-page",
+		label: "Queue",
+		icon: appConfig.icons.playlist,
+		onSelect: () =>
+			appState.send({ type: "navigateTo", goTo: { route: "queue" } })
+	}
+
 	const playlists = await Result.fromAsync(database.getPlaylists())
 		.map(
 			R.map(
@@ -165,7 +173,7 @@ async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
 		)
 		.getOrDefault([] as RunnerItem[])
 
-	return [home, ...playlists]
+	return [home, ...playlists, queue]
 }
 
 function rawInputToPrefixed(input: string): ParsedInput {

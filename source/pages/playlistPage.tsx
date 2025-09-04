@@ -33,7 +33,7 @@ export function Playlist({ id }: PlaylistProps) {
 						(playlist) => (
 							<Tracklist
 								tracks={playlist.tracks}
-								onChange={(index) =>
+								onPlay={(index) =>
 									playNewPlayback({
 										source: { type: "playlist", id },
 										index

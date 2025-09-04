@@ -1,4 +1,5 @@
-import { appState, type AppModal } from "#/state/state"
+import { appState } from "#/state/state"
+import type { AppModal } from "#/state/types"
 import { useSelector } from "@xstate/store/react"
 import { useState } from "react"
 import { Modal, useModal } from "tuir"

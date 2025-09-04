@@ -1,242 +1,67 @@
 import { randomUUID } from "node:crypto"
-import { createStoreWithProducer } from "@xstate/store"
-import { deepEquals } from "bun"
-import { produce } from "immer"
-import type { ReactNode } from "react"
+import { createStore } from "@xstate/store"
 import { Observable, shareReplay } from "rxjs"
 import { match } from "ts-pattern"
-import type { Except } from "type-fest"
 import { Result } from "typescript-result"
 import { database } from "#/database/database"
 import { enumarateError, logg } from "#/logs"
-import type { BaseTrack, PlaylistId, Track } from "../database/types"
-import type { LoopState, PlayingState } from "../types/types"
-import { shuffleWithMap, unshuffleFromMap } from "#/helpers"
+import type { BaseTrack } from "../database/types"
+import type { AppState, NotificationAdd, PlaybackSource } from "./types"
+import { appStateActionsInternal as a } from "./actions"
 
-export interface AppState {
-	playback: {
-		/**
-		 * The tracks to play.
-		 * Does not include the manuallyAdded ones.
-		 */
-		queue: Queue | undefined
-		/**
-		 * Tracks to play next.
-		 * Those are manually added by the user via "Play next" or similliar.
-		 */
-		manuallyAdded: Track[]
-		index: number
-		playState: PlayingState
-		loopState: LoopState
-		/**
-		 * Is set if shuffling is on.
-		 *
-		 * This maps the indexes of each item to the new position.
-		 * When shuffle gets unset, this is used to revert back to the original order.
-		 */
-		shuffleMap: readonly number[] | undefined
-		isPlayingFromManualQueue: boolean
-		/** Time in seconds */
-		progress: number
-	}
-
-	/** This dictates the navigation */
-	view: {
-		historyIndex: number
-		history: ViewPage[]
-	}
-
-	notifications: AppNotification[]
-	modals: AppModal[]
-	/**
-	 * Wether the {@linkcode KeybindingsManager} should stop listening to input.
-	 * Used to disable it when a textinput or the runner is focused
-	 */
-	disableGlobalKeybinds: boolean
-}
-
-export const appState = createStoreWithProducer(produce, {
+/**
+ * The global app state which holds data for
+ * - navigation
+ * - playback
+ * - notifications
+ * - modals
+ * - and more...
+ */
+export const appState = createStore({
 	context: createInitalState(),
 	on: {
+		////////////////////////
 		// playback
+		////////////////////////
 
-		stopPlayback: (context) => {
-			context.playback.queue = undefined
-			context.playback.index = 0
-			context.playback.manuallyAdded = []
-			context.playback.playState = "stopped"
-			context.playback.progress = 0
-			context.playback.shuffleMap = context.playback.shuffleMap ? [] : undefined
-		},
+		playNewPlayback: a.playNewPlayback,
+		playIndex: a.playIndex,
+		stopPlayback: a.stopPlayback,
+		nextTrack: a.nextTrack,
+		previousTrack: a.previousTrack,
+		togglePlayback: a.togglePlayback,
+		setPlayProgress: a.setPlayProgress,
+		toggleShuffle: a.toggleShuffle,
+		removeFromQueue: a.removeFromQueue,
 
-		playNewPlayback: (
-			context,
-			{ queue, index = 0 }: { queue: Queue; index?: number }
-		) => {
-			if (context.playback.shuffleMap) {
-				const { tracks } = queue
-				const { shuffled, shuffleMap } = shuffleWithMap(tracks)
-				context.playback.shuffleMap = shuffleMap
-				context.playback.index = shuffleMap.findIndex((i) => i === index)
-				context.playback.queue = { tracks: shuffled, source: queue.source }
-			} else {
-				context.playback.index = index
-				context.playback.queue = queue
-			}
+		playFromManualQueue: a.playFromManualQueue,
+		addToManualQueueFirst: a.addToManualQueueFirst,
+		addToManualQueueLast: a.addToManualQueueLast,
+		removeFromManualQueue: a.removeFromManualQueue,
 
-			context.playback.isPlayingFromManualQueue = false
-			context.playback.playState = "playing"
-
-			// remove the currently playing song from the manual queue
-			if (context.playback.isPlayingFromManualQueue) {
-				context.playback.manuallyAdded.shift()
-			}
-		},
-
-		nextTrack: (context) => {
-			if (!context.playback.queue) return
-
-			// TODO add manuallyAdded handling
-			// should switch to manuallyAdded if there is manually added stuff,
-			// should shift from manuallyAdded if already playing from manually added
-
-			const loop = context.playback.loopState
-
-			const currentIndex = context.playback.index
-			const overLastTrack =
-				currentIndex + 1 === context.playback.queue.tracks.length
-
-			if (overLastTrack) {
-				if (loop === "loop_queue") {
-					context.playback.index = 0
-				} else {
-					context.playback.playState === "stopped"
-				}
-				return
-			}
-
-			context.playback.index += 1
-		},
-
-		previousTrack: (context) => {
-			if (!context.playback.queue) return
-
-			const loop = context.playback.loopState
-
-			const currentIndex = context.playback.index
-			const overLastTrack = currentIndex - 1 <= 0
-
-			if (overLastTrack) {
-				if (loop === "loop_queue") {
-					context.playback.index = context.playback.queue.tracks.length - 1
-				} else {
-					context.playback.playState === "stopped"
-				}
-				return
-			}
-
-			context.playback.index -= 1
-		},
-
-		togglePlayback: (context) => {
-			const playState = context.playback.playState
-
-			if (!context.playback.queue) return
-
-			context.playback.playState =
-				playState === "playing" ? "paused" : "playing"
-		},
-
-		setPlayProgress: (context, { newTime }: { newTime: number }) => {
-			context.playback.progress = newTime
-		},
-
-		toggleShuffle: (context) => {
-			const { shuffleMap } = context.playback
-			logg.debug("toggleShuffle", {
-				shuffleMap,
-				tracks: context.playback.queue?.tracks
-			})
-
-			if (!context.playback.queue) {
-				context.playback.shuffleMap = shuffleMap ? undefined : []
-				return
-			}
-
-			const tracks = context.playback.queue.tracks
-
-			/* has shuffle on */
-			if (shuffleMap) {
-				context.playback.queue.tracks = unshuffleFromMap(tracks, shuffleMap)
-				// biome-ignore lint/style/noNonNullAssertion: <explanation>
-				context.playback.index = shuffleMap[context.playback.index]!
-				context.playback.shuffleMap = undefined
-			} else {
-				const playIndex = context.playback.index
-				const { shuffled, shuffleMap: newShuffleMap } = shuffleWithMap(tracks)
-				context.playback.shuffleMap = newShuffleMap
-				context.playback.queue.tracks = shuffled
-
-				const newIndex = newShuffleMap.findIndex((i) => i === playIndex)
-				context.playback.index = newIndex
-			}
-		},
-
+		////////////////////////
 		// notifications
+		////////////////////////
 
-		addNotification: (
-			context,
-			{ notification }: { notification: AppNotification }
-		) => {
-			context.notifications.push(notification)
-		},
+		addNotification: a.addNotification,
+		clearNotifications: a.clearNotifications,
+		disableGlobalKeybinds: a.disableGlobalKeybinds,
 
-		clearNotifications: (context) => {
-			context.notifications = []
-		},
-
-		disableGlobalKeybinds: (context, { disabled }: { disabled: boolean }) => {
-			context.disableGlobalKeybinds = disabled
-		},
-
+		////////////////////////
 		// navigation
+		////////////////////////
 
-		navigateTo: (context, { goTo }: { goTo: ViewPage }) => {
-			const index = context.view.historyIndex
-			const currentView = context.view.history[index]
-			if (deepEquals(currentView, goTo)) return
+		navigateTo: a.navigateTo,
+		navigateBack: a.navigateBack,
+		navigateForward: a.navigateForward,
 
-			context.view.history.splice(index + 1, Number.POSITIVE_INFINITY)
-			context.view.history.push(goTo)
-			context.view.historyIndex += 1
-		},
-
-		navigateBack: (context) => {
-			if (context.view.historyIndex <= 0) return
-			context.view.historyIndex -= 1
-		},
-
-		navigateForward: (context) => {
-			if (context.view.historyIndex + 1 >= context.view.history.length) return
-			context.view.historyIndex += 1
-		},
-
+		////////////////////////
 		// Modals
+		////////////////////////
 
-		addModal: (context, { modal }: { modal: AppModal }) => {
-			if (context.modals.find(({ id }) => modal.id === id)) {
-				return
-			}
-
-			context.modals.push(modal)
-		},
-
-		closeModal: (context, { id }: { id: AppModal["id"] }) => {
-			context.modals = context.modals.filter(
-				({ id: toClose }) => id !== toClose
-			)
-		}
-	}
+		addModal: a.addModal,
+		closeModal: a.closeModal
+	} satisfies { [K in keyof typeof a]: (typeof a)[K] }
 })
 
 function createInitalState(): AppState {
@@ -260,82 +85,6 @@ function createInitalState(): AppState {
 		disableGlobalKeybinds: false
 	}
 }
-
-/**
- * A modal in the {@link appState}.
- * Does hold its content and its ID.
- */
-export type AppModal = Readonly<{
-	/**
-	 * The content to show to the user.
-	 * The ModalManager shows it to the user via a modal.
-	 * */
-	Content: (props: AppModalContentProps) => ReactNode
-
-	/** Unique ID to discern the different modals */
-	id: number | string
-
-	/** The titel to show on the top of the modal box */
-	title: string
-}>
-export type AppModalContentProps = {
-	/** Removes the current modal */
-	closeModal: () => void
-	changeTitle: (title: string) => void
-}
-
-/** A notification in Moo */
-export type AppNotification = {
-	type: "error" | "success" | "default" | "warn"
-	/** The message to display. Can be JSX. */
-	message: ReactNode
-	/** Unique ID */
-	id: string
-}
-type NotificationAdd = Except<AppNotification, "id">
-
-type Queue = {
-	tracks: readonly BaseTrack[]
-	source: PlaybackSource
-}
-
-/**
- * Specifies the source of a playback.
- * Can be a playlist, an album etc.
- */
-export type PlaybackSource =
-	| {
-			// currently we only support playlists,
-			// but in the future albums, artists, etc. should work too
-			// and they should be compatible with streaming services too
-			type: "playlist"
-			id: PlaylistId
-			// provider: "local"
-	  }
-	| {
-			/** Everything from the library */
-			type: "all"
-	  }
-
-/**
- * This dictates the navigation
- * Each key is a route. The value is the data that is passed to the page
- * */
-// We use an interface because it is extensible (for plugins),
-// and it is easier to make a union type of the keys than making
-// an interface out of an union type
-export interface ViewPages {
-	// the homeview should be configurable via the config
-	home: undefined
-	playlist: { id: PlaylistId }
-	search: undefined
-}
-
-export type ViewPage = {
-	[Route in keyof ViewPages]: ViewPages[Route] extends undefined
-		? { route: Route; parameter?: undefined }
-		: { route: Route; parameter: ViewPages[Route] }
-}[keyof ViewPages]
 
 export function addErrorNotification(
 	message: string,
@@ -365,7 +114,10 @@ export function addNotification(notification: NotificationAdd) {
 export async function playNewPlayback({
 	source,
 	index
-}: { source: PlaybackSource; index?: number }) {
+}: {
+	source: PlaybackSource
+	index?: number
+}) {
 	const state = appState.getSnapshot().context.playback
 
 	const isSamePlayback =
@@ -381,7 +133,7 @@ export async function playNewPlayback({
 		.onSuccess((tracks) => {
 			appState.send({
 				type: "playNewPlayback",
-				queue: { tracks, source },
+				queue: { tracks: tracks.map(({ id }) => id), source },
 				index
 			})
 		})
@@ -421,3 +173,5 @@ export const appState$: Observable<AppState> = new Observable<AppState>(
 		return () => subscription.unsubscribe()
 	}
 ).pipe(shareReplay())
+
+appState$.subscribe(() => logg.debug("state updated"))

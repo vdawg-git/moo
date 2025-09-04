@@ -1,12 +1,14 @@
 #!/usr/bin/env bun
 import { setupFiles } from "./filesystem.ts"
-// import {} from "@drizzle-team/brocli"
+import { enumarateError, logg } from "./logs.ts"
 
 await setupFiles()
 
 process.on("uncaughtException", (error) => {
-	console.error(error)
-	process.exit(1)
+	logg.error("uncaughtException", enumarateError(error))
+
+	// idk why this never prints
+	console.error(error.stack || error.message)
 })
 
 const { startApp } = await import("./start.tsx")

@@ -21,7 +21,8 @@ import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/KeybindManager"
-import { type AppModalContentProps, appState } from "#/state/state"
+import { appState } from "#/state/state"
+import type { AppModalContentProps } from "#/state/types"
 import { useRunnerItems } from "./useRunnerItems"
 
 /**

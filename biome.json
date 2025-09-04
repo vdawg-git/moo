@@ -21,6 +21,7 @@
 		"rules": {
 			"recommended": true,
 			"complexity": { "noForEach": "off" },
+			"suspicious": { "noExplicitAny": "off" },
 			"style": {
 				"noDefaultExport": "error",
 				"noYodaExpression": "error",
