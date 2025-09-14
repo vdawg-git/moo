@@ -67,7 +67,7 @@ rules:
 
 ## Install
 
-On Arch you can use the AUR via `yay -S moo` .
+You can use the provided flake or just clone the repo and run `bun prod`.
 
 ### Requirements
 
