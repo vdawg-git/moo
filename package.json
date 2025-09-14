@@ -9,10 +9,12 @@
 		"debug": "DEV=true bun --inspect-wait=1111/a .",
 		"debug-prod": "NODE_ENV=production bun --inspect-wait=1111/a .",
 		"prod": "NODE_ENV=production bun .",
+		"build": "",
 		"writeSchemas": "bun run ./scripts/writeSchemas.ts",
 		"compile": "NODE_ENV=production bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
 		"release": "dotenv -- release-it",
-		"types": "tsc"
+		"types": "tsc",
+		"postinstall": "bun2nix -o ./nix/bun.nix"
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",
