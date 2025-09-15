@@ -15,10 +15,9 @@ import {
 } from "zod-validation-error"
 import { logg, enumarateError } from "#/logs"
 
-// biome-ignore lint/suspicious/noExplicitAny: .
 const zFilePath: z.Schema<FilePath> = z.string() as any
-const schemaUrl =
-	"https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/main/other/schemas/mooConfig.json"
+export const schemaUrl =
+	"https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/master/other/schemas/mooConfig.json"
 
 export const appConfigSchema = z
 	.object({

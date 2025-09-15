@@ -46,7 +46,7 @@ The filters can be as complex and deeply nested as you want :)
 Here is an example of a playlist:
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/main/other/schemas/mooPlaylist.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/master/other/schemas/mooPlaylist.json
 
 rules:
   - all:

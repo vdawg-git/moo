@@ -1,4 +1,6 @@
-export const examplePlaylist: string = `# yaml-language-server: $schema=https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/main/other/schemas/mooPlaylist.json
+import { schemaUrl } from "#/config/config"
+
+export const examplePlaylist: string = `# yaml-language-server: $schema=${schemaUrl}
 
 rules:
   - all:
