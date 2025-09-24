@@ -45,15 +45,12 @@ export function useQuery<T>(
 		isFetching: true,
 		isFetched: false
 	})
-	const queryCallback = useCallback(query, [])
 
 	useEffect(() => {
-		const subscription = observeQuery(combinedKey, queryCallback).subscribe(
-			setState
-		)
+		const subscription = observeQuery(combinedKey, query).subscribe(setState)
 
 		return () => subscription.unsubscribe()
-	}, [combinedKey, queryCallback])
+	}, [combinedKey, query])
 
 	return state
 }

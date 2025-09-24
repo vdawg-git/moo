@@ -192,28 +192,9 @@ export const composersTable = sqliteTable("composers", {
 })
 export type ComposerSimple = typeof albumsTable.$inferSelect
 
+/** Currently we only support smart-playlists. Might change, but prob not */
 export const playlistsTable = sqliteTable("playlists", {
 	id: text().primaryKey().$type<PlaylistId>(),
 	displayName: text()
 })
 export type PlaylistSimple = typeof playlistsTable.$inferSelect
-
-/** Links tracks to playlists */
-export const playlistTracksTable = sqliteTable(
-	"playlistTracks",
-	{
-		playlistId: text()
-			.notNull()
-			.references(() => playlistsTable.id),
-		trackId: text()
-			.notNull()
-			.references(() => tracksTable.id),
-		position: integer().notNull()
-	},
-	(table) => [
-		primaryKey({
-			name: "id",
-			columns: [table.playlistId, table.trackId, table.position]
-		})
-	]
-)

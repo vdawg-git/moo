@@ -2,7 +2,7 @@ import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import { tracksTable } from "./schema"
 import type { BaseTrack } from "./types"
 
-export const baseTrackSelector = {
+export const selectorBaseTrack = {
 	album: tracksTable.album,
 	artist: tracksTable.artist,
 	duration: tracksTable.duration,
@@ -13,7 +13,7 @@ export const baseTrackSelector = {
 	albumartist: tracksTable.albumartist
 } satisfies Record<keyof BaseTrack, SQLiteColumn>
 
-export const trackSortSelector = {
+export const selectorTrackSort = {
 	titlesort: tracksTable.titlesort,
 	albumsort: tracksTable.albumsort,
 	albumartistsort: tracksTable.albumartistsort,

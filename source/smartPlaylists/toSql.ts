@@ -3,7 +3,7 @@ import type {
 	DateSchema,
 	MetaOperator,
 	NumberSchema,
-	PlaylistSchema,
+	PlaylistBlueprint,
 	StringSchema,
 	TrackColumnSchema
 } from "#/smartPlaylists/schema"
@@ -21,22 +21,32 @@ import {
 	or,
 	sql
 } from "drizzle-orm"
-import { QueryBuilder, type SQLiteColumn } from "drizzle-orm/sqlite-core"
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import * as R from "remeda"
 import { P, match } from "ts-pattern"
 import type { Simplify } from "type-fest"
 import { type TrackColumn, tracksTable } from "../database/schema"
+import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
+import { Result, type AsyncResult } from "typescript-result"
+import { selectorBaseTrack } from "#/database/selectors"
+import { nullsToUndefined } from "#/helpers"
+import type { BaseTrack } from "#/database/types"
 
-export function schmemaToSql(schema: PlaylistSchema) {
+export function getSmartPlaylistTracks(
+	database: BunSQLiteDatabase,
+	schema: PlaylistBlueprint
+): AsyncResult<BaseTrack[], unknown> {
 	const { rules } = schema
 
 	const filterGroups = rules.map(transformRule)
-	const builder = new QueryBuilder()
-		.select({ id: tracksTable.id, sourceProvider: tracksTable.sourceProvider })
-		.from(tracksTable)
-		.where(and(...filterGroups))
 
-	return builder
+	return Result.fromAsyncCatching(
+		database
+			.select(selectorBaseTrack)
+			.from(tracksTable)
+			// nessecary as otherwise Drizzle doesnt know the type
+			.where(and(...(filterGroups as unknown as undefined[])))
+	).map(R.map(nullsToUndefined))
 }
 
 function transformRule(rule: MetaOperator | TrackColumnSchema): SQL {

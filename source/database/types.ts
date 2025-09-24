@@ -1,11 +1,11 @@
 import type { ICommonTagsResult, ILyricsTag } from "music-metadata"
 import type { Player } from "../player/types"
 import type { Except } from "type-fest"
-import { Result } from "typescript-result"
+import { Result, type AsyncResult } from "typescript-result"
 import type { Observable } from "rxjs"
 import type { FilePath } from "#/types/types"
 import { addErrorNotification } from "#/state/state"
-import type { PlaylistSchema } from "#/smartPlaylists/schema"
+import type { PlaylistBlueprint } from "#/smartPlaylists/schema"
 import type {
 	AlbumSimple,
 	ArtistSimple,
@@ -41,15 +41,15 @@ export interface Database {
 		ids?: readonly ArtistId[]
 	) => Promise<Result<readonly ArtistSimple[], Error>>
 
-	getPlaylist: (id: PlaylistId) => Promise<Result<Playlist, Error>>
+	getPlaylist: (id: PlaylistId) => AsyncResult<Playlist, Error>
 	getPlaylists: (
 		ids?: readonly PlaylistId[]
 	) => Promise<Result<readonly PlaylistSimple[], Error>>
 
 	upsertSmartPlaylist: (data: {
 		id: PlaylistId
-		schema: PlaylistSchema
-	}) => Promise<Result<unknown, Error>>
+		schema: PlaylistBlueprint
+	}) => AsyncResult<unknown, Error>
 
 	/**
 	 * Deletes the playlist in the database,

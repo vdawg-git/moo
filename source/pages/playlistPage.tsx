@@ -8,6 +8,7 @@ import type { PlaylistId } from "#/database/types"
 import { useQuery } from "#/database/useQuery"
 import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
+import { createQueryKey } from "#/queryKey"
 
 type PlaylistProps = {
 	id: PlaylistId
@@ -15,7 +16,7 @@ type PlaylistProps = {
 
 export function Playlist({ id }: PlaylistProps) {
 	const query = useCallback(() => database.getPlaylist(id), [id])
-	const response = useQuery(["playlist", id], query)
+	const response = useQuery(createQueryKey.playlist(id), query)
 	const playingIndex = usePlayingIndex({ type: "playlist", id })
 	const playback = usePlaybackData()
 	const amount = response.data?.getOrNull()?.tracks.length
@@ -42,6 +43,8 @@ export function Playlist({ id }: PlaylistProps) {
 								shuffleMap={playback.shuffleMap}
 								playState={playback.playState}
 								playingIndex={playingIndex}
+								// A bit weird, but useList needs that
+								key={JSON.stringify(playlist.tracks)}
 							/>
 						),
 						(error) => <Text color={"red"}>Error: {String(error)}</Text>

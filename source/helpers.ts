@@ -2,7 +2,7 @@ import { mapValues } from "remeda"
 import type { NullsToUndefined } from "./types/utillities"
 
 /** Converts all _top-level_ values from null to undefined */
-export function nullsToUndefined<T extends object>(
+export function nullsToUndefined<T extends Record<string, unknown>>(
 	object: T
 ): NullsToUndefined<T> {
 	return mapValues(
@@ -58,12 +58,3 @@ export function unshuffleFromMap<T>(
 	})
 	return unshuffled
 }
-
-/**
- * Gets a value from an object.
- * Throws if undefined
- */
-export function getOrThrow<T extends obje, K extends keyof T>(
-	object: T,
-	key: keyof T
-): T[K] {}

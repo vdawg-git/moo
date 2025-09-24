@@ -14,7 +14,7 @@
 		"compile": "NODE_ENV=production bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
 		"release": "dotenv -- release-it",
 		"types": "tsc",
-		"postinstall": "bun2nix -o ./nix/bun.nix"
+		"postinstall": "bun2nix -o ./nix/bun.nix || echo 'bun2nix not installed. skipping..'"
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",

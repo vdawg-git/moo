@@ -3,11 +3,11 @@ import type { ZodSchema } from "zod"
 import { ignoreOverride, zodToJsonSchema } from "zod-to-json-schema"
 import { appConfigSchema } from "#/config/config"
 import { APP_ROOT } from "#/constants"
-import { playlistSchema } from "#/smartPlaylists/schema"
+import { playlistBlueprintSchema } from "#/smartPlaylists/schema"
 
 const schemas = [
 	["mooConfig.json", appConfigSchema],
-	["mooPlaylist.json", playlistSchema]
+	["mooPlaylist.json", playlistBlueprintSchema]
 ] as const
 
 await Promise.all(schemas.map(([name, schema]) => writeSchema(name, schema)))

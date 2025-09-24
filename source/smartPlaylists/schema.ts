@@ -174,7 +174,7 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 )
 
 /** The schema for a smart playlist config */
-export const playlistSchema = z.object({
+export const playlistBlueprintSchema = z.object({
 	$schema: z
 		.string()
 		.optional()
@@ -200,7 +200,8 @@ export const playlistSchema = z.object({
 		)
 })
 
-export type PlaylistSchema = z.infer<typeof playlistSchema>
+/** Parsed playlist config file (blueprint) */
+export type PlaylistBlueprint = z.infer<typeof playlistBlueprintSchema>
 
 function orArray<T extends z.ZodTypeAny>(
 	type: T

@@ -6,7 +6,7 @@ import { Result } from "typescript-result"
 import { DATA_DIRECTORY, databasePath, IS_DEV } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
 import { logg, enumarateError } from "#/logs.js"
-import { schmemaToSql } from "#/smartPlaylists/toSql.js"
+import { getSmartPlaylistTracks } from "#/smartPlaylists/toSql.js"
 // @ts-expect-error
 import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 import { createLocalPlayer } from "../player/player.js"
@@ -16,7 +16,6 @@ import {
 	artistsTable,
 	composersTable,
 	movementsTable,
-	playlistTracksTable,
 	playlistsTable,
 	tracksTable,
 	versionTable,
@@ -28,17 +27,17 @@ import {
 	type ArtistId,
 	type Database,
 	type Playlist,
-	type PlaylistId,
 	Track,
 	type TrackId
 } from "./types.js"
 import { databaseLogger } from "./logger.js"
 import { sortTracks } from "./naturalSorting.js"
-import { baseTrackSelector, trackSortSelector } from "./selectors.js"
+import { selectorBaseTrack, selectorTrackSort } from "./selectors.js"
+import { getPlaylistBlueprint } from "#/smartPlaylists/parsing.js"
 
 export const database = connectDatabase()
 
-function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
+function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 	const changed$ = new Subject<string>()
 
 	// A lot of the api is not needed yet,
@@ -47,17 +46,18 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 		getTrack: async (id) =>
 			Result.fromAsyncCatching(
 				db
-					.select({ ...baseTrackSelector })
+					.select({ ...selectorBaseTrack })
 					.from(tracksTable)
 					.where(eq(tracksTable.id, id))
 					.then(([track]) => track && nullsToUndefined(track))
 			),
+
 		getTracks: async (ids = []) =>
 			Result.fromAsyncCatching(
 				db
 					.select({
-						...baseTrackSelector,
-						...trackSortSelector
+						...selectorBaseTrack,
+						...selectorTrackSort
 					})
 					.from(tracksTable)
 					.where(
@@ -94,41 +94,28 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 			)
 		},
 
-		getPlaylist: async (id) => {
-			return Result.fromAsyncCatching(
-				db
-					.select({
-						playlist: playlistsTable,
-						track: baseTrackSelector
-					})
-					.from(playlistsTable)
-					.leftJoin(
-						playlistTracksTable,
-						eq(playlistsTable.id, playlistTracksTable.playlistId)
-					)
-					.leftJoin(
-						tracksTable,
-						eq(playlistTracksTable.trackId, tracksTable.id)
-					)
-					.where(eq(playlistsTable.id, id))
-			).map((joined) => {
-				const playlist = joined[0]?.playlist
-				if (!playlist) {
-					return Result.error(new Error(`Could not find playlist ${id}`))
-				}
-				const tracks = R.pipe(
-					joined.flatMap(({ track }) => track ?? []),
-					R.map(nullsToUndefined),
-					sortTracks
-				)
+		getPlaylist: (id) =>
+			Result.try(async () => {
+				const blueprint = await getPlaylistBlueprint(id).getOrThrow()
 
-				return {
-					id: playlist.id as PlaylistId,
-					displayName: playlist.displayName ?? undefined,
-					tracks
-				} satisfies Playlist
-			})
-		},
+				return getSmartPlaylistTracks(db, blueprint)
+					.onSuccess((tracks) => {
+						logg.debug("playlist get BEFORE sort", { tracks })
+					})
+					.map(sortTracks)
+					.onSuccess((tracks) => {
+						logg.debug("playlist get after sort", { tracks })
+					})
+					.map(
+						(tracks) =>
+							({
+								id,
+								displayName: blueprint.name ?? undefined,
+								tracks
+							}) satisfies Playlist
+					)
+			}),
+
 		getPlaylists: async (ids) => {
 			return Result.fromAsyncCatching(
 				db
@@ -138,11 +125,8 @@ function connectDatabaseProxied(db: BunSQLiteDatabase): Database {
 			)
 		},
 
-		upsertSmartPlaylist: async (data) => {
-			const result = await upsertSmartPlaylist(db)(data)
-			result.onSuccess(() => changed$.next(""))
-
-			return result
+		upsertSmartPlaylist: (data) => {
+			return upsertSmartPlaylist(db)(data).onSuccess(() => changed$.next(""))
 		},
 
 		deletePlaylist: async (id) => {
@@ -210,7 +194,7 @@ function connectDatabase(): Database {
 	const db = drizzle(databasePath, { logger: databaseLogger })
 
 	const waitForInit = initDatabase(db)
-	const base = connectDatabaseProxied(db)
+	const base = connectDatabaseUnproxied(db)
 
 	/**
 	 * We need this as the proxy returns
@@ -325,38 +309,13 @@ const addTracks: (database: BunSQLiteDatabase) => Database["upsertTracks"] = (
 	}
 }
 
-const upsertSmartPlaylist: (
+function upsertSmartPlaylist(
 	database: BunSQLiteDatabase
-) => Database["upsertSmartPlaylist"] = (db) => {
-	return async ({ id, schema }) => {
-		const sqlGetTracks = schmemaToSql(schema)
-
-		return Result.fromAsyncCatching(
-			db.transaction(async (tx) => {
-				const tracks = tx.all(sqlGetTracks) as readonly { id: TrackId }[]
-
-				await upsert(
-					playlistsTable,
-					[{ id, displayName: schema.name }],
-					"id",
-					tx
-				)
-				await tx
-					.delete(playlistTracksTable)
-					.where(eq(playlistTracksTable.playlistId, id as string))
-
-				if (tracks.length > 0) {
-					await tx.insert(playlistTracksTable).values(
-						tracks.map((track, index) => ({
-							playlistId: id,
-							position: index,
-							trackId: track.id
-						}))
-					)
-				}
-			})
+): Database["upsertSmartPlaylist"] {
+	return ({ id, schema }) =>
+		Result.fromAsyncCatching(
+			upsert(playlistsTable, [{ id, displayName: schema.name }], "id", database)
 		)
-	}
 }
 
 /**

@@ -1,5 +1,5 @@
 import path from "node:path"
-import { useCallback, useEffect, useId, useState } from "react"
+import { useEffect, useId } from "react"
 import {
 	Box,
 	type Color,
@@ -9,16 +9,12 @@ import {
 	useList,
 	useListItem
 } from "tuir"
-import { appCommands, type GeneralCommand } from "#/commands/appCommands"
+import type { GeneralCommand } from "#/commands/appCommands"
 import { appConfig } from "#/config/config"
-import {
-	registerKeybinds,
-	unregisterKeybinds
-} from "#/keybindManager/KeybindManager"
+import { registerKeybinds } from "#/keybindManager/KeybindManager"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack, TrackId } from "../database/types"
 import { appState } from "#/state/state"
-import { logg } from "#/logs"
 import { useRegisterListNavigationCommands } from "#/hooks/hooks"
 
 type PlaylistProps = {

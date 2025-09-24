@@ -45,4 +45,4 @@ export const databasePath = (
 		: path.join(DATA_DIRECTORY, "database.db")
 ) as FilePath
 
-// console.log({ appPaths, nodeEnv, isCompiled, dir: import.meta.dirname })
+export const playlistExtension = ".yml"
