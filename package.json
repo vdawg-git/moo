@@ -22,6 +22,7 @@
 		"@libsql/client": "^0.14.0",
 		"@xstate/store": "^3.9.2",
 		"any-date-parser": "^2.0.3",
+		"chokidar": "^4.0.3",
 		"cowsay": "^1.6.0",
 		"drizzle-orm": "0.40.0",
 		"env-paths": "^3.0.0",

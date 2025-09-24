@@ -40,9 +40,6 @@ export async function startApp() {
 			logg.error("Failed to update db at startup", { error })
 			throw new Error("Failed to update database")
 		})
-		.onSuccess(() => {
-			logg.info("Updated db")
-		})
 
 	const watcher = watchPlaylists()
 	preserveScreen()

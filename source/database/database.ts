@@ -33,7 +33,7 @@ import {
 import { databaseLogger } from "./logger.js"
 import { sortTracks } from "./naturalSorting.js"
 import { selectorBaseTrack, selectorTrackSort } from "./selectors.js"
-import { getPlaylistBlueprint } from "#/smartPlaylists/parsing.js"
+import { getPlaylistBlueprintFromId } from "#/smartPlaylists/parsing.js"
 
 export const database = connectDatabase()
 
@@ -96,7 +96,7 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 
 		getPlaylist: (id) =>
 			Result.try(async () => {
-				const blueprint = await getPlaylistBlueprint(id).getOrThrow()
+				const blueprint = await getPlaylistBlueprintFromId(id).getOrThrow()
 
 				return getSmartPlaylistTracks(db, blueprint)
 					.onSuccess((tracks) => {
@@ -129,7 +129,7 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 			return upsertSmartPlaylist(db)(data).onSuccess(() => changed$.next(""))
 		},
 
-		deletePlaylist: async (id) => {
+		deletePlaylist: (id) => {
 			return Result.fromAsyncCatching(
 				db.delete(playlistsTable).where(eq(playlistsTable.id, id))
 			)

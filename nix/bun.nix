@@ -1134,6 +1134,12 @@
     url = "https://registry.npmjs.org/chardet/-/chardet-0.7.0.tgz";
     hash = "sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==";
   };
+  "chokidar" = {
+    out_path = "chokidar";
+    name = "chokidar@4.0.3";
+    url = "https://registry.npmjs.org/chokidar/-/chokidar-4.0.3.tgz";
+    hash = "sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==";
+  };
   "ci-info" = {
     out_path = "ci-info";
     name = "ci-info@4.1.0";
@@ -2945,6 +2951,12 @@
     name = "readable-stream@3.6.2";
     url = "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz";
     hash = "sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==";
+  };
+  "readdirp" = {
+    out_path = "readdirp";
+    name = "readdirp@4.1.2";
+    url = "https://registry.npmjs.org/readdirp/-/readdirp-4.1.2.tgz";
+    hash = "sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==";
   };
   "rechoir" = {
     out_path = "rechoir";

@@ -5,6 +5,7 @@ import {
 	debounceTime,
 	filter,
 	groupBy,
+	map,
 	mergeMap,
 	share,
 	switchMap,
@@ -31,25 +32,30 @@ type PlaylistParsed = {
 }
 
 // TODO handle playlist rename
-export const playlistsChanged$: Observable<
-	PlaylistParsed & { type: "change" | "rename" }
-> = createWatcher(playlistsDirectory, { recursive: false }).pipe(
-	tap((x) => logg.debug("xxxxx", { x })),
-	filter(({ filePath }) => isSupportedExtension(filePath)),
+export const playlistsChanged$: Observable<{
+	playlistPath: FilePath
+	event: "add" | "change" | "unlink"
+}> = createWatcher(playlistsDirectory, {
+	ignored: (path) =>
+		!path.endsWith(playlistExtension) && path !== playlistsDirectory,
+	depth: 1
+}).pipe(
+	filter(
+		({ event }) => event === "add" || event === "change" || event === "unlink"
+	),
 	// We use groupBy to debounce individual filePaths,
 	// as multiple files could be updated at once and debouncing them all at once
-	// would lead to only the latest one updating
-	groupBy(({ filePath }) => filePath),
+	// would lead to only the latest one being updated
+	groupBy(({ filePath, event }) =>
+		filePath + event === "unlink" ? "removed" : "updated"
+	),
 	mergeMap((changedFile$) =>
 		changedFile$.pipe(
 			debounceTime(playlistChangedDebounce),
-			switchMap(({ filePath, type }) =>
-				parsePlaylistFromPath(filePath).then((parseResult) => ({
-					parseResult,
-					playlistPath: filePath,
-					type
-				}))
-			)
+			map(({ filePath, event }) => ({
+				playlistPath: filePath,
+				event: event as "add" | "change" | "unlink"
+			}))
 		)
 	),
 	share()
@@ -70,24 +76,24 @@ export async function parsePlaylistsAll(): Promise<
 					async (filepath) =>
 						({
 							playlistPath: filepath,
-							parseResult: await parsePlaylistFromPath(filepath)
+							parseResult: await parsePlaylistBlueprintFromPath(filepath)
 						}) satisfies PlaylistParsed
 				)
 		)
 		.map((ok) => Promise.all(ok))
 }
 
-export function getPlaylistBlueprint(
+export function getPlaylistBlueprintFromId(
 	id: PlaylistId
-): AsyncResult<PlaylistBlueprint, unknown> {
-	return parsePlaylistFromPath(playlistIdToFilePath(id))
+): AsyncResult<PlaylistBlueprint, Error> {
+	return parsePlaylistBlueprintFromPath(playlistIdToFilePath(id))
 }
 
 function playlistIdToFilePath(id: PlaylistId): FilePath {
-	return path.join(playlistsDirectory, id + ".yml") as FilePath
+	return path.join(playlistsDirectory, id + playlistExtension) as FilePath
 }
 
-function parsePlaylistFromPath(
+export function parsePlaylistBlueprintFromPath(
 	filePath: FilePath
 ): AsyncResult<PlaylistBlueprint, Error> {
 	return Result.fromAsyncCatching(readFile(filePath, "utf-8"))

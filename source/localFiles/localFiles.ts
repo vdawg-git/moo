@@ -382,7 +382,7 @@ function createMusicDirectoriesWatcher(
 ): Observable<FilePath> {
 	return merge(
 		...directories.map((directory) =>
-			createWatcher(directory, { recursive: true })
+			createWatcher(directory, { depth: undefined })
 		)
 	).pipe(
 		map(({ filePath }) => filePath),

@@ -17,8 +17,9 @@ import {
 import { Result } from "typescript-result"
 import { database } from "./database"
 import type { JsonValue } from "type-fest"
-import { logg } from "#/logs"
 
+// This is in theory a memory leak, but in practice it still is
+// But idc
 const cache: Record<string, unknown> = {}
 
 /** To refetch the query when the database changes */
@@ -46,11 +47,13 @@ export function useQuery<T>(
 		isFetched: false
 	})
 
+	const callback = useCallback(query, [])
+
 	useEffect(() => {
-		const subscription = observeQuery(combinedKey, query).subscribe(setState)
+		const subscription = observeQuery(combinedKey, callback).subscribe(setState)
 
 		return () => subscription.unsubscribe()
-	}, [combinedKey, query])
+	}, [combinedKey, callback])
 
 	return state
 }
@@ -107,13 +110,6 @@ export function observeQuery<T>(
 						isLoading: false as const,
 						isFetched: true as const
 					}
-		),
-		tap((data) =>
-			logg.debug("observeQueryEnd", {
-				key: cacheKey,
-				...data,
-				data: data.data?.toString()
-			})
 		),
 		shareReplay({ refCount: true })
 	)

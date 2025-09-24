@@ -1,31 +1,38 @@
-import { watch } from "node:fs"
 import { mkdir, readdir } from "node:fs/promises"
 import path from "node:path"
 import { Observable, distinctUntilChanged, share } from "rxjs"
 import { Result } from "typescript-result"
 import { DATA_DIRECTORY, playlistsDirectory } from "./constants"
 import { examplePlaylist } from "./smartPlaylists/examplePlaylist"
+import { watch, type ChokidarOptions } from "chokidar"
 import type { FilePath } from "./types/types"
+import type { EventName } from "chokidar/handler.js"
+import type { Stats } from "node:fs"
+
+const defaultWatchOptions: ChokidarOptions = {
+	awaitWriteFinish: { stabilityThreshold: 500, pollInterval: 100 },
+	ignoreInitial: true
+}
+
+type WatcherData = {
+	event: EventName
+	filePath: FilePath
+	stats: Stats | undefined
+}
 
 /**
  * Creates a directory watcher and emits changed files.
  */
 export function createWatcher(
 	toWatch: string,
-	options: { recursive?: boolean } = {}
-): Observable<FileChanged> {
-	return new Observable<FileChanged>((subscriber) => {
-		const watcher = watch(
-			toWatch,
-			{ recursive: options.recursive ?? true },
-			(type, filePath) => {
-				if (!filePath) return
-
-				subscriber.next({
-					type,
-					filePath: path.join(toWatch, filePath) as FilePath
-				})
-			}
+	options?: ChokidarOptions
+): Observable<WatcherData> {
+	return new Observable<WatcherData>((subscriber) => {
+		const optionsMerged = { ...defaultWatchOptions, ...options }
+		const watcher = watch(toWatch, optionsMerged).on(
+			"all",
+			(event, filePath, stats) =>
+				subscriber.next({ event, filePath: filePath as FilePath, stats })
 		)
 
 		return () => watcher.close()

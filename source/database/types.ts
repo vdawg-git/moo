@@ -57,7 +57,7 @@ export interface Database {
 	 *
 	 * Used when a playlist file got removed from the filesystem.
 	 */
-	deletePlaylist: (id: PlaylistId) => Promise<Result<PlaylistId, Error>>
+	deletePlaylist: (id: PlaylistId) => AsyncResult<PlaylistId, Error>
 
 	/** Fuzzy search the database */
 	search: (input: string) => Promise<

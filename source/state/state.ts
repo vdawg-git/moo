@@ -173,5 +173,3 @@ export const appState$: Observable<AppState> = new Observable<AppState>(
 		return () => subscription.unsubscribe()
 	}
 ).pipe(shareReplay())
-
-appState$.subscribe(() => logg.debug("state updated"))

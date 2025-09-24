@@ -1,9 +1,5 @@
 import type { GeneralCommand } from "#/commands/appCommands"
-import {
-	registerKeybinds,
-	unregisterKeybinds
-} from "#/keybindManager/KeybindManager"
-import { logg } from "#/logs"
+import { registerKeybinds } from "#/keybindManager/KeybindManager"
 import { useCallback, useEffect, useState } from "react"
 import type { Observable } from "rxjs"
 import type { useList } from "tuir"
@@ -13,7 +9,6 @@ export function useObservable<T>(observable: Observable<T>): T | undefined {
 
 	useEffect(() => {
 		const subscription = observable.subscribe((value) => {
-			logg.debug("useObservable", { value: JSON.stringify(value), hi: "yo" })
 			setValue(value)
 		})
 

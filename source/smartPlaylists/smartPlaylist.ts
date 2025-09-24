@@ -1,12 +1,17 @@
 import { database } from "#/database/database"
 import type { PlaylistId } from "#/database/types"
 import { addErrorNotification } from "#/state/state"
-import path, { basename } from "node:path"
+import path, { basename, extname } from "node:path"
 import type { Subscription } from "rxjs"
-import { parsePlaylistsAll, playlistsChanged$ } from "./parsing"
+import {
+	getPlaylistBlueprintFromId,
+	parsePlaylistsAll,
+	playlistsChanged$
+} from "./parsing"
 import { Result } from "typescript-result"
 import type { FilePath } from "#/types/types"
 import { logg } from "#/logs"
+import { match, P } from "ts-pattern"
 
 export async function updateSmartPlaylists(): Promise<void> {
 	const playlistsParsed = await Result.fromAsync(parsePlaylistsAll())
@@ -71,27 +76,48 @@ export async function updateSmartPlaylists(): Promise<void> {
 }
 
 export function watchPlaylists(): Subscription {
-	return playlistsChanged$.subscribe(({ parseResult, playlistPath }) => {
-		const playlistId = basename(playlistPath) as PlaylistId
-		logg.debug("playlist changed", { playlistId, playlistPath })
+	return playlistsChanged$.subscribe(async ({ playlistPath, event }) => {
+		const playlistId = basename(
+			playlistPath,
+			extname(playlistPath)
+		) as PlaylistId
+		logg.debug("playlist changed", { playlistId, playlistPath, event })
 
-		parseResult
-			.map((schema) =>
-				database.upsertSmartPlaylist({
-					id: playlistId,
-					schema
-				})
+		await match(event)
+			.with(P.union("add", "change"), () =>
+				getPlaylistBlueprintFromId(playlistId)
+					.map((schema) =>
+						database.upsertSmartPlaylist({
+							id: playlistId,
+							schema
+						})
+					)
+					.onSuccess(() => {
+						logg.silly("Updated smart-playlist", { playlistId, playlistPath })
+					})
+					.onFailure((error) =>
+						addErrorNotification(
+							`Failed to update playlist "${playlistId}"\n${error.message}`,
+							{ error, playlistId },
+							"Failed playlist update"
+						)
+					)
 			)
-			.onSuccess(() => {
-				logg.silly("Updated smart-playlist", { playlistId, playlistPath })
-			})
-			.onFailure((error) =>
-				addErrorNotification(
-					`Failed to update playlist "${playlistId}"\n${error.message}`,
-					{ error, playlistId },
-					"Failed playlist update"
-				)
+			.with("unlink", () =>
+				database
+					.deletePlaylist(playlistId)
+					.onSuccess(() => {
+						logg.silly("Removed smart-playlist", { playlistId, playlistPath })
+					})
+					.onFailure((error) =>
+						addErrorNotification(
+							`Failed to remove playlist "${playlistId}"\n${error.message}`,
+							{ error, playlistId },
+							"Failed playlist removal"
+						)
+					)
 			)
+			.exhaustive()
 	})
 }
 
