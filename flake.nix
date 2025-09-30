@@ -30,6 +30,19 @@
       lib = pkgs.lib;
       bunNix = import ./nix/bun.nix;
       nodeModules = bun2nix.lib.${system}.mkBunNodeModules {packages = bunNix;};
+
+      name = "moo";
+
+      desktopItem = pkgs.makeDesktopItem {
+        inherit name;
+        exec = "${name} %u";
+        desktopName = name;
+        comment = "Sick terminal music player";
+        terminal = true;
+        type = "Application";
+        categories = ["Audio"];
+        keywords = ["playlists" "music player" "music"];
+      };
     in {
       devShell = with pkgs;
         mkShell {
@@ -45,7 +58,7 @@
         };
 
       packages.default = pkgs.stdenv.mkDerivation {
-        pname = "moo";
+        pname = name;
         version = "0.10.0";
         src = ./.;
         buildInputs = with pkgs; [bun];
@@ -63,6 +76,11 @@
           cp -r . $out/src
           rm -rf $out/src/node_modules
           ln -s ${nodeModules}/node_modules $out/src/node_modules
+        '';
+
+        postInstall = ''
+          mkdir -p $out/share/applications
+          cp ${desktopItem}/share/applications/* $out/share/applications/
         '';
       };
     });
