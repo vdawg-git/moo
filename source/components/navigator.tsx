@@ -28,5 +28,5 @@ function renderRoute(view: ViewPage): JSX.Element {
 	const Component = routes[view.route]
 
 	// @ts-expect-error
-	return <Component {...view.parameter} />
+	return <Component {...view.parameter} key={JSON.stringify(view)} />
 }
