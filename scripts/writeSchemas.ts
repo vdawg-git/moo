@@ -1,31 +1,30 @@
 import path from "node:path"
-import type { ZodSchema } from "zod"
-import { ignoreOverride, zodToJsonSchema } from "zod-to-json-schema"
+import { z, type ZodType } from "zod"
 import { appConfigSchema } from "#/config/config"
 import { APP_ROOT } from "#/constants"
 import { playlistBlueprintSchema } from "#/smartPlaylists/schema"
 
 const schemas = [
 	["mooConfig.json", appConfigSchema],
-	["mooPlaylist.json", playlistBlueprintSchema]
+	["mooPlaylist.json", playlistBlueprintSchema],
 ] as const
 
 await Promise.all(schemas.map(([name, schema]) => writeSchema(name, schema)))
 
 process.exit(0)
 
-async function writeSchema(name: string, schema: ZodSchema<unknown>) {
-	const jsonSchema = zodToJsonSchema(schema, {
-		pipeStrategy: "input",
-		$refStrategy: "root",
-		override: (defs, refs) => {
-			const current = refs.currentPath.at(-1)
-
-			// removes the identifier which is only used for Typescript
-			if (current === "_type") return undefined
-
-			return ignoreOverride
-		}
+async function writeSchema(name: string, schema: ZodType<unknown>) {
+	const jsonSchema = z.toJSONSchema(schema, {
+		io: "input",
+		reused: "ref",
+		// VS Code does not fully support the latest target, so we use an old one 
+		target: "draft-4",
+		override: (ctx) => {
+			// overriding _type directly is not possible. It needs to get deleted from the parent
+			if (ctx.jsonSchema.properties?._type) {
+				delete ctx.jsonSchema.properties._type
+			}
+		},
 	})
 
 	return Bun.write(

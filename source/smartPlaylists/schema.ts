@@ -5,12 +5,23 @@ import { match } from "ts-pattern"
 import { z } from "zod"
 import { type TrackColumnKey, tracksTable } from "#/database/schema"
 import { stripIndent } from "#/helpers"
+import parser from "any-date-parser"
+
+const allDateFormatsLink =
+	"https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats"
 
 const columns = getTableColumns(tracksTable)
+const dateRaw = z
+	.string()
+	.transform((input) => parser.fromString(input))
+	.describe(
+		`A date in various formats. For a full list of supported formats see: ${allDateFormatsLink}`
+	)
 
 const stringOrArray = orArray(z.string()).optional()
 const numberOrArray = orArray(z.number()).optional()
-const dateOrArray = orArray(z.date()).optional()
+const dateOrArray = orArray(dateRaw).optional()
+/** Not actually in the data. Gets added during parsing via the default value to allow to do pattern matching */
 const discriminator = <T extends string>(string: T) =>
 	z.literal(string).default(string)
 
@@ -21,9 +32,9 @@ const stringSchema = z.object({
 	starts_not_with: stringOrArray,
 	ends_with: stringOrArray,
 	ends_not_with: stringOrArray,
-	is: stringOrArray.describe("If an array tests them with or."),
-	is_not: stringOrArray.describe("If an array all have to not match."),
-	_type: discriminator("string")
+	is: stringOrArray.describe("If it is a list at least one has to match exactly."),
+	is_not: stringOrArray.describe("If it is a list none should match exactly."),
+	_type: discriminator("string"),
 })
 export type StringSchema = z.infer<typeof stringSchema>
 
@@ -43,14 +54,14 @@ const numberSchema = z.object({
 	in_the_range: orArray(z.tuple([z.number(), z.number()]))
 		.optional()
 		.describe("Is in between the provided range(s), including the end."),
-	_type: discriminator("number")
+	_type: discriminator("number"),
 })
 export type NumberSchema = z.infer<typeof numberSchema>
 
 const booleanSchema = z.object({
 	is: z.boolean(),
-	_type: z.literal("boolean").default("boolean")
-})
+	_type: z.literal("boolean").default("boolean"),
+}).describe("A very simple true/false check.")
 export type BooleanSchema = z.infer<typeof booleanSchema>
 
 /** Does not need _type as its not a rule, but just a nicer way to get a number for a rule  */
@@ -60,7 +71,7 @@ const durationSchema = z
 		hours: z.number().optional(),
 		days: z.number().optional(),
 		weeks: z.number().optional(),
-		years: z.number().optional()
+		years: z.number().optional(),
 	})
 	.strict()
 	.transform((input) => {
@@ -79,15 +90,19 @@ const durationSchema = z
 	})
 export type RelativeTimeSchema = z.infer<typeof durationSchema>
 
-const dateSchema = z.object({
-	is: dateOrArray,
-	is_not: dateOrArray,
-	before: z.date().optional(),
-	after: z.date().optional(),
-	in_the_last: durationSchema.optional(),
-	not_in_the_last: durationSchema.optional(),
-	_type: discriminator("date")
-})
+const dateSchema = z
+	.object({
+		is: dateOrArray,
+		is_not: dateOrArray,
+		before: dateRaw.optional(),
+		after: dateRaw.optional(),
+		in_the_last: durationSchema.optional(),
+		not_in_the_last: durationSchema.optional(),
+		_type: discriminator("date"),
+	})
+	.describe(
+		`Filter by using dates. Valid dates can be in various formats. See here for the full list of formats: ${allDateFormatsLink}`
+	)
 export type DateSchema = z.infer<typeof dateSchema>
 
 /** The schema to validate all fields like 'artist', 'title' etc */
@@ -112,12 +127,11 @@ const trackColumnSchema = pipe(
 			return {
 				_type: "column" as const,
 				column: trackColumn as TrackColumnKey,
-				rules
+				rules,
 			}
 		})
 	),
-	// biome-ignore lint/style/noNonNullAssertion: We need to do this because of zods union typing
-	(schemas) => z.union([schemas[0]!, schemas[1]!, ...schemas.slice(2)] as const)
+	(schemas) => z.union(schemas)
 )
 
 /**
@@ -136,16 +150,15 @@ export type MetaOperator = Readonly<{
 const metaOperators = [
 	{
 		type: "all",
-		description: "*All* specified rules need to match for a track to be added."
+		description: "*All* specified rules need to match for a track to be added.",
 	},
 	{
 		type: "any",
 		description:
-			"*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added."
-	}
+			"*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added.",
+	},
 ] as const
 
-// @ts-expect-error Too much for TS, but its fine
 const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 	metaOperators,
 	R.map(({ type, description }) =>
@@ -153,7 +166,7 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 			.object({
 				[type]: z.array(
 					z.union([trackColumnSchema, z.lazy(() => metaOperatorSchema)])
-				)
+				),
 			})
 			.describe(description)
 			.transform((object) => {
@@ -163,7 +176,7 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 
 				return {
 					_type: typedType,
-					fields
+					fields,
 				}
 			})
 	),
@@ -197,7 +210,7 @@ export const playlistBlueprintSchema = z.object({
 			stripIndent(`Dictates what to put into the smart playlist.
 				All top level rules need to match for a track to get added.
 				An "any" group matches if any single rule within it matches. Whereas an "all" rules matches only if all rules match.`)
-		)
+		),
 })
 
 /** Parsed playlist config file (blueprint) */
@@ -205,7 +218,7 @@ export type PlaylistBlueprint = z.infer<typeof playlistBlueprintSchema>
 
 function orArray<T extends z.ZodTypeAny>(
 	type: T
-): z.ZodUnion<[T, z.ZodArray<T, "atleastone">]> {
+): z.ZodUnion<[T, z.ZodArray<T>]> {
 	return type.or(z.array(type).nonempty())
 }
 
@@ -213,5 +226,3 @@ function orArray<T extends z.ZodTypeAny>(
 // this is useful if you for example want to filter all skits, podcasts etc
 // and then base your other playlists on that.
 // Also allow for a "hidden" field in the yml to not show those meta playlists in the app
-
-// TODO add sorting

@@ -1,222 +1,292 @@
 {
-	"type": "object",
-	"properties": {
-		"$schema": {
-			"type": "string",
-			"default": "https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/master/other/schemas/mooConfig.json"
-		},
-		"musicDirectories": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"description": "Directories to recursivly scan music files from."
-		},
-		"watchDirectories": {
-			"type": "boolean",
-			"default": true,
-			"description": "Wether to watch the musicDirectories for changes and update the music library then."
-		},
-		"version": {
-			"type": "string",
-			"const": "0.1"
-		},
-		"icons": {
-			"type": "object",
-			"properties": {
-				"play": {
-					"type": "string",
-					"default": "",
-					"description": "The play icon, also used as the playing indicator"
-				},
-				"pause": {
-					"type": "string",
-					"default": "",
-					"description": "The pause icon"
-				},
-				"next": {
-					"type": "string",
-					"default": ">",
-					"description": "Play next icon."
-				},
-				"previous": {
-					"type": "string",
-					"default": "<",
-					"description": "Play previous icon."
-				},
-				"playingIndicator": {
-					"type": "string",
-					"default": "",
-					"description": "The indicator of a playing track in a list."
-				},
-				"error": {
-					"type": "string",
-					"default": "",
-					"description": "Icon used for errors."
-				},
-				"warn": {
-					"type": "string",
-					"default": "",
-					"description": "Icon used for warnings."
-				},
-				"info": {
-					"type": "string",
-					"default": "",
-					"description": "Icon used for info boxes."
-				},
-				"success": {
-					"type": "string",
-					"default": "",
-					"description": "Icon used for success messages."
-				},
-				"playlist": {
-					"type": "string",
-					"default": "",
-					"description": "Icon used to indicate a playlist."
-				},
-				"command": {
-					"type": "string",
-					"default": "❯",
-					"description": "Icon used to indicate a command."
-				}
-			},
-			"additionalProperties": false,
-			"default": {},
-			"description": "Change the icons used in the app."
-		},
-		"keybindings": {
-			"type": "array",
-			"items": {
-				"anyOf": [
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "runner.openCommands"
-							},
-							"key": {
-								"type": "string",
-								"minLength": 1,
-								"description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\""
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Open the command runner from which you can access all commands for the app.\nDefault: \":\""
-					},
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "runner.openGoto"
-							},
-							"key": {
-								"$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Open the switcher from where you can go to different parts of your library.\nDefault: \";\""
-					},
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "player.next"
-							},
-							"key": {
-								"$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Plays the next song in the queue\nDefault: \"l\""
-					},
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "player.playPrevious"
-							},
-							"key": {
-								"$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Global keybinding. Plays the previous track in the queue.\nDefault: \"h\""
-					},
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "player.togglePlayback"
-							},
-							"key": {
-								"$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Global keybinding. Toggles the playback from pause to play and vice versa.\nDefault: \"space\""
-					},
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "player.seekForward"
-							},
-							"key": {
-								"$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Seeks forward a couple of seconds.\nDefault: \"L\""
-					},
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "player.seekBackward"
-							},
-							"key": {
-								"$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Seeks backward a couple of seconds.\nDefault: \"H\""
-					},
-					{
-						"type": "object",
-						"properties": {
-							"command": {
-								"type": "string",
-								"const": "showKeybinds"
-							},
-							"key": {
-								"$ref": "#/properties/keybindings/items/anyOf/0/properties/key"
-							}
-						},
-						"required": ["command", "key"],
-						"additionalProperties": false,
-						"description": "Show all keybinds\nDefault: \"?\""
-					}
-				]
-			},
-			"description": "The keybindings of the app. If a keybinding is not set its default value will be used, so you dont have to set any. You can unset a keybind by setting it to \"null\". Setting it to \"\" will not work.",
-			"default": []
-		}
-	},
-	"required": ["musicDirectories", "version"],
-	"additionalProperties": false,
-	"$schema": "http://json-schema.org/draft-07/schema#"
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "default": "https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/master/other/schemas/mooConfig.json",
+      "type": "string"
+    },
+    "musicDirectories": {
+      "description": "Directories to recursivly scan music files from.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "watchDirectories": {
+      "description": "Wether to watch the musicDirectories for changes and update the music library then.",
+      "readOnly": true,
+      "default": true,
+      "type": "boolean"
+    },
+    "version": {
+      "type": "string",
+      "enum": [
+        "0.1"
+      ]
+    },
+    "icons": {
+      "description": "Change the icons used in the app.",
+      "default": {},
+      "type": "object",
+      "properties": {
+        "play": {
+          "description": "The play icon, also used as the playing indicator",
+          "default": "",
+          "type": "string"
+        },
+        "pause": {
+          "description": "The pause icon",
+          "default": "",
+          "type": "string"
+        },
+        "next": {
+          "description": "Play next icon.",
+          "default": ">",
+          "type": "string"
+        },
+        "previous": {
+          "description": "Play previous icon.",
+          "default": "<",
+          "type": "string"
+        },
+        "playingIndicator": {
+          "description": "The indicator of a playing track in a list.",
+          "default": "",
+          "type": "string"
+        },
+        "error": {
+          "description": "Icon used for errors.",
+          "default": "",
+          "type": "string"
+        },
+        "warn": {
+          "description": "Icon used for warnings.",
+          "default": "",
+          "type": "string"
+        },
+        "info": {
+          "description": "Icon used for info boxes.",
+          "default": "",
+          "type": "string"
+        },
+        "success": {
+          "description": "Icon used for success messages.",
+          "default": "",
+          "type": "string"
+        },
+        "playlist": {
+          "description": "Icon used to indicate a playlist.",
+          "default": "",
+          "type": "string"
+        },
+        "command": {
+          "description": "Icon used to indicate a command.",
+          "default": "❯",
+          "type": "string"
+        },
+        "shuffle": {
+          "description": "Icon used for shuffling.",
+          "default": "󰒝",
+          "type": "string"
+        },
+        "linear": {
+          "description": "Icon used for linear playback.",
+          "default": "󰒞",
+          "type": "string"
+        }
+      }
+    },
+    "keybindings": {
+      "description": "The keybindings of the app. If a keybinding is not set its default value will be used, so you dont have to set any. You can unset a keybind by setting it to \"null\". Setting it to \"\" will not work.",
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "description": "Open the command runner from which you can access all commands for the app.\nDefault: \":\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "runner.openCommands"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Open the switcher from where you can go to different parts of your library.\nDefault: \";\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "runner.openGoto"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Plays the next song in the queue\nDefault: \"l\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "player.next"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Global keybinding. Plays the previous track in the queue.\nDefault: \"h\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "player.playPrevious"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Global keybinding. Toggles the playback from pause to play and vice versa.\nDefault: \"space\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "player.togglePlayback"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Seeks forward a couple of seconds.\nDefault: \"L\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "player.seekForward"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Seeks backward a couple of seconds.\nDefault: \"H\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "player.seekBackward"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Toggles the shuffle mode on/off.\nDefault: \"s\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "player.toggleShuffle"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          },
+          {
+            "description": "Show all keybinds\nDefault: \"?\"",
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "showKeybinds"
+                ]
+              },
+              "key": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            "required": [
+              "command",
+              "key"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "musicDirectories",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "__schema0": {
+      "description": "A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this \"a b c\"",
+      "type": "string",
+      "minLength": 1
+    }
+  }
 }

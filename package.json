@@ -21,7 +21,7 @@
 		"@jellybrick/mpris-service": "^2.1.5",
 		"@libsql/client": "^0.14.0",
 		"@xstate/store": "^3.9.2",
-		"any-date-parser": "^2.0.3",
+		"any-date-parser": "^2.2.3",
 		"chokidar": "^4.0.3",
 		"cowsay": "^1.6.0",
 		"drizzle-orm": "0.40.0",
@@ -42,9 +42,8 @@
 		"winston": "^3.17.0",
 		"yaml": "^2.7.0",
 		"yoga-wasm-web": "^0.3.3",
-		"zod": "^3.24.2",
-		"zod-to-json-schema": "^3.24.4",
-		"zod-validation-error": "^3.4.0"
+		"zod": "^4.1.11",
+		"zod-validation-error": "^4.0.2"
 	},
 	"devDependencies": {
 		"dotenv-cli": "^8.0.0",

@@ -8,8 +8,6 @@ import {
 	map,
 	mergeMap,
 	share,
-	switchMap,
-	tap
 } from "rxjs"
 import { Result, type AsyncResult } from "typescript-result"
 import * as yaml from "yaml"
@@ -18,7 +16,7 @@ import { createWatcher } from "#/filesystem"
 import type { FilePath } from "#/types/types"
 import { type PlaylistBlueprint, playlistBlueprintSchema } from "./schema"
 import type { PlaylistId } from "#/database/types"
-import { logg } from "#/logs"
+import { fromError } from "zod-validation-error"
 
 /**
  * A time fast engough to feel instant,
@@ -38,7 +36,7 @@ export const playlistsChanged$: Observable<{
 }> = createWatcher(playlistsDirectory, {
 	ignored: (path) =>
 		!path.endsWith(playlistExtension) && path !== playlistsDirectory,
-	depth: 1
+	depth: 1,
 }).pipe(
 	filter(
 		({ event }) => event === "add" || event === "change" || event === "unlink"
@@ -54,7 +52,7 @@ export const playlistsChanged$: Observable<{
 			debounceTime(playlistChangedDebounce),
 			map(({ filePath, event }) => ({
 				playlistPath: filePath,
-				event: event as "add" | "change" | "unlink"
+				event: event as "add" | "change" | "unlink",
 			}))
 		)
 	),
@@ -76,8 +74,8 @@ export async function parsePlaylistsAll(): Promise<
 					async (filepath) =>
 						({
 							playlistPath: filepath,
-							parseResult: await parsePlaylistBlueprintFromPath(filepath)
-						}) satisfies PlaylistParsed
+							parseResult: await parsePlaylistBlueprintFromPath(filepath),
+						} satisfies PlaylistParsed)
 				)
 		)
 		.map((ok) => Promise.all(ok))
@@ -98,7 +96,11 @@ export function parsePlaylistBlueprintFromPath(
 ): AsyncResult<PlaylistBlueprint, Error> {
 	return Result.fromAsyncCatching(readFile(filePath, "utf-8"))
 		.map((text) => yaml.parse(text))
-		.mapCatching((toParse) => playlistBlueprintSchema.parseAsync(toParse))
+		.map((toParse) =>
+			playlistBlueprintSchema
+				.parseAsync(toParse)
+				.catch((error) => Result.error(fromError(error)))
+		)
 		.mapError((error) =>
 			error instanceof Error
 				? error

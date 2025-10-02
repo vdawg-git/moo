@@ -1,1168 +1,1166 @@
 {
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
     "$schema": {
-      "type": "string",
-      "description": "The JSON schema to reference. This allows your Editor/LSP to give you autocompletion and validate some inputs."
+      "description": "The JSON schema to reference. This allows your Editor/LSP to give you autocompletion and validate some inputs.",
+      "type": "string"
     },
     "name": {
-      "type": "string",
-      "description": "Optional display name. If not set the filename will get shown in the app."
+      "description": "Optional display name. If not set the filename will get shown in the app.",
+      "type": "string"
     },
     "rules": {
+      "description": "Dictates what to put into the smart playlist.\nAll top level rules need to match for a track to get added.\nAn \"any\" group matches if any single rule within it matches. Whereas an \"all\" rules matches only if all rules match.",
+      "readOnly": true,
+      "minItems": 1,
       "type": "array",
       "items": {
-        "anyOf": [
-          {
-            "type": "object",
-            "properties": {
-              "all": {
-                "type": "array",
-                "items": {
-                  "anyOf": [
-                    {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "sourceProvider": {
-                              "type": "object",
-                              "properties": {
-                                "includes": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "array",
-                                      "items": {
-                                        "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes/anyOf/0"
-                                      },
-                                      "minItems": 1
-                                    }
-                                  ]
-                                },
-                                "includes_not": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes"
-                                },
-                                "starts_with": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes"
-                                },
-                                "starts_not_with": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes"
-                                },
-                                "ends_with": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes"
-                                },
-                                "ends_not_with": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes"
-                                },
-                                "is": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes",
-                                  "description": "If an array tests them with or."
-                                },
-                                "is_not": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider/properties/includes",
-                                  "description": "If an array all have to not match."
-                                }
-                              },
-                              "additionalProperties": false
-                            }
-                          },
-                          "required": [
-                            "sourceProvider"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "duration": {
-                              "type": "object",
-                              "properties": {
-                                "is": {
-                                  "anyOf": [
-                                    {
-                                      "type": "number"
-                                    },
-                                    {
-                                      "type": "array",
-                                      "items": {
-                                        "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration/properties/is/anyOf/0"
-                                      },
-                                      "minItems": 1
-                                    }
-                                  ],
-                                  "description": "Is exactly the provided number. Or one of them if multiple are specified."
-                                },
-                                "is_not": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration/properties/is",
-                                  "description": "Is not the provided number(s)"
-                                },
-                                "greater_than": {
-                                  "type": "number",
-                                  "description": "Everything greater than the provided number."
-                                },
-                                "smaller_than": {
-                                  "type": "number",
-                                  "description": "Everything smaller than the provided number"
-                                },
-                                "in_the_range": {
-                                  "anyOf": [
-                                    {
-                                      "type": "array",
-                                      "minItems": 2,
-                                      "maxItems": 2,
-                                      "items": [
-                                        {
-                                          "type": "number"
-                                        },
-                                        {
-                                          "type": "number"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "array",
-                                      "items": {
-                                        "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration/properties/in_the_range/anyOf/0"
-                                      },
-                                      "minItems": 1
-                                    }
-                                  ],
-                                  "description": "Is in between the provided range(s), including the end."
-                                }
-                              },
-                              "additionalProperties": false
-                            }
-                          },
-                          "required": [
-                            "duration"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "title": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "title"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "trackIndex": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "trackIndex"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "trackIndexOf": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "trackIndexOf"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "disk": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "disk"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "diskOf": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "diskOf"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "year": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "year"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "artist": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "artist"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "albumartist": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "albumartist"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "album": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "album"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "comment": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "comment"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "genre": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "genre"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "picture": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "picture"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "composer": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "composer"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "albumsort": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "albumsort"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "titlesort": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "titlesort"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "work": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "work"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "artistsort": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "artistsort"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "albumartistsort": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "albumartistsort"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "composersort": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "composersort"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "lyricist": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "lyricist"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "writer": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "writer"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "conductor": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "conductor"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "remixer": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "remixer"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "arranger": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "arranger"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "engineer": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "engineer"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "publisher": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "publisher"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "producer": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "producer"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "djmixer": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "djmixer"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "mixer": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "mixer"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "technician": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "technician"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "label": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "label"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "grouping": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "grouping"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "totaltracks": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "totaltracks"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "totaldiscs": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "totaldiscs"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "movementTotal": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "movementTotal"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "compilation": {
-                              "type": "object",
-                              "properties": {
-                                "is": {
-                                  "type": "boolean"
-                                }
-                              },
-                              "required": [
-                                "is"
-                              ],
-                              "additionalProperties": false
-                            }
-                          },
-                          "required": [
-                            "compilation"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "rating": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "rating"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "bpm": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "bpm"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "mood": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "mood"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "media": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "media"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "catalognumber": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "catalognumber"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "podcast": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/37/properties/compilation"
-                            }
-                          },
-                          "required": [
-                            "podcast"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "podcasturl": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "podcasturl"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "releasestatus": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "releasestatus"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "releasetype": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "releasetype"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "releasecountry": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "releasecountry"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "script": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "script"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "language": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "language"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "releasedate": {
-                              "type": "object",
-                              "properties": {
-                                "is": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string",
-                                      "format": "date-time"
-                                    },
-                                    {
-                                      "type": "array",
-                                      "items": {
-                                        "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/50/properties/releasedate/properties/is/anyOf/0"
-                                      },
-                                      "minItems": 1
-                                    }
-                                  ]
-                                },
-                                "is_not": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/50/properties/releasedate/properties/is"
-                                },
-                                "before": {
-                                  "type": "string",
-                                  "format": "date-time"
-                                },
-                                "after": {
-                                  "type": "string",
-                                  "format": "date-time"
-                                },
-                                "in_the_last": {
-                                  "type": "object",
-                                  "properties": {
-                                    "minutes": {
-                                      "type": "number"
-                                    },
-                                    "hours": {
-                                      "type": "number"
-                                    },
-                                    "days": {
-                                      "type": "number"
-                                    },
-                                    "weeks": {
-                                      "type": "number"
-                                    },
-                                    "years": {
-                                      "type": "number"
-                                    }
-                                  },
-                                  "additionalProperties": false
-                                },
-                                "not_in_the_last": {
-                                  "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/50/properties/releasedate/properties/in_the_last"
-                                }
-                              },
-                              "additionalProperties": false
-                            }
-                          },
-                          "required": [
-                            "releasedate"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "performerInstrument": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "performerInstrument"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "averageLevel": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "averageLevel"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "peakLevel": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "peakLevel"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "key": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "key"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "category": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "category"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "keywords": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "keywords"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "movement": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "movement"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "movementIndex": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "movementIndex"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "movementIndexOf": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "movementIndexOf"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "podcastId": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "podcastId"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "bitrate": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "bitrate"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "codec": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "codec"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "audioMD5": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "audioMD5"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "lossless": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/37/properties/compilation"
-                            }
-                          },
-                          "required": [
-                            "lossless"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "modificationTime": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/50/properties/releasedate"
-                            }
-                          },
-                          "required": [
-                            "modificationTime"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "trackGain": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "trackGain"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "numberOfChannels": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "numberOfChannels"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "numberOfSamples": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "numberOfSamples"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "tool": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "tool"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "trackPeakLevel": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "trackPeakLevel"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "sampleRate": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "sampleRate"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "bitsPerSample": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "bitsPerSample"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "albumGain": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "albumGain"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "codecProfile": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "codecProfile"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "container": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/0/properties/sourceProvider"
-                            }
-                          },
-                          "required": [
-                            "container"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "size": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "size"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "mtime": {
-                              "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0/anyOf/1/properties/duration"
-                            }
-                          },
-                          "required": [
-                            "mtime"
-                          ],
-                          "additionalProperties": false
-                        }
-                      ]
-                    },
-                    {
-                      "$ref": "#/properties/rules/items"
-                    }
-                  ]
-                }
-              }
-            },
-            "required": [
-              "all"
-            ],
-            "additionalProperties": false,
-            "description": "*All* specified rules need to match for a track to be added."
-          },
-          {
-            "type": "object",
-            "properties": {
-              "any": {
-                "type": "array",
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/properties/rules/items/anyOf/0/properties/all/items/anyOf/0"
-                    },
-                    {
-                      "$ref": "#/properties/rules/items"
-                    }
-                  ]
-                }
-              }
-            },
-            "required": [
-              "any"
-            ],
-            "additionalProperties": false,
-            "description": "*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added."
-          }
-        ],
-        "description": "Filter by fields or add nested 'all' and 'any' groups."
-      },
-      "minItems": 1,
-      "description": "Dictates what to put into the smart playlist.\nAll top level rules need to match for a track to get added.\nAn \"any\" group matches if any single rule within it matches. Whereas an \"all\" rules matches only if all rules match."
+        "$ref": "#/definitions/__schema0"
+      }
     }
   },
   "required": [
     "rules"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "definitions": {
+    "__schema0": {
+      "description": "Filter by fields or add nested 'all' and 'any' groups.",
+      "anyOf": [
+        {
+          "description": "*All* specified rules need to match for a track to be added.",
+          "type": "object",
+          "properties": {
+            "all": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/__schema1"
+                  },
+                  {
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/__schema0"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "all"
+          ]
+        },
+        {
+          "description": "*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added.",
+          "type": "object",
+          "properties": {
+            "any": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/__schema1"
+                  },
+                  {
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/__schema0"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "any"
+          ]
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "sourceProvider": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "sourceProvider"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "duration": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "duration"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "title": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "trackIndex": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "trackIndex"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "trackIndexOf": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "trackIndexOf"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "disk": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "disk"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "diskOf": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "diskOf"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "year": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "year"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artist": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "artist"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "albumartist": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "albumartist"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "album": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "album"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "comment": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "comment"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "genre": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "genre"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "picture": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "picture"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "composer": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "composer"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "albumsort": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "albumsort"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "titlesort": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "titlesort"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "work": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "work"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artistsort": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "artistsort"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "albumartistsort": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "albumartistsort"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "composersort": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "composersort"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "lyricist": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "lyricist"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "writer": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "writer"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "conductor": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "conductor"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "remixer": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "remixer"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "arranger": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "arranger"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "engineer": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "engineer"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "publisher": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "publisher"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "producer": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "producer"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "djmixer": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "djmixer"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mixer": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "mixer"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "technician": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "technician"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "label": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "label"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "grouping": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "grouping"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "totaltracks": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "totaltracks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "totaldiscs": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "totaldiscs"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "movementTotal": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "movementTotal"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "compilation": {
+              "$ref": "#/definitions/__schema9"
+            }
+          },
+          "required": [
+            "compilation"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "rating": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "rating"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bpm": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "bpm"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mood": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "mood"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "media": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "media"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "catalognumber": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "catalognumber"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "podcast": {
+              "$ref": "#/definitions/__schema9"
+            }
+          },
+          "required": [
+            "podcast"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "podcasturl": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "podcasturl"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "releasestatus": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "releasestatus"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "releasetype": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "releasetype"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "releasecountry": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "releasecountry"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "script": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "script"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "language": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "language"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "releasedate": {
+              "$ref": "#/definitions/__schema10"
+            }
+          },
+          "required": [
+            "releasedate"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "performerInstrument": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "performerInstrument"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "averageLevel": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "averageLevel"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "peakLevel": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "peakLevel"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "category": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "category"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "keywords": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "keywords"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "movement": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "movement"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "movementIndex": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "movementIndex"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "movementIndexOf": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "movementIndexOf"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "podcastId": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "podcastId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bitrate": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "bitrate"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "codec": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "codec"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "audioMD5": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "audioMD5"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "lossless": {
+              "$ref": "#/definitions/__schema9"
+            }
+          },
+          "required": [
+            "lossless"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "modificationTime": {
+              "$ref": "#/definitions/__schema10"
+            }
+          },
+          "required": [
+            "modificationTime"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "trackGain": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "trackGain"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "numberOfChannels": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "numberOfChannels"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "numberOfSamples": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "numberOfSamples"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tool": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "tool"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "trackPeakLevel": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "trackPeakLevel"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sampleRate": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "sampleRate"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bitsPerSample": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "bitsPerSample"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "albumGain": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "albumGain"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "codecProfile": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "codecProfile"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "container": {
+              "$ref": "#/definitions/__schema2"
+            }
+          },
+          "required": [
+            "container"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "size": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "size"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mtime": {
+              "$ref": "#/definitions/__schema5"
+            }
+          },
+          "required": [
+            "mtime"
+          ]
+        }
+      ]
+    },
+    "__schema2": {
+      "type": "object",
+      "properties": {
+        "includes": {
+          "$ref": "#/definitions/__schema3"
+        },
+        "includes_not": {
+          "$ref": "#/definitions/__schema3"
+        },
+        "starts_with": {
+          "$ref": "#/definitions/__schema3"
+        },
+        "starts_not_with": {
+          "$ref": "#/definitions/__schema3"
+        },
+        "ends_with": {
+          "$ref": "#/definitions/__schema3"
+        },
+        "ends_not_with": {
+          "$ref": "#/definitions/__schema3"
+        },
+        "is": {
+          "description": "If it is a list at least one has to match exactly.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema3"
+            }
+          ]
+        },
+        "is_not": {
+          "description": "If it is a list none should match exactly.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema3"
+            }
+          ]
+        }
+      }
+    },
+    "__schema3": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/__schema4"
+        },
+        {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/__schema4"
+          }
+        }
+      ]
+    },
+    "__schema4": {
+      "type": "string"
+    },
+    "__schema5": {
+      "type": "object",
+      "properties": {
+        "is": {
+          "description": "Is exactly the provided number. Or one of them if multiple are specified.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema6"
+            }
+          ]
+        },
+        "is_not": {
+          "description": "Is not the provided number(s)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema6"
+            }
+          ]
+        },
+        "greater_than": {
+          "description": "Everything greater than the provided number.",
+          "type": "number"
+        },
+        "smaller_than": {
+          "description": "Everything smaller than the provided number",
+          "type": "number"
+        },
+        "in_the_range": {
+          "description": "Is in between the provided range(s), including the end.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/__schema8"
+            },
+            {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema8"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "__schema6": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/__schema7"
+        },
+        {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/__schema7"
+          }
+        }
+      ]
+    },
+    "__schema7": {
+      "type": "number"
+    },
+    "__schema8": {
+      "type": "array",
+      "items": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "__schema9": {
+      "description": "A very simple true/false check.",
+      "type": "object",
+      "properties": {
+        "is": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "is"
+      ]
+    },
+    "__schema10": {
+      "description": "Filter by using dates. Valid dates can be in various formats. See here for the full list of formats: https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats",
+      "type": "object",
+      "properties": {
+        "is": {
+          "$ref": "#/definitions/__schema11"
+        },
+        "is_not": {
+          "$ref": "#/definitions/__schema11"
+        },
+        "before": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema12"
+            }
+          ]
+        },
+        "after": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema12"
+            }
+          ]
+        },
+        "in_the_last": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema13"
+            }
+          ]
+        },
+        "not_in_the_last": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema13"
+            }
+          ]
+        }
+      }
+    },
+    "__schema11": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/__schema12"
+        },
+        {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/__schema12"
+          }
+        }
+      ]
+    },
+    "__schema12": {
+      "description": "A date in various formats. For a full list of supported formats see: https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats",
+      "type": "string"
+    },
+    "__schema13": {
+      "type": "object",
+      "properties": {
+        "minutes": {
+          "type": "number"
+        },
+        "hours": {
+          "type": "number"
+        },
+        "days": {
+          "type": "number"
+        },
+        "weeks": {
+          "type": "number"
+        },
+        "years": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }
