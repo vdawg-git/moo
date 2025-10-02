@@ -23,6 +23,7 @@
   "required": [
     "rules"
   ],
+  "additionalProperties": false,
   "definitions": {
     "__schema0": {
       "description": "Filter by fields or add nested 'all' and 'any' groups.",
@@ -51,7 +52,8 @@
           },
           "required": [
             "all"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "description": "*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added.",
@@ -77,7 +79,8 @@
           },
           "required": [
             "any"
-          ]
+          ],
+          "additionalProperties": false
         }
       ]
     },
@@ -92,7 +95,8 @@
           },
           "required": [
             "sourceProvider"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -103,7 +107,8 @@
           },
           "required": [
             "duration"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -114,7 +119,8 @@
           },
           "required": [
             "title"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -125,7 +131,8 @@
           },
           "required": [
             "trackIndex"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -136,7 +143,8 @@
           },
           "required": [
             "trackIndexOf"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -147,7 +155,8 @@
           },
           "required": [
             "disk"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -158,7 +167,8 @@
           },
           "required": [
             "diskOf"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -169,7 +179,8 @@
           },
           "required": [
             "year"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -180,7 +191,8 @@
           },
           "required": [
             "artist"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -191,7 +203,8 @@
           },
           "required": [
             "albumartist"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -202,7 +215,8 @@
           },
           "required": [
             "album"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -213,7 +227,8 @@
           },
           "required": [
             "comment"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -224,7 +239,8 @@
           },
           "required": [
             "genre"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -235,7 +251,8 @@
           },
           "required": [
             "picture"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -246,7 +263,8 @@
           },
           "required": [
             "composer"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -257,7 +275,8 @@
           },
           "required": [
             "albumsort"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -268,7 +287,8 @@
           },
           "required": [
             "titlesort"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -279,7 +299,8 @@
           },
           "required": [
             "work"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -290,7 +311,8 @@
           },
           "required": [
             "artistsort"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -301,7 +323,8 @@
           },
           "required": [
             "albumartistsort"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -312,7 +335,8 @@
           },
           "required": [
             "composersort"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -323,7 +347,8 @@
           },
           "required": [
             "lyricist"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -334,7 +359,8 @@
           },
           "required": [
             "writer"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -345,7 +371,8 @@
           },
           "required": [
             "conductor"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -356,7 +383,8 @@
           },
           "required": [
             "remixer"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -367,7 +395,8 @@
           },
           "required": [
             "arranger"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -378,7 +407,8 @@
           },
           "required": [
             "engineer"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -389,7 +419,8 @@
           },
           "required": [
             "publisher"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -400,7 +431,8 @@
           },
           "required": [
             "producer"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -411,7 +443,8 @@
           },
           "required": [
             "djmixer"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -422,7 +455,8 @@
           },
           "required": [
             "mixer"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -433,7 +467,8 @@
           },
           "required": [
             "technician"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -444,7 +479,8 @@
           },
           "required": [
             "label"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -455,7 +491,8 @@
           },
           "required": [
             "grouping"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -466,7 +503,8 @@
           },
           "required": [
             "totaltracks"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -477,7 +515,8 @@
           },
           "required": [
             "totaldiscs"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -488,7 +527,8 @@
           },
           "required": [
             "movementTotal"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -499,7 +539,8 @@
           },
           "required": [
             "compilation"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -510,7 +551,8 @@
           },
           "required": [
             "rating"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -521,7 +563,8 @@
           },
           "required": [
             "bpm"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -532,7 +575,8 @@
           },
           "required": [
             "mood"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -543,7 +587,8 @@
           },
           "required": [
             "media"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -554,7 +599,8 @@
           },
           "required": [
             "catalognumber"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -565,7 +611,8 @@
           },
           "required": [
             "podcast"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -576,7 +623,8 @@
           },
           "required": [
             "podcasturl"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -587,7 +635,8 @@
           },
           "required": [
             "releasestatus"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -598,7 +647,8 @@
           },
           "required": [
             "releasetype"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -609,7 +659,8 @@
           },
           "required": [
             "releasecountry"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -620,7 +671,8 @@
           },
           "required": [
             "script"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -631,7 +683,8 @@
           },
           "required": [
             "language"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -642,7 +695,8 @@
           },
           "required": [
             "releasedate"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -653,7 +707,8 @@
           },
           "required": [
             "performerInstrument"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -664,7 +719,8 @@
           },
           "required": [
             "averageLevel"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -675,7 +731,8 @@
           },
           "required": [
             "peakLevel"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -686,7 +743,8 @@
           },
           "required": [
             "key"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -697,7 +755,8 @@
           },
           "required": [
             "category"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -708,7 +767,8 @@
           },
           "required": [
             "keywords"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -719,7 +779,8 @@
           },
           "required": [
             "movement"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -730,7 +791,8 @@
           },
           "required": [
             "movementIndex"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -741,7 +803,8 @@
           },
           "required": [
             "movementIndexOf"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -752,7 +815,8 @@
           },
           "required": [
             "podcastId"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -763,7 +827,8 @@
           },
           "required": [
             "bitrate"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -774,7 +839,8 @@
           },
           "required": [
             "codec"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -785,7 +851,8 @@
           },
           "required": [
             "audioMD5"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -796,7 +863,8 @@
           },
           "required": [
             "lossless"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -807,7 +875,8 @@
           },
           "required": [
             "modificationTime"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -818,7 +887,8 @@
           },
           "required": [
             "trackGain"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -829,7 +899,8 @@
           },
           "required": [
             "numberOfChannels"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -840,7 +911,8 @@
           },
           "required": [
             "numberOfSamples"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -851,7 +923,8 @@
           },
           "required": [
             "tool"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -862,7 +935,8 @@
           },
           "required": [
             "trackPeakLevel"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -873,7 +947,8 @@
           },
           "required": [
             "sampleRate"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -884,7 +959,8 @@
           },
           "required": [
             "bitsPerSample"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -895,7 +971,8 @@
           },
           "required": [
             "albumGain"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -906,7 +983,8 @@
           },
           "required": [
             "codecProfile"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -917,7 +995,8 @@
           },
           "required": [
             "container"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -928,7 +1007,8 @@
           },
           "required": [
             "size"
-          ]
+          ],
+          "additionalProperties": false
         },
         {
           "type": "object",
@@ -939,7 +1019,8 @@
           },
           "required": [
             "mtime"
-          ]
+          ],
+          "additionalProperties": false
         }
       ]
     },
@@ -980,7 +1061,8 @@
             }
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "__schema3": {
       "anyOf": [
@@ -1041,7 +1123,8 @@
             }
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "__schema6": {
       "anyOf": [
@@ -1081,7 +1164,8 @@
       },
       "required": [
         "is"
-      ]
+      ],
+      "additionalProperties": false
     },
     "__schema10": {
       "description": "Filter by using dates. Valid dates can be in various formats. See here for the full list of formats: https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats",
@@ -1121,7 +1205,8 @@
             }
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "__schema11": {
       "anyOf": [

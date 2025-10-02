@@ -24,6 +24,10 @@ async function writeSchema(name: string, schema: ZodType<unknown>) {
 			if (ctx.jsonSchema.properties?._type) {
 				delete ctx.jsonSchema.properties._type
 			}
+			
+			if (ctx.jsonSchema.type === 'object') {
+				ctx.jsonSchema.additionalProperties = false
+			}
 		},
 	})
 
