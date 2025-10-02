@@ -20,8 +20,11 @@ export function Navigator() {
 		({ context: { view } }) => view.history[view.historyIndex]
 	)
 
-	// biome-ignore lint/style/noNonNullAssertion: Should crash if undefined as it is unexpected
-	return renderRoute(view!)
+	if (!view) {
+		throw new Error("view is undefined, should not happen #owygyh")
+	}
+
+	return renderRoute(view)
 }
 
 function renderRoute(view: ViewPage): JSX.Element {

@@ -77,6 +77,7 @@ function createGetRunnerItems(): {
 } {
 	const input$ = new Subject<string | undefined>()
 	const inputParsed$ = input$.pipe(
+		map((input) => input?.trim()),
 		filter(R.isNonNullish),
 		distinctUntilChanged(),
 		map(rawInputToPrefixed),
@@ -87,18 +88,19 @@ function createGetRunnerItems(): {
 		switchMap((input) => {
 			const query = match(input)
 				.with(
-					{ toSearch: "Commands" },
+					{ searchMode: "Commands" },
 					() => () => Promise.resolve(getRunnerCommands())
 				)
 				.with(
-					{ toSearch: P.union("Go to", "Playlists") },
+					{ searchMode: P.union("Go to", "Playlists") },
 					() => getPossibleGotos
 				)
 				.exhaustive()
 
-			return observeQuery(input.toSearch, query)
+			return observeQuery([input.searchMode, input.value], query)
 		}),
 		map((result) =>
+			// TODO handle errors
 			result.data?.map((items) => ({
 				items,
 				fuse: new Fuse(items, {
@@ -126,12 +128,10 @@ function createGetRunnerItems(): {
 		)
 	)
 
-	const mode$ = inputParsed$.pipe(map(({ toSearch }) => toSearch))
-
 	return {
 		input$,
 		results$: filtered$,
-		mode$
+		mode$: inputParsed$.pipe(map(({ searchMode }) => searchMode))
 	}
 }
 
@@ -181,20 +181,20 @@ function rawInputToPrefixed(input: string): ParsedInput {
 		.returnType<ParsedInput>()
 
 		.with(P.string.startsWith(">"), (cInput) => ({
-			toSearch: "Commands",
+			searchMode: "Commands",
 			value: cInput.slice(1).trim()
 		}))
 
 		.with(P.string.startsWith("p "), (pInput) => ({
-			toSearch: "Playlists",
+			searchMode: "Playlists",
 			value: pInput.slice(2).trim()
 		}))
 
-		.otherwise((value) => ({ toSearch: "Go to", value }))
+		.otherwise((value) => ({ searchMode: "Go to", value }))
 }
 
 type ParsedInput = {
-	toSearch: SearchMode
+	searchMode: SearchMode
 	value: string
 }
 
