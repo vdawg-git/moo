@@ -47,15 +47,17 @@ export const appConfigSchema = z
 		/** All keybindings. Default ones and those overriden by the user. */
 		keybindings: keybindingsSchema
 	})
-	.strict("Unknown properties found in the config!")
+	.strict()
 
 type Config = Readonly<z.infer<typeof appConfigSchema>>
 
-const defaultConfig: Partial<Config> = {
+const defaultConfig: z.input<typeof appConfigSchema> = {
 	$schema: schemaUrl,
 	musicDirectories: [],
 	watchDirectories: true,
-	version: "0.1"
+	version: "0.1",
+	icons: {},
+	keybindings: []
 }
 
 const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")

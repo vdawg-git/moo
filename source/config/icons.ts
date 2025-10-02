@@ -36,5 +36,4 @@ export const iconsSchema = z
 		shuffle: z.string().default("󰒝").describe("Icon used for shuffling."),
 		linear: z.string().default("󰒞").describe("Icon used for linear playback.")
 	})
-	.default({})
 	.describe("Change the icons used in the app.")
