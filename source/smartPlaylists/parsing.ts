@@ -7,7 +7,7 @@ import {
 	groupBy,
 	map,
 	mergeMap,
-	share,
+	share
 } from "rxjs"
 import { Result, type AsyncResult } from "typescript-result"
 import * as yaml from "yaml"
@@ -36,7 +36,7 @@ export const playlistsChanged$: Observable<{
 }> = createWatcher(playlistsDirectory, {
 	ignored: (path) =>
 		!path.endsWith(playlistExtension) && path !== playlistsDirectory,
-	depth: 1,
+	depth: 1
 }).pipe(
 	filter(
 		({ event }) => event === "add" || event === "change" || event === "unlink"
@@ -52,7 +52,7 @@ export const playlistsChanged$: Observable<{
 			debounceTime(playlistChangedDebounce),
 			map(({ filePath, event }) => ({
 				playlistPath: filePath,
-				event: event as "add" | "change" | "unlink",
+				event: event as "add" | "change" | "unlink"
 			}))
 		)
 	),
@@ -74,8 +74,8 @@ export async function parsePlaylistsAll(): Promise<
 					async (filepath) =>
 						({
 							playlistPath: filepath,
-							parseResult: await parsePlaylistBlueprintFromPath(filepath),
-						} satisfies PlaylistParsed)
+							parseResult: await parsePlaylistBlueprintFromPath(filepath)
+						}) satisfies PlaylistParsed
 				)
 		)
 		.map((ok) => Promise.all(ok))

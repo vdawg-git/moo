@@ -1,1251 +1,1087 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "object",
-  "properties": {
-    "$schema": {
-      "description": "The JSON schema to reference. This allows your Editor/LSP to give you autocompletion and validate some inputs.",
-      "type": "string"
-    },
-    "name": {
-      "description": "Optional display name. If not set the filename will get shown in the app.",
-      "type": "string"
-    },
-    "rules": {
-      "description": "Dictates what to put into the smart playlist.\nAll top level rules need to match for a track to get added.\nAn \"any\" group matches if any single rule within it matches. Whereas an \"all\" rules matches only if all rules match.",
-      "readOnly": true,
-      "minItems": 1,
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/__schema0"
-      }
-    }
-  },
-  "required": [
-    "rules"
-  ],
-  "additionalProperties": false,
-  "definitions": {
-    "__schema0": {
-      "description": "Filter by fields or add nested 'all' and 'any' groups.",
-      "anyOf": [
-        {
-          "description": "*All* specified rules need to match for a track to be added.",
-          "type": "object",
-          "properties": {
-            "all": {
-              "type": "array",
-              "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/definitions/__schema1"
-                  },
-                  {
-                    "allOf": [
-                      {
-                        "$ref": "#/definitions/__schema0"
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "all"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "description": "*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added.",
-          "type": "object",
-          "properties": {
-            "any": {
-              "type": "array",
-              "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/definitions/__schema1"
-                  },
-                  {
-                    "allOf": [
-                      {
-                        "$ref": "#/definitions/__schema0"
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "any"
-          ],
-          "additionalProperties": false
-        }
-      ]
-    },
-    "__schema1": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "sourceProvider": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "sourceProvider"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "duration": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "duration"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "title": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "title"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "trackIndex": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "trackIndex"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "trackIndexOf": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "trackIndexOf"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "disk": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "disk"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "diskOf": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "diskOf"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "year": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "year"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "artist": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "artist"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "albumartist": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "albumartist"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "album": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "album"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "comment": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "comment"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "genre": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "genre"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "picture": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "picture"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "composer": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "composer"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "albumsort": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "albumsort"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "titlesort": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "titlesort"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "work": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "work"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "artistsort": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "artistsort"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "albumartistsort": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "albumartistsort"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "composersort": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "composersort"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "lyricist": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "lyricist"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "writer": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "writer"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "conductor": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "conductor"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "remixer": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "remixer"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "arranger": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "arranger"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "engineer": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "engineer"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "publisher": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "publisher"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "producer": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "producer"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "djmixer": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "djmixer"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "mixer": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "mixer"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "technician": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "technician"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "label": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "label"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "grouping": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "grouping"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "totaltracks": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "totaltracks"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "totaldiscs": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "totaldiscs"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "movementTotal": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "movementTotal"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "compilation": {
-              "$ref": "#/definitions/__schema9"
-            }
-          },
-          "required": [
-            "compilation"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "rating": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "rating"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "bpm": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "bpm"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "mood": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "mood"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "media": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "media"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "catalognumber": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "catalognumber"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "podcast": {
-              "$ref": "#/definitions/__schema9"
-            }
-          },
-          "required": [
-            "podcast"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "podcasturl": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "podcasturl"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "releasestatus": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "releasestatus"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "releasetype": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "releasetype"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "releasecountry": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "releasecountry"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "script": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "script"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "language": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "language"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "releasedate": {
-              "$ref": "#/definitions/__schema10"
-            }
-          },
-          "required": [
-            "releasedate"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "performerInstrument": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "performerInstrument"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "averageLevel": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "averageLevel"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "peakLevel": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "peakLevel"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "key": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "key"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "category": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "category"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "keywords": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "keywords"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "movement": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "movement"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "movementIndex": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "movementIndex"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "movementIndexOf": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "movementIndexOf"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "podcastId": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "podcastId"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "bitrate": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "bitrate"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "codec": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "codec"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "audioMD5": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "audioMD5"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "lossless": {
-              "$ref": "#/definitions/__schema9"
-            }
-          },
-          "required": [
-            "lossless"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "modificationTime": {
-              "$ref": "#/definitions/__schema10"
-            }
-          },
-          "required": [
-            "modificationTime"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "trackGain": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "trackGain"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "numberOfChannels": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "numberOfChannels"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "numberOfSamples": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "numberOfSamples"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "tool": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "tool"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "trackPeakLevel": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "trackPeakLevel"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "sampleRate": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "sampleRate"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "bitsPerSample": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "bitsPerSample"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "albumGain": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "albumGain"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "codecProfile": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "codecProfile"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "container": {
-              "$ref": "#/definitions/__schema2"
-            }
-          },
-          "required": [
-            "container"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "size": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "size"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "mtime": {
-              "$ref": "#/definitions/__schema5"
-            }
-          },
-          "required": [
-            "mtime"
-          ],
-          "additionalProperties": false
-        }
-      ]
-    },
-    "__schema2": {
-      "type": "object",
-      "properties": {
-        "includes": {
-          "$ref": "#/definitions/__schema3"
-        },
-        "includes_not": {
-          "$ref": "#/definitions/__schema3"
-        },
-        "starts_with": {
-          "$ref": "#/definitions/__schema3"
-        },
-        "starts_not_with": {
-          "$ref": "#/definitions/__schema3"
-        },
-        "ends_with": {
-          "$ref": "#/definitions/__schema3"
-        },
-        "ends_not_with": {
-          "$ref": "#/definitions/__schema3"
-        },
-        "is": {
-          "description": "If it is a list at least one has to match exactly.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema3"
-            }
-          ]
-        },
-        "is_not": {
-          "description": "If it is a list none should match exactly.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema3"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "__schema3": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/__schema4"
-        },
-        {
-          "minItems": 1,
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/__schema4"
-          }
-        }
-      ]
-    },
-    "__schema4": {
-      "type": "string"
-    },
-    "__schema5": {
-      "type": "object",
-      "properties": {
-        "is": {
-          "description": "Is exactly the provided number. Or one of them if multiple are specified.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema6"
-            }
-          ]
-        },
-        "is_not": {
-          "description": "Is not the provided number(s)",
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema6"
-            }
-          ]
-        },
-        "greater_than": {
-          "description": "Everything greater than the provided number.",
-          "type": "number"
-        },
-        "smaller_than": {
-          "description": "Everything smaller than the provided number",
-          "type": "number"
-        },
-        "in_the_range": {
-          "description": "Is in between the provided range(s), including the end.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/__schema8"
-            },
-            {
-              "minItems": 1,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/__schema8"
-              }
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "__schema6": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/__schema7"
-        },
-        {
-          "minItems": 1,
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/__schema7"
-          }
-        }
-      ]
-    },
-    "__schema7": {
-      "type": "number"
-    },
-    "__schema8": {
-      "type": "array",
-      "items": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "number"
-        }
-      ]
-    },
-    "__schema9": {
-      "description": "A very simple true/false check.",
-      "type": "object",
-      "properties": {
-        "is": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "is"
-      ],
-      "additionalProperties": false
-    },
-    "__schema10": {
-      "description": "Filter by using dates. Valid dates can be in various formats. See here for the full list of formats: https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats",
-      "type": "object",
-      "properties": {
-        "is": {
-          "$ref": "#/definitions/__schema11"
-        },
-        "is_not": {
-          "$ref": "#/definitions/__schema11"
-        },
-        "before": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema12"
-            }
-          ]
-        },
-        "after": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema12"
-            }
-          ]
-        },
-        "in_the_last": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema13"
-            }
-          ]
-        },
-        "not_in_the_last": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/__schema13"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "__schema11": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/__schema12"
-        },
-        {
-          "minItems": 1,
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/__schema12"
-          }
-        }
-      ]
-    },
-    "__schema12": {
-      "description": "A date in various formats. For a full list of supported formats see: https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats",
-      "type": "string"
-    },
-    "__schema13": {
-      "type": "object",
-      "properties": {
-        "minutes": {
-          "type": "number"
-        },
-        "hours": {
-          "type": "number"
-        },
-        "days": {
-          "type": "number"
-        },
-        "weeks": {
-          "type": "number"
-        },
-        "years": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false
-    }
-  }
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "object",
+	"properties": {
+		"$schema": {
+			"description": "The JSON schema to reference. This allows your Editor/LSP to give you autocompletion and validate some inputs.",
+			"type": "string"
+		},
+		"name": {
+			"description": "Optional display name. If not set the filename will get shown in the app.",
+			"type": "string"
+		},
+		"rules": {
+			"description": "Dictates what to put into the smart playlist.\nAll top level rules need to match for a track to get added.\nAn \"any\" group matches if any single rule within it matches. Whereas an \"all\" rules matches only if all rules match.",
+			"readOnly": true,
+			"minItems": 1,
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/__schema0"
+			}
+		}
+	},
+	"required": ["rules"],
+	"additionalProperties": false,
+	"definitions": {
+		"__schema0": {
+			"description": "Filter by fields or add nested 'all' and 'any' groups.",
+			"anyOf": [
+				{
+					"description": "*All* specified rules need to match for a track to be added.",
+					"type": "object",
+					"properties": {
+						"all": {
+							"type": "array",
+							"items": {
+								"anyOf": [
+									{
+										"$ref": "#/definitions/__schema1"
+									},
+									{
+										"allOf": [
+											{
+												"$ref": "#/definitions/__schema0"
+											}
+										]
+									}
+								]
+							}
+						}
+					},
+					"required": ["all"],
+					"additionalProperties": false
+				},
+				{
+					"description": "*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added.",
+					"type": "object",
+					"properties": {
+						"any": {
+							"type": "array",
+							"items": {
+								"anyOf": [
+									{
+										"$ref": "#/definitions/__schema1"
+									},
+									{
+										"allOf": [
+											{
+												"$ref": "#/definitions/__schema0"
+											}
+										]
+									}
+								]
+							}
+						}
+					},
+					"required": ["any"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"__schema1": {
+			"anyOf": [
+				{
+					"type": "object",
+					"properties": {
+						"sourceProvider": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["sourceProvider"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"duration": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["duration"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"title": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["title"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"trackIndex": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["trackIndex"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"trackIndexOf": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["trackIndexOf"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"disk": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["disk"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"diskOf": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["diskOf"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"year": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["year"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"artist": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["artist"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"albumartist": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["albumartist"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"album": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["album"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"comment": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["comment"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"genre": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["genre"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"picture": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["picture"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"composer": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["composer"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"albumsort": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["albumsort"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"titlesort": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["titlesort"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"work": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["work"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"artistsort": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["artistsort"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"albumartistsort": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["albumartistsort"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"composersort": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["composersort"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"lyricist": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["lyricist"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"writer": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["writer"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"conductor": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["conductor"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"remixer": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["remixer"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"arranger": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["arranger"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"engineer": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["engineer"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"publisher": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["publisher"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"producer": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["producer"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"djmixer": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["djmixer"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mixer": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["mixer"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"technician": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["technician"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"label": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["label"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"grouping": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["grouping"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"totaltracks": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["totaltracks"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"totaldiscs": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["totaldiscs"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"movementTotal": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["movementTotal"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"compilation": {
+							"$ref": "#/definitions/__schema9"
+						}
+					},
+					"required": ["compilation"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"rating": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["rating"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"bpm": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["bpm"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mood": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["mood"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"media": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["media"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"catalognumber": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["catalognumber"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"podcast": {
+							"$ref": "#/definitions/__schema9"
+						}
+					},
+					"required": ["podcast"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"podcasturl": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["podcasturl"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"releasestatus": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["releasestatus"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"releasetype": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["releasetype"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"releasecountry": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["releasecountry"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"script": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["script"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"language": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["language"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"releasedate": {
+							"$ref": "#/definitions/__schema10"
+						}
+					},
+					"required": ["releasedate"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"performerInstrument": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["performerInstrument"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"averageLevel": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["averageLevel"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"peakLevel": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["peakLevel"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"key": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["key"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"category": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["category"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"keywords": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["keywords"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"movement": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["movement"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"movementIndex": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["movementIndex"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"movementIndexOf": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["movementIndexOf"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"podcastId": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["podcastId"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"bitrate": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["bitrate"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"codec": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["codec"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"audioMD5": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["audioMD5"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"lossless": {
+							"$ref": "#/definitions/__schema9"
+						}
+					},
+					"required": ["lossless"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"modificationTime": {
+							"$ref": "#/definitions/__schema10"
+						}
+					},
+					"required": ["modificationTime"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"trackGain": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["trackGain"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"numberOfChannels": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["numberOfChannels"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"numberOfSamples": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["numberOfSamples"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"tool": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["tool"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"trackPeakLevel": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["trackPeakLevel"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"sampleRate": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["sampleRate"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"bitsPerSample": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["bitsPerSample"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"albumGain": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["albumGain"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"codecProfile": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["codecProfile"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"container": {
+							"$ref": "#/definitions/__schema2"
+						}
+					},
+					"required": ["container"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"size": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["size"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mtime": {
+							"$ref": "#/definitions/__schema5"
+						}
+					},
+					"required": ["mtime"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"__schema2": {
+			"type": "object",
+			"properties": {
+				"includes": {
+					"$ref": "#/definitions/__schema3"
+				},
+				"includes_not": {
+					"$ref": "#/definitions/__schema3"
+				},
+				"starts_with": {
+					"$ref": "#/definitions/__schema3"
+				},
+				"starts_not_with": {
+					"$ref": "#/definitions/__schema3"
+				},
+				"ends_with": {
+					"$ref": "#/definitions/__schema3"
+				},
+				"ends_not_with": {
+					"$ref": "#/definitions/__schema3"
+				},
+				"is": {
+					"description": "If it is a list at least one has to match exactly.",
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema3"
+						}
+					]
+				},
+				"is_not": {
+					"description": "If it is a list none should match exactly.",
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema3"
+						}
+					]
+				}
+			},
+			"additionalProperties": false
+		},
+		"__schema3": {
+			"anyOf": [
+				{
+					"$ref": "#/definitions/__schema4"
+				},
+				{
+					"minItems": 1,
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/__schema4"
+					}
+				}
+			]
+		},
+		"__schema4": {
+			"type": "string"
+		},
+		"__schema5": {
+			"type": "object",
+			"properties": {
+				"is": {
+					"description": "Is exactly the provided number. Or one of them if multiple are specified.",
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema6"
+						}
+					]
+				},
+				"is_not": {
+					"description": "Is not the provided number(s)",
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema6"
+						}
+					]
+				},
+				"greater_than": {
+					"description": "Everything greater than the provided number.",
+					"type": "number"
+				},
+				"smaller_than": {
+					"description": "Everything smaller than the provided number",
+					"type": "number"
+				},
+				"in_the_range": {
+					"description": "Is in between the provided range(s), including the end.",
+					"anyOf": [
+						{
+							"$ref": "#/definitions/__schema8"
+						},
+						{
+							"minItems": 1,
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/__schema8"
+							}
+						}
+					]
+				}
+			},
+			"additionalProperties": false
+		},
+		"__schema6": {
+			"anyOf": [
+				{
+					"$ref": "#/definitions/__schema7"
+				},
+				{
+					"minItems": 1,
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/__schema7"
+					}
+				}
+			]
+		},
+		"__schema7": {
+			"type": "number"
+		},
+		"__schema8": {
+			"type": "array",
+			"items": [
+				{
+					"type": "number"
+				},
+				{
+					"type": "number"
+				}
+			]
+		},
+		"__schema9": {
+			"description": "A very simple true/false check.",
+			"type": "object",
+			"properties": {
+				"is": {
+					"type": "boolean"
+				}
+			},
+			"required": ["is"],
+			"additionalProperties": false
+		},
+		"__schema10": {
+			"description": "Filter by using dates. Valid dates can be in various formats. See here for the full list of formats: https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats",
+			"type": "object",
+			"properties": {
+				"is": {
+					"$ref": "#/definitions/__schema11"
+				},
+				"is_not": {
+					"$ref": "#/definitions/__schema11"
+				},
+				"before": {
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema12"
+						}
+					]
+				},
+				"after": {
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema12"
+						}
+					]
+				},
+				"in_the_last": {
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema13"
+						}
+					]
+				},
+				"not_in_the_last": {
+					"allOf": [
+						{
+							"$ref": "#/definitions/__schema13"
+						}
+					]
+				}
+			},
+			"additionalProperties": false
+		},
+		"__schema11": {
+			"anyOf": [
+				{
+					"$ref": "#/definitions/__schema12"
+				},
+				{
+					"minItems": 1,
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/__schema12"
+					}
+				}
+			]
+		},
+		"__schema12": {
+			"description": "A date in various formats. For a full list of supported formats see: https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats",
+			"type": "string"
+		},
+		"__schema13": {
+			"type": "object",
+			"properties": {
+				"minutes": {
+					"type": "number"
+				},
+				"hours": {
+					"type": "number"
+				},
+				"days": {
+					"type": "number"
+				},
+				"weeks": {
+					"type": "number"
+				},
+				"years": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false
+		}
+	}
 }

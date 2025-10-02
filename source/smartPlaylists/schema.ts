@@ -32,9 +32,11 @@ const stringSchema = z.object({
 	starts_not_with: stringOrArray,
 	ends_with: stringOrArray,
 	ends_not_with: stringOrArray,
-	is: stringOrArray.describe("If it is a list at least one has to match exactly."),
+	is: stringOrArray.describe(
+		"If it is a list at least one has to match exactly."
+	),
 	is_not: stringOrArray.describe("If it is a list none should match exactly."),
-	_type: discriminator("string"),
+	_type: discriminator("string")
 })
 export type StringSchema = z.infer<typeof stringSchema>
 
@@ -54,14 +56,16 @@ const numberSchema = z.object({
 	in_the_range: orArray(z.tuple([z.number(), z.number()]))
 		.optional()
 		.describe("Is in between the provided range(s), including the end."),
-	_type: discriminator("number"),
+	_type: discriminator("number")
 })
 export type NumberSchema = z.infer<typeof numberSchema>
 
-const booleanSchema = z.object({
-	is: z.boolean(),
-	_type: z.literal("boolean").default("boolean"),
-}).describe("A very simple true/false check.")
+const booleanSchema = z
+	.object({
+		is: z.boolean(),
+		_type: z.literal("boolean").default("boolean")
+	})
+	.describe("A very simple true/false check.")
 export type BooleanSchema = z.infer<typeof booleanSchema>
 
 /** Does not need _type as its not a rule, but just a nicer way to get a number for a rule  */
@@ -71,7 +75,7 @@ const durationSchema = z
 		hours: z.number().optional(),
 		days: z.number().optional(),
 		weeks: z.number().optional(),
-		years: z.number().optional(),
+		years: z.number().optional()
 	})
 	.strict()
 	.transform((input) => {
@@ -98,7 +102,7 @@ const dateSchema = z
 		after: dateRaw.optional(),
 		in_the_last: durationSchema.optional(),
 		not_in_the_last: durationSchema.optional(),
-		_type: discriminator("date"),
+		_type: discriminator("date")
 	})
 	.describe(
 		`Filter by using dates. Valid dates can be in various formats. See here for the full list of formats: ${allDateFormatsLink}`
@@ -127,7 +131,7 @@ const trackColumnSchema = pipe(
 			return {
 				_type: "column" as const,
 				column: trackColumn as TrackColumnKey,
-				rules,
+				rules
 			}
 		})
 	),
@@ -150,13 +154,13 @@ export type MetaOperator = Readonly<{
 const metaOperators = [
 	{
 		type: "all",
-		description: "*All* specified rules need to match for a track to be added.",
+		description: "*All* specified rules need to match for a track to be added."
 	},
 	{
 		type: "any",
 		description:
-			"*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added.",
-	},
+			"*Any* of the specified rules need to match for a track to be added. If one is passes the track gets added."
+	}
 ] as const
 
 const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
@@ -166,7 +170,7 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 			.object({
 				[type]: z.array(
 					z.union([trackColumnSchema, z.lazy(() => metaOperatorSchema)])
-				),
+				)
 			})
 			.describe(description)
 			.transform((object) => {
@@ -176,7 +180,7 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 
 				return {
 					_type: typedType,
-					fields,
+					fields
 				}
 			})
 	),
@@ -210,7 +214,7 @@ export const playlistBlueprintSchema = z.object({
 			stripIndent(`Dictates what to put into the smart playlist.
 				All top level rules need to match for a track to get added.
 				An "any" group matches if any single rule within it matches. Whereas an "all" rules matches only if all rules match.`)
-		),
+		)
 })
 
 /** Parsed playlist config file (blueprint) */

@@ -8,7 +8,7 @@ import { useRegisterListNavigationCommands } from "#/hooks/hooks"
 import { registerKeybinds } from "#/keybindManager/KeybindManager"
 import { appState } from "#/state/state"
 import type { AppState } from "#/state/types"
-import {  usePlaybackData } from "#/state/useSelectors"
+import { usePlaybackData } from "#/state/useSelectors"
 import { useId } from "react"
 import { Box, List, Text, useList } from "tuir"
 import { Result } from "typescript-result"
@@ -19,7 +19,6 @@ export function QueuePage() {
 
 	const ids = [...(queue?.tracks ?? []), ...manuallyAdded]
 	const totalTracks = queue?.tracks.length ?? 0 + manuallyAdded.length
-
 
 	const response = useQuery(["tracks", ...new Set(ids)], () =>
 		Result.fromAsyncCatching(database.getTracks(ids)).map((tracks) => {

@@ -17,7 +17,7 @@ export async function handleMpris() {
 	const mpris = new MprisService({
 		name: "org.mpris.MediaPlayer2.moo",
 		supportedInterfaces: ["player"],
-		identity: "moo",
+		identity: "moo"
 	})
 
 	currentTrack$.pipe(filter(R.isNonNullish)).subscribe((track) => {
@@ -58,8 +58,8 @@ export async function handleMpris() {
 			playState === "playing"
 				? "Playing"
 				: playState === "paused"
-				? "Paused"
-				: "Stopped"
+					? "Paused"
+					: "Stopped"
 	})
 
 	loop$.subscribe((loop) => {
@@ -67,8 +67,8 @@ export async function handleMpris() {
 			loop === "loop_track"
 				? "Track"
 				: loop === "loop_queue"
-				? "Playlist"
-				: "None"
+					? "Playlist"
+					: "None"
 	})
 
 	const handlers: {
@@ -88,7 +88,7 @@ export async function handleMpris() {
 			appState.send({ type: "togglePlayback" })
 		},
 		stop: () => appState.send({ type: "togglePlayback" }),
-		quit: () => appState.send({ type: "stopPlayback" }),
+		quit: () => appState.send({ type: "stopPlayback" })
 	}
 
 	for (const [event, handler] of Object.entries(handlers)) {

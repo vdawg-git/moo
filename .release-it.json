@@ -1,13 +1,13 @@
 {
-  "$schema": "https://unpkg.com/release-it@18/schema/release-it.json",
-  "git": {
-    "commitMessage": "chore: release v${version}"
-  },
-  "github": {
-    "release": true,
-    "autoGenerate": true
-  },
-  "npm": {
-    "publish": false
-  }
+	"$schema": "https://unpkg.com/release-it@18/schema/release-it.json",
+	"git": {
+		"commitMessage": "chore: release v${version}"
+	},
+	"github": {
+		"release": true,
+		"autoGenerate": true
+	},
+	"npm": {
+		"publish": false
+	}
 }
