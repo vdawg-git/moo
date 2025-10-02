@@ -130,6 +130,8 @@ function Runner({ modal, initialValue }: RunnerProps) {
 			flexDirection="column"
 			alignItems="flex-start"
 			justifyContent="flex-start"
+			width={"50%"}
+			minWidth={40}
 		>
 			<Node.Box {...nodemap.register("textinput")}>
 				<RunnerInput
@@ -232,6 +234,8 @@ function RunnerInput({
 			borderDimColor={!isFocus}
 			borderColor={isFocus ? "blue" : "gray"}
 			borderTop={false}
+			width={"100%"}
+			flexGrow={1}
 		>
 			<TextInput
 				onChange={_onChangeInternal}
@@ -333,7 +337,7 @@ export function RunnerList({
 	}, [onIndexChange, control.currentIndex])
 
 	return (
-		<Box height={16}>
+		<Box minHeight={16}>
 			<List listView={listView}>{children}</List>
 		</Box>
 	)
