@@ -1,8 +1,8 @@
+import { Box, Text } from "tuir"
 import { appConfig } from "#/config/config"
-import type { BaseTrack, Track } from "#/database/types"
 import { appState } from "#/state/state"
 import { useCurrentTrack, usePlaybackData } from "#/state/useSelectors"
-import { Box, Text } from "tuir"
+import type { BaseTrack } from "#/database/types"
 
 export function Playbar() {
 	const currentTrack = useCurrentTrack()

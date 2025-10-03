@@ -1,8 +1,8 @@
-import type { GeneralCommand } from "#/commands/appCommands"
-import { registerKeybinds } from "#/keybindManager/KeybindManager"
 import { useCallback, useEffect, useState } from "react"
+import { registerKeybinds } from "#/keybindManager/keybindManager"
 import type { Observable } from "rxjs"
 import type { useList } from "tuir"
+import type { GeneralCommand } from "#/commands/appCommands"
 
 export function useObservable<T>(observable: Observable<T>): T | undefined {
 	const [value, setValue] = useState<T | undefined>()

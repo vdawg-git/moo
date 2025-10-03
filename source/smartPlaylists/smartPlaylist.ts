@@ -1,17 +1,17 @@
-import { database } from "#/database/database"
-import type { PlaylistId } from "#/database/types"
-import { addErrorNotification } from "#/state/state"
 import path, { basename, extname } from "node:path"
-import type { Subscription } from "rxjs"
+import { match, P } from "ts-pattern"
+import { Result } from "typescript-result"
+import { database } from "#/database/database"
+import { logg } from "#/logs"
+import { addErrorNotification } from "#/state/state"
 import {
 	getPlaylistBlueprintFromId,
 	parsePlaylistsAll,
 	playlistsChanged$
 } from "./parsing"
-import { Result } from "typescript-result"
+import type { Subscription } from "rxjs"
+import type { PlaylistId } from "#/database/types"
 import type { FilePath } from "#/types/types"
-import { logg } from "#/logs"
-import { match, P } from "ts-pattern"
 
 export async function updateSmartPlaylists(): Promise<void> {
 	const playlistsParsed = await Result.fromAsync(parsePlaylistsAll())

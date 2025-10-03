@@ -1,12 +1,12 @@
 import { useSelector } from "@xstate/store/react"
 import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
+import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
-import { PlaylistTitle } from "#/components/playlilstTitle"
 
 export function All() {
 	const response = useQuery("all", database.getTracks)

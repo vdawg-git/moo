@@ -17,13 +17,17 @@
 		"rules": {
 			"recommended": true,
 			"complexity": { "noForEach": "off" },
-			"suspicious": { "noExplicitAny": "off" },
+			"suspicious": {
+				"noExplicitAny": "off",
+				"useIterableCallbackReturn": "off"
+			},
 			"style": {
 				"noDefaultExport": "error",
 				"noYodaExpression": "error",
 				"useCollapsedElseIf": "error",
 				"useFilenamingConvention": "error",
-				"useTemplate": "off"
+				"useTemplate": "off",
+				"noNonNullAssertion": "off"
 			}
 		}
 	},
@@ -32,6 +36,18 @@
 			"quoteStyle": "double",
 			"semicolons": "asNeeded",
 			"trailingCommas": "none"
+		}
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [{ "type": false }]
+					}
+				}
+			}
 		}
 	}
 }

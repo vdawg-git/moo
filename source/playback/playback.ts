@@ -1,28 +1,28 @@
 import {
-	EMPTY,
-	type Observable,
-	Subject,
 	auditTime,
 	combineLatest,
 	distinctUntilChanged,
+	EMPTY,
 	map,
+	type Observable,
 	pairwise,
+	Subject,
 	startWith,
 	switchMap,
 	tap
 } from "rxjs"
 import { match } from "ts-pattern"
-import { logg } from "#/logs"
-import { addErrorNotification, appState, appState$ } from "#/state/state"
-import { LocalTrack } from "#/database/database"
-import type { Track } from "#/database/types"
 import { pickCommands } from "#/commands/commandFunctions"
+import { LocalTrack } from "#/database/database"
 import {
 	registerKeybinds,
 	unregisterKeybinds
-} from "#/keybindManager/KeybindManager"
-import { handleMpris } from "./mpris"
+} from "#/keybindManager/keybindManager"
+import { logg } from "#/logs"
 import { currentTrack$, playState$ } from "#/state/derivedState"
+import { addErrorNotification, appState, appState$ } from "#/state/state"
+import { handleMpris } from "./mpris"
+import type { Track } from "#/database/types"
 
 const toPlay$: Observable<Track | undefined> = combineLatest([
 	currentTrack$,

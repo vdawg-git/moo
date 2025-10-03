@@ -1,4 +1,3 @@
-import { shuffle } from "remeda"
 import { z } from "zod"
 
 export const iconsSchema = z

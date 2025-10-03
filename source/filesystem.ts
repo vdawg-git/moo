@@ -1,13 +1,13 @@
 import { mkdir, readdir } from "node:fs/promises"
 import path from "node:path"
-import { Observable, distinctUntilChanged, share } from "rxjs"
+import { type ChokidarOptions, watch } from "chokidar"
+import { distinctUntilChanged, Observable, share } from "rxjs"
 import { Result } from "typescript-result"
 import { DATA_DIRECTORY, playlistsDirectory } from "./constants"
 import { examplePlaylist } from "./smartPlaylists/examplePlaylist"
-import { watch, type ChokidarOptions } from "chokidar"
-import type { FilePath } from "./types/types"
-import type { EventName } from "chokidar/handler.js"
 import type { Stats } from "node:fs"
+import type { EventName } from "chokidar/handler.js"
+import type { FilePath } from "./types/types"
 
 const defaultWatchOptions: ChokidarOptions = {
 	awaitWriteFinish: { stabilityThreshold: 500, pollInterval: 100 },
@@ -66,12 +66,6 @@ async function checkDirectoryExists(directoryPath: FilePath): Promise<boolean> {
 	return readdir(directoryPath)
 		.then(() => true)
 		.catch(() => false)
-}
-
-type FileChanged = {
-	/** The absolute filepath which changed */
-	filePath: FilePath
-	type: "change" | "rename"
 }
 
 /**

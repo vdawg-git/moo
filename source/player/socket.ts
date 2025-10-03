@@ -1,5 +1,5 @@
-import type { Socket } from "bun"
 import { type Observable, Subject } from "rxjs"
+import type { Socket } from "bun"
 
 export type SocketEvents<T> =
 	| { type: "data"; data: T }
@@ -29,20 +29,20 @@ export async function createSocketClient<T>(
 	const client = await Bun.connect({
 		unix: socket,
 		socket: {
-			data(socket, data) {
+			data(_socket, data) {
 				events$.next({ type: "data", data: options.onData(data) })
 			},
-			connectError(socket, error) {
+			connectError(_socket, error) {
 				events$.next({ type: "connectError", error })
 			},
-			close(socket) {
+			close(_socket) {
 				events$.next({ type: "close" })
 				events$.complete()
 			},
-			open(socket) {
+			open(_socket) {
 				events$.next({ type: "open" })
 			},
-			error(socket, error) {
+			error(_socket, error) {
 				events$.next({ type: "error", error })
 			}
 		}

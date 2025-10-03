@@ -2,7 +2,7 @@ import { Box, Text } from "tuir"
 import {
 	type SequencePart,
 	useManageKeybinds
-} from "#/keybindManager/KeybindManager"
+} from "#/keybindManager/keybindManager"
 
 type NextUpKeybind = { label: string; toPress: string; id: string }
 

@@ -1,4 +1,4 @@
-import type { KeyBinding, KeyInput } from "#/config/shortcutParser"
+import type { KeyBinding } from "#/config/shortcutParser"
 
 /**
  * Used for the keybindings config schema generation

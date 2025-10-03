@@ -1,4 +1,4 @@
-import { type SQL, getTableColumns, sql } from "drizzle-orm"
+import { getTableColumns, type SQL, sql } from "drizzle-orm"
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
 import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
 

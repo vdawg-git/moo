@@ -9,13 +9,13 @@ import {
 	useList,
 	useListItem
 } from "tuir"
-import type { GeneralCommand } from "#/commands/appCommands"
 import { appConfig } from "#/config/config"
-import { registerKeybinds } from "#/keybindManager/KeybindManager"
+import { useRegisterListNavigationCommands } from "#/hooks/hooks"
+import { registerKeybinds } from "#/keybindManager/keybindManager"
+import { appState } from "#/state/state"
+import type { GeneralCommand } from "#/commands/appCommands"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack, TrackId } from "../database/types"
-import { appState } from "#/state/state"
-import { useRegisterListNavigationCommands } from "#/hooks/hooks"
 
 type PlaylistProps = {
 	tracks: readonly BaseTrack[]

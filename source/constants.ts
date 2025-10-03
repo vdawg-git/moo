@@ -1,6 +1,6 @@
-import packageJson from "#/../package.json"
-import envPaths from "env-paths"
 import path from "node:path"
+import envPaths from "env-paths"
+import packageJson from "#/../package.json"
 import type { FilePath } from "./types/types"
 
 // drizzle kit runs on Cjs where import.meta.dirname

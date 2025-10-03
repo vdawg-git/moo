@@ -1,24 +1,23 @@
-import { appCommands } from "#/commands/appCommands"
-import { appConfig } from "#/config/config"
-import { database } from "#/database/database"
-import { observeQuery } from "#/database/useQuery"
-import { addErrorNotification, appState } from "#/state/state"
 import Fuse from "fuse.js"
 import { useEffect, useState } from "react"
 import * as R from "remeda"
 import {
-	type Observable,
-	Subject,
 	distinctUntilChanged,
 	filter,
 	map,
+	type Observable,
+	Subject,
 	shareReplay,
 	switchMap
 } from "rxjs"
-import { P, match } from "ts-pattern"
+import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
-import type { RunnerItem } from "./runner"
+import { appConfig } from "#/config/config"
+import { database } from "#/database/database"
+import { observeQuery } from "#/database/useQuery"
 import { keybindsState } from "#/keybindManager/keybindsState"
+import { addErrorNotification, appState } from "#/state/state"
+import type { RunnerItem } from "./runner"
 
 type SearchMode = "Playlists" | "Go to" | "Commands"
 

@@ -1,11 +1,11 @@
-import type { ICommonTagsResult, ILyricsTag } from "music-metadata"
-import type { Player } from "../player/types"
-import type { Except } from "type-fest"
-import { Result, type AsyncResult } from "typescript-result"
-import type { Observable } from "rxjs"
-import type { FilePath } from "#/types/types"
+import { type AsyncResult, Result } from "typescript-result"
 import { addErrorNotification } from "#/state/state"
+import type { ICommonTagsResult, ILyricsTag } from "music-metadata"
+import type { Observable } from "rxjs"
+import type { Except } from "type-fest"
 import type { PlaylistBlueprint } from "#/smartPlaylists/schema"
+import type { FilePath } from "#/types/types"
+import type { Player } from "../player/types"
 import type {
 	AlbumSimple,
 	ArtistSimple,

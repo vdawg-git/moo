@@ -1,5 +1,5 @@
+import { displayKeybinding, type KeyBinding } from "#/config/shortcutParser"
 import type { Except } from "type-fest"
-import { type KeyBinding, displayKeybinding } from "#/config/shortcutParser"
 
 type TrieNode = {
 	children: Map<string, TrieNode>
@@ -30,7 +30,6 @@ class KeybindTrie {
 				node.children.set(keyString, createEmptyNode())
 			}
 
-			// biome-ignore lint/style/noNonNullAssertion: <explanation>
 			node = node.children.get(keyString)!
 		}
 		node.commands.set(id, commandData)
@@ -43,7 +42,6 @@ class KeybindTrie {
 			const keyString = displayKeybinding([part])
 			if (!node.children.has(keyString)) return undefined
 
-			// biome-ignore lint/style/noNonNullAssertion: <explanation>
 			node = node.children.get(keyString)!
 		}
 
@@ -105,7 +103,6 @@ class KeybindTrie {
 
 			stack.push([node, keyString])
 
-			// biome-ignore lint/style/noNonNullAssertion: <explanation>
 			node = node.children.get(keyString)!
 		}
 
@@ -118,7 +115,6 @@ class KeybindTrie {
 			node.commands.size === 0 &&
 			node.children.size === 0
 		) {
-			// biome-ignore lint/style/noNonNullAssertion: <explanation>
 			const [parent, keyString] = stack.pop()!
 			parent.children.delete(keyString)
 			node = parent

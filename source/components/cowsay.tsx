@@ -1,4 +1,4 @@
-import { say, type IOptions as CowOptions } from "cowsay"
+import { type IOptions as CowOptions, say } from "cowsay"
 import { Text } from "tuir"
 
 export const cowGlasses = {

@@ -1,5 +1,5 @@
-import { appConfig } from "#/config/config"
 import { Text } from "tuir"
+import { appConfig } from "#/config/config"
 
 type PlaylistTitleProps = {
 	title: string

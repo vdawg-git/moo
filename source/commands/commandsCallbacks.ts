@@ -1,9 +1,9 @@
-import type { AppCommandID } from "./commandsBase"
-import { openRunner } from "#/components/runner/runner"
-import { appState } from "#/state/state"
 import { firstValueFrom } from "rxjs"
-import { currentTrack$ } from "#/state/derivedState"
 import { KeybindsModal } from "#/components/keybindsModal"
+import { openRunner } from "#/components/runner/runner"
+import { currentTrack$ } from "#/state/derivedState"
+import { appState } from "#/state/state"
+import type { AppCommandID } from "./commandsBase"
 
 const lookupFunction: Readonly<Record<AppCommandID, () => void>> =
 	Object.freeze({

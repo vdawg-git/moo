@@ -5,22 +5,26 @@ import { Subject } from "rxjs"
 import { Result } from "typescript-result"
 import { DATA_DIRECTORY, databasePath, IS_DEV } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
-import { logg, enumarateError } from "#/logs.js"
+import { enumarateError, logg } from "#/logs.js"
+import { getPlaylistBlueprintFromId } from "#/smartPlaylists/parsing.js"
 import { getSmartPlaylistTracks } from "#/smartPlaylists/toSql.js"
 // @ts-expect-error
 import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 import { createLocalPlayer } from "../player/player.js"
+import { databaseLogger } from "./logger.js"
+import { sortTracks } from "./naturalSorting.js"
 import {
-	DATABASE_VERSION,
 	albumsTable,
 	artistsTable,
 	composersTable,
+	DATABASE_VERSION,
 	movementsTable,
 	playlistsTable,
+	type TrackFileMeta,
 	tracksTable,
-	versionTable,
-	type TrackFileMeta
+	versionTable
 } from "./schema.js"
+import { selectorBaseTrack, selectorTrackSort } from "./selectors.js"
 import { upsert } from "./sqlHelper.js"
 import {
 	type AlbumId,
@@ -30,10 +34,6 @@ import {
 	Track,
 	type TrackId
 } from "./types.js"
-import { databaseLogger } from "./logger.js"
-import { sortTracks } from "./naturalSorting.js"
-import { selectorBaseTrack, selectorTrackSort } from "./selectors.js"
-import { getPlaylistBlueprintFromId } from "#/smartPlaylists/parsing.js"
 
 export const database = connectDatabase()
 
@@ -164,7 +164,7 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 		getAlbum: async () => {
 			throw new Error("getAlbum is not implemented")
 		},
-		getAlbums: async (ids = []) => {
+		getAlbums: async (_ids = []) => {
 			throw new Error("getAlbums is not implemented")
 		},
 		getArtist: async () => {

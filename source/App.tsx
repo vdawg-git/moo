@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Viewport, setCharRegisterSize, setMouseReporting } from "tuir"
+import { setCharRegisterSize, setMouseReporting, Viewport } from "tuir"
 import { ModalManager } from "./components/modalManager"
 import { Navigator } from "./components/navigator"
 import { NextUpKeybinds } from "./components/sequenceKeybindsShower"

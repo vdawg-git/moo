@@ -1,11 +1,11 @@
-import { appConfig } from "#/config/config"
-import { appState } from "#/state/state"
-import type { AppNotification } from "#/state/types"
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { match } from "ts-pattern"
 import { Box, Text, useKeymap } from "tuir"
+import { appConfig } from "#/config/config"
+import { appState } from "#/state/state"
 import { BracketButton } from "./button"
+import type { AppNotification } from "#/state/types"
 
 export const notificationModalId = "_notificationModalaid_"
 

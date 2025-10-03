@@ -4,7 +4,7 @@ import { Result } from "typescript-result"
 import { App } from "./App"
 import { registerGlobalCommands } from "./commands/commandFunctions"
 import { appConfig } from "./config/config"
-import { IS_DEV, LOGS_DIRECTORY, databasePath } from "./constants"
+import { databasePath, IS_DEV, LOGS_DIRECTORY } from "./constants"
 import { database } from "./database/database"
 import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { logg } from "./logs"
@@ -21,7 +21,7 @@ export async function startApp() {
 
 	if (IS_DEV) {
 		const { initialize, connectToDevTools } = await import(
-			//@ts-ignore
+			//@ts-expect-error
 			"react-devtools-core"
 		)
 

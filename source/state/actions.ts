@@ -1,18 +1,17 @@
 import { deepEquals } from "bun"
-import { logg } from "#/logs"
-import type { TrackId } from "../database/types"
+import { type Draft, makeCreator } from "mutative"
+import { IS_DEV } from "#/constants"
 import { shuffleWithMap, unshuffleFromMap } from "#/helpers"
+import { logg } from "#/logs"
+import { addErrorNotification } from "./state"
+import type { TrackId } from "../database/types"
 import type {
-	AppNotification,
 	AppModal,
+	AppNotification,
 	AppState,
 	Queue,
 	ViewPage
 } from "./types"
-import { IS_DEV } from "#/constants"
-import { makeCreator, type Draft } from "mutative"
-import { addErrorMessage } from "zod-to-json-schema"
-import { addErrorNotification } from "./state"
 
 const create = makeCreator({ strict: IS_DEV, enableAutoFreeze: IS_DEV })
 
@@ -55,7 +54,7 @@ const playNewPlayback = createAction<{ queue: Queue; index?: number }>(
 			const { tracks } = queue
 			const { shuffled, shuffleMap } = shuffleWithMap(tracks)
 			context.playback.shuffleMap = shuffleMap
-			context.playback.index = shuffleMap.findIndex((i) => i === index)
+			context.playback.index = shuffleMap.indexOf(index)
 			context.playback.queue = { tracks: shuffled, source: queue.source }
 		} else {
 			context.playback.index = index
@@ -180,7 +179,6 @@ const toggleShuffle = createAction((context) => {
 	/* has shuffle on */
 	if (shuffleMap) {
 		context.playback.queue.tracks = unshuffleFromMap(tracks, shuffleMap)
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		context.playback.index = shuffleMap[context.playback.index]!
 		context.playback.shuffleMap = undefined
 		/* has shuffle off */
@@ -190,7 +188,7 @@ const toggleShuffle = createAction((context) => {
 		context.playback.shuffleMap = newShuffleMap
 		context.playback.queue.tracks = shuffled
 
-		const newIndex = newShuffleMap.findIndex((i) => i === playIndex)
+		const newIndex = newShuffleMap.indexOf(playIndex)
 		context.playback.index = newIndex
 	}
 })

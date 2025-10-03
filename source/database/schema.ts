@@ -1,7 +1,7 @@
-import { sqliteTable, primaryKey, integer, text } from "drizzle-orm/sqlite-core"
+import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import type { ILyricsTag } from "music-metadata"
-import type { AlbumId, ArtistId, PlaylistId, TrackId } from "./types"
 import type { FilePath } from "#/types/types"
+import type { ArtistId, PlaylistId, TrackId } from "./types"
 
 export type TrackColumnKey = keyof (typeof tracksTable)["_"]["columns"]
 export type TrackColumn = (typeof tracksTable)["_"]["columns"][TrackColumnKey]

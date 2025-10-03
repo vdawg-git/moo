@@ -1,19 +1,19 @@
 import path from "node:path"
-import type { BunFile } from "bun"
 import json5 from "json5"
 import { Result } from "typescript-result"
 import untildify from "untildify"
 import { z } from "zod"
-import { CONFIG_DIRECTORY, IS_DEV } from "#/constants"
-import type { FilePath } from "#/types/types"
-import { iconsSchema } from "./icons"
-import { keybindingsSchema } from "./keybindings"
 import {
 	isValidationError,
 	toValidationError,
 	type ValidationError
 } from "zod-validation-error"
-import { logg, enumarateError } from "#/logs"
+import { CONFIG_DIRECTORY } from "#/constants"
+import { enumarateError, logg } from "#/logs"
+import { iconsSchema } from "./icons"
+import { keybindingsSchema } from "./keybindings"
+import type { BunFile } from "bun"
+import type { FilePath } from "#/types/types"
 
 const zFilePath: z.Schema<FilePath> = z.string() as any
 export const schemaUrl =

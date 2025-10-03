@@ -1,3 +1,4 @@
+import parser from "any-date-parser"
 import { getTableColumns } from "drizzle-orm"
 import * as R from "remeda"
 import { pipe } from "remeda"
@@ -5,7 +6,6 @@ import { match } from "ts-pattern"
 import { z } from "zod"
 import { type TrackColumnKey, tracksTable } from "#/database/schema"
 import { stripIndent } from "#/helpers"
-import parser from "any-date-parser"
 
 const allDateFormatsLink =
 	"https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats"
@@ -126,7 +126,6 @@ const trackColumnSchema = pipe(
 	R.filter(R.isNonNullish),
 	R.map(([column, schema]) =>
 		z.object({ [column]: schema }).transform((parsed) => {
-			// biome-ignore lint/style/noNonNullAssertion: There will always be a single key
 			const [trackColumn, rules] = Object.entries(parsed)[0]!
 			return {
 				_type: "column" as const,
@@ -174,7 +173,6 @@ const metaOperatorSchema: z.ZodType<MetaOperator> = pipe(
 			})
 			.describe(description)
 			.transform((object) => {
-				// biome-ignore lint/style/noNonNullAssertion: should always only have one key
 				const [_type, fields] = Object.entries(object)[0]!
 				const typedType = _type as (typeof metaOperators)[number]["type"]
 

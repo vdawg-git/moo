@@ -2,9 +2,9 @@ import { useSelector } from "@xstate/store/react"
 import { Text } from "tuir"
 import { All } from "#/pages/allPage"
 import { Playlist } from "#/pages/playlistPage"
+import { QueuePage } from "#/pages/queuePage"
 import { appState } from "#/state/state"
 import type { ViewPage, ViewPages } from "#/state/types"
-import { QueuePage } from "#/pages/queuePage"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
 const routes: Routes = {

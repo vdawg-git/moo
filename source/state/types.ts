@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { Except } from "type-fest"
-import type { BaseTrack, PlaylistId, TrackId } from "../database/types"
+import type { PlaylistId, TrackId } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 
 export interface AppState {

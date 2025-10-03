@@ -4,22 +4,22 @@ import path from "node:path"
 import { deepEquals, sleep } from "bun"
 import { isNonNullish, isPromise } from "remeda"
 import {
-	type Observable,
 	concatMap,
 	distinctUntilChanged,
 	filter,
 	from,
+	type Observable,
 	of,
 	take
 } from "rxjs"
 import { match, P } from "ts-pattern"
-import type { JsonValue } from "type-fest"
 import { type AsyncResult, Result } from "typescript-result"
 import { z } from "zod"
 import { TEMP_DIRECTORY } from "#/constants"
 import { logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
-import { type SocketWrapper, createSocketClient } from "./socket"
+import { createSocketClient, type SocketWrapper } from "./socket"
+import type { JsonValue } from "type-fest"
 import type { Player, PlayerEvent } from "./types"
 
 const socketPath = path.join(TEMP_DIRECTORY, "mpv.sock")

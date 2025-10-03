@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises"
+import { readdir, stat } from "node:fs/promises"
 import path from "node:path"
 import parseDate from "any-date-parser"
 import { parseBuffer, selectCover } from "music-metadata"
@@ -6,25 +6,24 @@ import * as R from "remeda"
 import { pipe } from "remeda"
 import {
 	buffer,
-	type Observable,
 	concatMap,
 	debounceTime,
 	distinctUntilChanged,
 	filter,
 	map,
 	merge,
+	type Observable,
 	share
 } from "rxjs"
 import { Result } from "typescript-result"
 import { DATA_DIRECTORY } from "#/constants"
-import type { Database, TrackData, TrackId } from "#/database/types"
 import { createWatcher } from "#/filesystem"
-import { logg, enumarateError } from "#/logs"
+import { enumarateError, logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
-import type { FilePath } from "#/types/types"
 import { supportedFormats } from "./formats"
 import type { TrackFileMeta } from "#/database/schema"
-import { stat } from "node:fs/promises"
+import type { Database, TrackData, TrackId } from "#/database/types"
+import type { FilePath } from "#/types/types"
 
 export async function updateDatabase(
 	musicDirectories: readonly FilePath[],
@@ -33,7 +32,7 @@ export async function updateDatabase(
 	return Result.fromAsync(scanMusicDirectories(musicDirectories)).map(
 		async (filePaths) => {
 			return Result.fromAsync(batchTrackUpdates(filePaths, database))
-				.map(({ upserted, errors }) => {
+				.map(({ errors }) => {
 					errors.length &&
 						addErrorNotification(
 							`Errors when updating tracks: ${errors.map((error) => String(error)).join("")}`

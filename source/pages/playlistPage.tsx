@@ -4,11 +4,11 @@ import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
-import type { PlaylistId } from "#/database/types"
 import { useQuery } from "#/database/useQuery"
+import { createQueryKey } from "#/queryKey"
 import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
-import { createQueryKey } from "#/queryKey"
+import type { PlaylistId } from "#/database/types"
 
 type PlaylistProps = {
 	id: PlaylistId

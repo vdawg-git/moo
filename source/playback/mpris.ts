@@ -1,10 +1,10 @@
 import os from "node:os"
-import type { MprisEventsCatalog } from "@jellybrick/mpris-service"
 import * as R from "remeda"
 import { filter } from "rxjs"
 import { logg } from "#/logs"
 import { currentTrack$, loop$, playState$ } from "#/state/derivedState"
 import { appState } from "#/state/state"
+import type { MprisEventsCatalog } from "@jellybrick/mpris-service"
 
 /** Handles mpris. Does nothing if not compiled for Linux */
 export async function handleMpris() {
@@ -20,7 +20,8 @@ export async function handleMpris() {
 		identity: "moo"
 	})
 
-	currentTrack$.pipe(filter(R.isNonNullish)).subscribe((track) => {
+	currentTrack$.pipe(filter(R.isNonNullish)).subscribe((_track) => {
+		// TODO fixme
 		// mpris-service logs warnings when passing undefined as it tries to parse it into values,
 		// so we conditonally spread the object
 		// mpris.metadata = {

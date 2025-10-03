@@ -1,18 +1,17 @@
 import { useSelector } from "@xstate/store/react"
 import { useEffect, useState } from "react"
 import { isTruthy } from "remeda"
-import { Subject, map, scan } from "rxjs"
-import { P, match } from "ts-pattern"
+import { map, Subject, scan } from "rxjs"
+import { match, P } from "ts-pattern"
 import { type Key, useInput } from "tuir"
-import type { GeneralCommand } from "#/commands/appCommands"
-import type { KeyBinding, KeyInput } from "#/config/shortcutParser"
 import { appState } from "#/state/state"
 import {
 	type KeybindCommand,
 	type KeybindNextUp,
 	keybindsState
 } from "./keybindsState"
-import { logg } from "#/logs"
+import type { GeneralCommand } from "#/commands/appCommands"
+import type { KeyBinding, KeyInput } from "#/config/shortcutParser"
 
 /** This is a mirror of the internal `SpecialKeys`,
  * which does not get exported, but used in `useInput` */

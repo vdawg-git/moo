@@ -1,5 +1,5 @@
-import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import { tracksTable } from "./schema"
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import type { BaseTrack } from "./types"
 
 export const selectorBaseTrack = {

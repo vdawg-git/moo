@@ -5,9 +5,9 @@ import { match } from "ts-pattern"
 import { Result } from "typescript-result"
 import { database } from "#/database/database"
 import { enumarateError, logg } from "#/logs"
+import { appStateActionsInternal as a } from "./actions"
 import type { BaseTrack } from "../database/types"
 import type { AppState, NotificationAdd, PlaybackSource } from "./types"
-import { appStateActionsInternal as a } from "./actions"
 
 /**
  * The global app state which holds data for

@@ -1,5 +1,5 @@
-import { databasePath, IS_DEV } from "#/constants"
 import { defineConfig } from "drizzle-kit"
+import { databasePath, IS_DEV } from "#/constants"
 
 console.log({ IS_DEV, databasePath })
 

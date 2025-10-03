@@ -1,10 +1,8 @@
-import type React from "react"
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import {
 	Box,
 	type Color,
 	Key,
-	type KeyInput,
 	List,
 	Node,
 	Text,
@@ -20,10 +18,11 @@ import { pickCommands } from "#/commands/commandFunctions"
 import {
 	registerKeybinds,
 	unregisterKeybinds
-} from "#/keybindManager/KeybindManager"
+} from "#/keybindManager/keybindManager"
 import { appState } from "#/state/state"
-import type { AppModalContentProps } from "#/state/types"
 import { useRunnerItems } from "./useRunnerItems"
+import type React from "react"
+import type { AppModalContentProps } from "#/state/types"
 
 /**
  * This component is a bit complicated,
@@ -153,7 +152,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 						setActiveItem(runnerItems[index])
 					}}
 					onSelect={onSelect}
-					onOtherInput={(input, specialKey) => {
+					onOtherInput={(input) => {
 						updateInputValueRef.current?.((oldValue) => oldValue + input)
 
 						if (input !== "") {

@@ -1,6 +1,6 @@
 import path from "node:path"
-import { APP_ROOT, IS_DEV, LOGS_DIRECTORY } from "./constants"
 import { createLogger, format, transports } from "winston"
+import { APP_ROOT, IS_DEV, LOGS_DIRECTORY } from "./constants"
 
 const logsPath = IS_DEV
 	? path.join(APP_ROOT, "moo.log")

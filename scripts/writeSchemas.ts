@@ -1,5 +1,5 @@
 import path from "node:path"
-import { z, type ZodType } from "zod"
+import { type ZodType, z } from "zod"
 import { appConfigSchema } from "#/config/config"
 import { APP_ROOT } from "#/constants"
 import { playlistBlueprintSchema } from "#/smartPlaylists/schema"

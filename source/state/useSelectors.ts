@@ -1,10 +1,10 @@
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
-import type { BaseTrack } from "#/database/types"
-import { appState } from "./state"
-import type { AppState, PlaybackSource } from "./types"
 import { useObservable } from "#/hooks/hooks"
 import { currentTrack$ } from "./derivedState"
+import { appState } from "./state"
+import type { BaseTrack } from "#/database/types"
+import type { AppState, PlaybackSource } from "./types"
 
 // /
 // Hooks for the global state.

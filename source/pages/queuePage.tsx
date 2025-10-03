@@ -1,17 +1,17 @@
+import { useId } from "react"
+import { Box, List, Text, useList } from "tuir"
+import { Result } from "typescript-result"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { TrackItem } from "#/components/tracklist"
 import { database } from "#/database/database"
-import type { BaseTrack, TrackId } from "#/database/types"
 import { useQuery } from "#/database/useQuery"
 import { useRegisterListNavigationCommands } from "#/hooks/hooks"
-import { registerKeybinds } from "#/keybindManager/KeybindManager"
+import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { appState } from "#/state/state"
-import type { AppState } from "#/state/types"
 import { usePlaybackData } from "#/state/useSelectors"
-import { useId } from "react"
-import { Box, List, Text, useList } from "tuir"
-import { Result } from "typescript-result"
+import type { BaseTrack, TrackId } from "#/database/types"
+import type { AppState } from "#/state/types"
 
 export function QueuePage() {
 	const playbackState = usePlaybackData()
@@ -64,8 +64,7 @@ function QueueView({
 		queue,
 		index: playIndex,
 		isPlayingFromManualQueue,
-		playState,
-		shuffleMap
+		playState
 	},
 	tracksMap
 }: QueueViewProps) {

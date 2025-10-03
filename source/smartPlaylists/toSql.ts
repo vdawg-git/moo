@@ -1,14 +1,4 @@
-import type {
-	BooleanSchema,
-	DateSchema,
-	MetaOperator,
-	NumberSchema,
-	PlaylistBlueprint,
-	StringSchema,
-	TrackColumnSchema
-} from "#/smartPlaylists/schema"
 import {
-	type SQL,
 	and,
 	eq,
 	gt,
@@ -19,18 +9,28 @@ import {
 	not,
 	notLike,
 	or,
+	type SQL,
 	sql
 } from "drizzle-orm"
-import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import * as R from "remeda"
-import { P, match } from "ts-pattern"
-import type { Simplify } from "type-fest"
-import { type TrackColumn, tracksTable } from "../database/schema"
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
-import { Result, type AsyncResult } from "typescript-result"
+import { match, P } from "ts-pattern"
+import { type AsyncResult, Result } from "typescript-result"
 import { selectorBaseTrack } from "#/database/selectors"
 import { nullsToUndefined } from "#/helpers"
+import { type TrackColumn, tracksTable } from "../database/schema"
+import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
+import type { Simplify } from "type-fest"
 import type { BaseTrack } from "#/database/types"
+import type {
+	BooleanSchema,
+	DateSchema,
+	MetaOperator,
+	NumberSchema,
+	PlaylistBlueprint,
+	StringSchema,
+	TrackColumnSchema
+} from "#/smartPlaylists/schema"
 
 export function getSmartPlaylistTracks(
 	database: BunSQLiteDatabase,
@@ -119,8 +119,7 @@ function rulesDate(schema: DateSchema): ColumnFilter {
 				["is_not", P.select()],
 				(toCompare) => (column) =>
 					Array.isArray(toCompare)
-						? // biome-ignore lint/style/noNonNullAssertion: The clauses should not be empty, so or should not be undefined
-							and(...toCompare.map((a) => not(eq(column, a))))!
+						? and(...toCompare.map((a) => not(eq(column, a))))!
 						: not(eq(column, toCompare))
 			)
 			.exhaustive()
