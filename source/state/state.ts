@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto"
 import { createStore } from "@xstate/store"
 import { Observable, shareReplay } from "rxjs"
 import { match } from "ts-pattern"
-import { Result } from "typescript-result"
+import { Result, type AsyncResult } from "typescript-result"
 import { database } from "#/database/database"
 import { enumarateError, logg } from "#/logs"
 import { appStateActionsInternal as a } from "./actions"
@@ -142,10 +142,12 @@ export async function playNewPlayback({
 		})
 }
 
-async function fetchPlaybackSource(
+function fetchPlaybackSource(
 	source: PlaybackSource
 ): Promise<Result<readonly BaseTrack[], Error>> {
 	return match(source)
+		.returnType<Promise<Result<readonly BaseTrack[], Error>>>()
+
 		.with({ type: "all" }, () => database.getTracks())
 
 		.with({ type: "playlist" }, ({ id }) =>
@@ -158,6 +160,27 @@ async function fetchPlaybackSource(
 					)
 				)
 		)
+
+		.with({ type: "album" }, ({ id }) =>
+			database
+				.getAlbum(id)
+				.map((album) =>
+					album
+						? album.tracks
+						: Result.error(new Error(`Album not found: ${id}`))
+				)
+		)
+
+		.with({ type: "artist" }, ({ id }) =>
+			database
+				.getArtist(id)
+				.map((artist) =>
+					artist
+						? artist.tracks
+						: Result.error(new Error(`Artist not found: ${id}`))
+				)
+		)
+
 		.exhaustive()
 }
 

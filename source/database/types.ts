@@ -1,11 +1,13 @@
 import { type AsyncResult, Result } from "typescript-result"
 import { addErrorNotification } from "#/state/state"
+import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
 import type { ICommonTagsResult, ILyricsTag } from "music-metadata"
 import type { Observable } from "rxjs"
 import type { Except } from "type-fest"
 import type { PlaylistBlueprint } from "#/smartPlaylists/schema"
 import type { FilePath } from "#/types/types"
 import type { Player } from "../player/types"
+import type * as schema from "./schema"
 import type {
 	AlbumSimple,
 	ArtistSimple,
@@ -13,7 +15,14 @@ import type {
 	TrackFileMeta
 } from "./schema"
 
-export interface Database {
+/**
+ * The interface of the raw Drizzle instance.
+ * Not the same as the `AppDatabase` interface which wraps this one.
+ */
+export type DrizzleDatabase = BunSQLiteDatabase<typeof schema>
+
+/** The interface for the moo SQLite database */
+export type AppDatabase = Readonly<{
 	getTrack: (id: TrackId) => Promise<Result<BaseTrack | undefined, Error>>
 	getTracks: (
 		ids?: readonly TrackId[]
@@ -31,20 +40,20 @@ export interface Database {
 		ids?: readonly TrackId[]
 	) => Promise<Result<Record<TrackId, TrackFileMeta>, Error>>
 
-	getAlbum: (id: AlbumId) => Promise<Result<Album | undefined, Error>>
+	getAlbum: (id: AlbumId) => AsyncResult<Album | undefined, Error>
 	getAlbums: (
 		ids?: readonly AlbumId[]
-	) => Promise<Result<readonly AlbumSimple[], Error>>
+	) => AsyncResult<readonly AlbumSimple[], Error>
 
-	getArtist: (id: ArtistId) => Promise<Result<Artist | undefined, Error>>
+	getArtist: (name: ArtistId) => AsyncResult<Artist | undefined, Error>
 	getArtists: (
-		ids?: readonly ArtistId[]
-	) => Promise<Result<readonly ArtistSimple[], Error>>
+		names?: readonly ArtistId[]
+	) => AsyncResult<readonly ArtistSimple[], Error>
 
 	getPlaylist: (id: PlaylistId) => AsyncResult<Playlist, Error>
 	getPlaylists: (
 		ids?: readonly PlaylistId[]
-	) => Promise<Result<readonly PlaylistSimple[], Error>>
+	) => AsyncResult<readonly PlaylistSimple[], Error>
 
 	upsertSmartPlaylist: (data: {
 		id: PlaylistId
@@ -83,7 +92,7 @@ export interface Database {
 
 	/** Emits when the database changes. */
 	changed$: Observable<string>
-}
+}>
 
 /**
  * Basic track data used for listing tracks.
@@ -106,6 +115,7 @@ export type BaseTrack = Pick<
  * Adapted from {@link ICommonTagsResult}
  *
  * A class to reduce the play/pause boilerplate.
+ * A bit overengineered as we initially thought about supporting multiple audio backends, but meh
  * */
 export abstract class Track {
 	/**
@@ -318,7 +328,6 @@ export type Artist = {
 	name: string
 	albums: readonly Album[]
 	tracks: readonly BaseTrack[]
-	id: string
 }
 
 export type Playlist = {
@@ -329,12 +338,12 @@ export type Playlist = {
 }
 
 export type Album = {
-	name: string
-	cover: string
-	artist: string
+	title: string
+	// cover: string
+	artist?: string
 	tracks: readonly BaseTrack[]
 	/** Concat of albumartist and name */
-	id: string
+	id: AlbumId
 }
 
 export type TrackId = string & { __brand: "TrackId" }

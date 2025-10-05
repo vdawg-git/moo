@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { Except } from "type-fest"
-import type { PlaylistId, TrackId } from "../database/types"
+import type { AlbumId, ArtistId, PlaylistId, TrackId } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 
 export interface AppState {
@@ -88,14 +88,9 @@ export type Queue = {
  * Can be a playlist, an album etc.
  */
 export type PlaybackSource =
-	| {
-			// currently we only support playlists,
-			// but in the future albums, artists, etc. should work too
-			// and they should be compatible with streaming services too
-			type: "playlist"
-			id: PlaylistId
-			// provider: "local"
-	  }
+	| { type: "playlist"; id: PlaylistId }
+	| { type: "album"; id: AlbumId }
+	| { type: "artist"; id: ArtistId }
 	| {
 			/** Everything from the library */
 			type: "all"
@@ -112,6 +107,8 @@ export interface ViewPages {
 	// the homeview should be configurable via the config
 	home: undefined
 	playlist: { id: PlaylistId }
+	album: { id: AlbumId }
+	artist: { id: ArtistId }
 	search: undefined
 	/** The queue page which shows the next up songs */
 	queue: undefined

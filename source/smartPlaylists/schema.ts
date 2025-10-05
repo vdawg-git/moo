@@ -4,13 +4,13 @@ import * as R from "remeda"
 import { pipe } from "remeda"
 import { match } from "ts-pattern"
 import { z } from "zod"
-import { type TrackColumnKey, tracksTable } from "#/database/schema"
+import { type TrackColumnKey, tableTracks } from "#/database/schema"
 import { stripIndent } from "#/helpers"
 
 const allDateFormatsLink =
 	"https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats"
 
-const columns = getTableColumns(tracksTable)
+const columns = getTableColumns(tableTracks)
 const dateRaw = z
 	.string()
 	.transform((input) => parser.fromString(input))

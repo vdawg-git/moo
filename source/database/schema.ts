@@ -1,13 +1,14 @@
+import { relations, sql } from "drizzle-orm"
 import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import type { ILyricsTag } from "music-metadata"
 import type { FilePath } from "#/types/types"
-import type { ArtistId, PlaylistId, TrackId } from "./types"
+import type { AlbumId, ArtistId, PlaylistId, TrackId } from "./types"
 
-export type TrackColumnKey = keyof (typeof tracksTable)["_"]["columns"]
-export type TrackColumn = (typeof tracksTable)["_"]["columns"][TrackColumnKey]
+export type TrackColumnKey = keyof (typeof tableTracks)["_"]["columns"]
+export type TrackColumn = (typeof tableTracks)["_"]["columns"][TrackColumnKey]
 /** File metadata used to detect wether the local track was modified. */
 export type TrackFileMeta = Pick<
-	typeof tracksTable.$inferSelect,
+	typeof tableTracks.$inferSelect,
 	"mtime" | "size"
 >
 
@@ -15,7 +16,7 @@ export type TrackFileMeta = Pick<
 // and https://bun.sh/docs/bundler/executables#embed-assets-files
 // there doesn't seem to an easy way to handle migrations automatically.
 // But as the database currently only acts as a cache, we can safely recreate it if the version doesnt match
-//! Increase this if you change the schema.
+//! Increase this if you change the schema in a breaking way.
 export const DATABASE_VERSION = 1
 export const versionTable = sqliteTable("version", {
 	version: integer()
@@ -25,7 +26,7 @@ export const versionTable = sqliteTable("version", {
 		.$default(() => DATABASE_VERSION)
 })
 
-export const tracksTable = sqliteTable("tracks", {
+export const tableTracks = sqliteTable("tracks", {
 	id: text().primaryKey().$type<TrackId>(),
 
 	/** What provides this track. Currently we only have `local` for local files.  */
@@ -45,13 +46,13 @@ export const tracksTable = sqliteTable("tracks", {
 	year: integer(),
 	/** Track title */
 	/** Track, maybe several artists written in a single string. */
-	artist: text().references(() => artistsTable.name, { onDelete: "cascade" }),
+	artist: text().references(() => tableArtists.name, { onDelete: "cascade" }),
 	/** Track album artists */
-	albumartist: text().references(() => artistsTable.name, {
+	albumartist: text().references(() => tableArtists.name, {
 		onDelete: "cascade"
 	}),
 	/** Album title */
-	album: text().references(() => albumsTable.id, { onDelete: "cascade" }),
+	album: text().references(() => tableAlbums.id, { onDelete: "cascade" }),
 	comment: text(),
 	genre: text(),
 	/** Filepath to the artwork */
@@ -163,38 +164,75 @@ export const tracksTable = sqliteTable("tracks", {
 	mtime: integer().notNull()
 })
 
-export const artistsTable = sqliteTable("artists", {
+export const relationsTrack = relations(tableTracks, ({ one }) => ({
+	album: one(tableAlbums, {
+		fields: [tableTracks.album, tableTracks.artist],
+		references: [tableAlbums.title, tableAlbums.artist]
+	}),
+	artist: one(tableArtists, {
+		relationName: "artist",
+		fields: [tableTracks.artist],
+		references: [tableArtists.name]
+	}),
+	albumArtist: one(tableArtists, {
+		relationName: "albumArtist",
+		fields: [tableTracks.albumartist],
+		references: [tableArtists.name]
+	})
+}))
+
+export const tableArtists = sqliteTable("artists", {
 	name: text().primaryKey().$type<ArtistId>(),
 	sort: text()
 })
-export type ArtistSimple = typeof artistsTable.$inferSelect
+export type ArtistSimple = typeof tableArtists.$inferSelect
 
-export const albumsTable = sqliteTable(
+export const relationsArtist = relations(tableArtists, ({ many }) => ({
+	tracks: many(tableTracks, { relationName: "artist" }),
+	albumArtistTracks: many(tableTracks, { relationName: "albumArtist" }),
+	albums: many(tableAlbums)
+}))
+
+export const tableAlbums = sqliteTable(
 	"albums",
 	{
 		title: text("title").notNull(),
-		artist: text("artist").references(() => artistsTable.name),
+		artist: text("artist").references(() => tableArtists.name, {
+			onDelete: "cascade"
+		}),
 		sort: text("sort"),
-		id: text().notNull().unique()
+		id: text().primaryKey().$type<AlbumId>()
 	},
 	(table) => [primaryKey({ name: "id", columns: [table.title, table.artist] })]
 )
-export type AlbumSimple = typeof albumsTable.$inferSelect
+export type AlbumSimple = typeof tableAlbums.$inferSelect
 
-export const movementsTable = sqliteTable("movements", {
+export const relationsAlbum = relations(tableAlbums, ({ one, many }) => ({
+	tracks: many(tableTracks),
+	artist: one(tableArtists, {
+		fields: [tableAlbums.artist],
+		references: [tableArtists.name]
+	})
+}))
+
+export const tableMovements = sqliteTable("movements", {
 	title: text().primaryKey()
 })
-export type MovementSimple = typeof albumsTable.$inferSelect
+export type MovementSimple = typeof tableAlbums.$inferSelect
 
-export const composersTable = sqliteTable("composers", {
+export const tableComposers = sqliteTable("composers", {
 	name: text().primaryKey(),
 	sort: text()
 })
-export type ComposerSimple = typeof albumsTable.$inferSelect
+export type ComposerSimple = typeof tableAlbums.$inferSelect
 
-/** Currently we only support smart-playlists. Might change, but prob not */
-export const playlistsTable = sqliteTable("playlists", {
+/**
+ * Currently we only support smart-playlists. Might change, but prob not.
+ * We might not need to save playlists in the database tbh
+ * TODO: think about removing playlists from the db, as we just query them directly anyway and use the FS to know what available
+ */
+export const tablePlaylists = sqliteTable("playlists", {
 	id: text().primaryKey().$type<PlaylistId>(),
 	displayName: text()
 })
-export type PlaylistSimple = typeof playlistsTable.$inferSelect
+export type PlaylistSimple = typeof tablePlaylists.$inferSelect

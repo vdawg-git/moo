@@ -14,6 +14,7 @@ import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
 import type { BunFile } from "bun"
 import type { FilePath } from "#/types/types"
+import type { Color } from "tuir"
 
 const zFilePath: z.Schema<FilePath> = z.string() as any
 export const schemaUrl =
@@ -45,7 +46,14 @@ export const appConfigSchema = z
 		icons: iconsSchema,
 
 		/** All keybindings. Default ones and those overriden by the user. */
-		keybindings: keybindingsSchema
+		keybindings: keybindingsSchema,
+
+		colors: z.object({
+			artists: z.string().default("blue" satisfies Color),
+			albums: z.string().default("cyan" satisfies Color),
+			playlists: z.string().default("magenta" satisfies Color),
+			commands: z.string().default("yellow" satisfies Color)
+		})
 	})
 	.strict()
 
@@ -57,7 +65,8 @@ const defaultConfig: z.input<typeof appConfigSchema> = {
 	watchDirectories: true,
 	version: "0.1",
 	icons: {},
-	keybindings: []
+	keybindings: [],
+	colors: {}
 }
 
 const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")

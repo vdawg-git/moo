@@ -16,10 +16,10 @@ import { appConfig } from "#/config/config"
 import { database } from "#/database/database"
 import { observeQuery } from "#/database/useQuery"
 import { keybindsState } from "#/keybindManager/keybindsState"
+import { enumarateError, logg } from "#/logs"
 import { addErrorNotification, appState } from "#/state/state"
-import type { RunnerItem } from "./runner"
-
-type SearchMode = "Playlists" | "Go to" | "Commands"
+import { openRunner, type RunnerItem } from "./runner"
+import { searchModes, searchModesEntries, type SearchMode } from "./consts"
 
 export function useRunnerItems(): {
 	setInput: (input: string | undefined) => void
@@ -83,20 +83,13 @@ function createGetRunnerItems(): {
 		shareReplay({ refCount: true })
 	)
 
+	// We get all possible results for each mode, not filtering anything yet,
+	// as we want to do fuzzy searching (which SQLite doesnt support)
 	const results$ = inputParsed$.pipe(
 		switchMap((input) => {
-			const query = match(input)
-				.with(
-					{ searchMode: "Commands" },
-					() => () => Promise.resolve(getRunnerCommands())
-				)
-				.with(
-					{ searchMode: P.union("Go to", "Playlists") },
-					() => getPossibleGotos
-				)
-				.exhaustive()
+			const queryRunnerItems = getQueryForRunnerItems(input.searchMode)
 
-			return observeQuery([input.searchMode, input.value], query)
+			return observeQuery(input.searchMode, queryRunnerItems)
 		}),
 		map((result) =>
 			// TODO handle errors
@@ -135,23 +128,7 @@ function createGetRunnerItems(): {
 }
 
 async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
-	const home: RunnerItem = {
-		id: "all-tracks",
-		label: "All tracks",
-		icon: appConfig.icons.playlist,
-		onSelect: () =>
-			appState.send({ type: "navigateTo", goTo: { route: "home" } })
-	}
-
-	const queue: RunnerItem = {
-		id: "queue-page",
-		label: "Queue",
-		icon: appConfig.icons.playlist,
-		onSelect: () =>
-			appState.send({ type: "navigateTo", goTo: { route: "queue" } })
-	}
-
-	const playlists = await Result.fromAsync(database.getPlaylists())
+	return Result.fromAsync(database.getPlaylists())
 		.map(
 			R.map(
 				({ displayName, id }) =>
@@ -171,30 +148,94 @@ async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
 			addErrorNotification("Failed to get playlists for search", error)
 		)
 		.getOrDefault([] as RunnerItem[])
-
-	return [home, ...playlists, queue]
 }
 
 function rawInputToPrefixed(input: string): ParsedInput {
-	return match(input.toLowerCase().trim())
-		.returnType<ParsedInput>()
+	const searchMode = searchModesEntries.find(([_, { prefix }]) =>
+		input.startsWith(prefix)
+	)
 
-		.with(P.string.startsWith(">"), (cInput) => ({
-			searchMode: "Commands",
-			value: cInput.slice(1).trim()
-		}))
-
-		.with(P.string.startsWith("p "), (pInput) => ({
-			searchMode: "Playlists",
-			value: pInput.slice(2).trim()
-		}))
-
-		.otherwise((value) => ({ searchMode: "Go to", value }))
+	return searchMode
+		? {
+				searchMode: searchMode[0],
+				value: input.slice(searchMode[1].prefix.length)
+			}
+		: { searchMode: "goTo", value: input }
 }
 
 type ParsedInput = {
 	searchMode: SearchMode
 	value: string
+}
+
+function getQueryForRunnerItems(
+	mode: SearchMode
+): () => Promise<readonly RunnerItem[]> {
+	return match(mode)
+		.returnType<() => Promise<readonly RunnerItem[]>>()
+
+		.with("commands", () => () => Promise.resolve(getRunnerCommands()))
+
+		.with(P.union("goTo", "playlists"), () => getGoTos)
+
+		.with(
+			"albums",
+			() => () =>
+				database
+					.getAlbums()
+					.map(
+						R.map(
+							(album) =>
+								({
+									id: album.id,
+									label: album.title,
+									icon: appConfig.icons.album,
+									onSelect: () =>
+										appState.send({
+											type: "navigateTo",
+											goTo: { route: "album", parameter: { id: album.id } }
+										})
+								}) satisfies RunnerItem
+						)
+					)
+					.onFailure((error) => {
+						addErrorNotification("Failed to get albums", error)
+						logg.error("Failed to get albums", {
+							error: enumarateError(error)
+						})
+					})
+					.getOrElse(() => [] as readonly RunnerItem[])
+		)
+
+		.with(
+			"artists",
+			() => () =>
+				database
+					.getArtists()
+					.map(
+						R.map(
+							(artist) =>
+								({
+									id: artist.name,
+									label: artist.name,
+									onSelect: () =>
+										appState.send({
+											type: "navigateTo",
+											goTo: { route: "artist", parameter: { id: artist.name } }
+										})
+								}) satisfies RunnerItem
+						)
+					)
+					.onFailure((error) => {
+						addErrorNotification("Failed to get artists", error)
+						logg.error("Failed to get artists", {
+							error: enumarateError(error)
+						})
+					})
+					.getOrElse(() => [] as readonly RunnerItem[])
+		)
+
+		.exhaustive()
 }
 
 /** A function because otherwise we have circular imports  */
@@ -211,6 +252,38 @@ function getRunnerCommands(): RunnerItem[] {
 		.toArray()
 }
 
-async function getPossibleGotos(): Promise<readonly RunnerItem[]> {
-	return getPlaylistRunnerItems()
+async function getGoTos(): Promise<readonly RunnerItem[]> {
+	const artists: RunnerItem = {
+		id: "go-to-artists",
+		label: "Artists",
+		icon: appConfig.icons.artist,
+		onSelect: () => openRunner(searchModes.artists.prefix)
+	}
+
+	const albums: RunnerItem = {
+		id: "go-to-albums",
+		label: "Albums",
+		icon: appConfig.icons.album,
+		onSelect: () => openRunner(searchModes.albums.prefix)
+	}
+
+	const home: RunnerItem = {
+		id: "all-tracks",
+		label: "All tracks",
+		icon: appConfig.icons.playlist,
+		onSelect: () =>
+			appState.send({ type: "navigateTo", goTo: { route: "home" } })
+	}
+
+	const queue: RunnerItem = {
+		id: "queue-page",
+		label: "Queue",
+		icon: appConfig.icons.playlist,
+		onSelect: () =>
+			appState.send({ type: "navigateTo", goTo: { route: "queue" } })
+	}
+
+	const playlist = await getPlaylistRunnerItems()
+
+	return [home, artists, albums, queue, ...playlist]
 }

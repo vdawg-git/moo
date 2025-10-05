@@ -22,12 +22,12 @@ import { enumarateError, logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
 import { supportedFormats } from "./formats"
 import type { TrackFileMeta } from "#/database/schema"
-import type { Database, TrackData, TrackId } from "#/database/types"
+import type { AppDatabase, TrackData, TrackId } from "#/database/types"
 import type { FilePath } from "#/types/types"
 
 export async function updateDatabase(
 	musicDirectories: readonly FilePath[],
-	database: Database
+	database: AppDatabase
 ): Promise<Result<void, Error | readonly Error[]>> {
 	return Result.fromAsync(scanMusicDirectories(musicDirectories)).map(
 		async (filePaths) => {
@@ -68,7 +68,7 @@ type BatchUpdate = Result<
 
 async function batchTrackUpdates(
 	filePaths: readonly FilePath[],
-	database: Database
+	database: AppDatabase
 ): Promise<BatchUpdate> {
 	const BATCH_AMOUNT = 25
 
@@ -161,7 +161,7 @@ const bufferWatcherTime = 6_000
 
 export function watchAndUpdateDatabase(
 	musicDirectories: readonly FilePath[],
-	database: Database
+	database: AppDatabase
 ): () => void {
 	const watcher$ = createMusicDirectoriesWatcher(musicDirectories)
 	const watcherRelease$ = watcher$.pipe(debounceTime(bufferWatcherTime))

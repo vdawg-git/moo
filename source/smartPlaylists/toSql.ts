@@ -17,11 +17,10 @@ import { match, P } from "ts-pattern"
 import { type AsyncResult, Result } from "typescript-result"
 import { selectorBaseTrack } from "#/database/selectors"
 import { nullsToUndefined } from "#/helpers"
-import { type TrackColumn, tracksTable } from "../database/schema"
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
+import { type TrackColumn, tableTracks } from "../database/schema"
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import type { Simplify } from "type-fest"
-import type { BaseTrack } from "#/database/types"
+import type { BaseTrack, DrizzleDatabase } from "#/database/types"
 import type {
 	BooleanSchema,
 	DateSchema,
@@ -33,7 +32,7 @@ import type {
 } from "#/smartPlaylists/schema"
 
 export function getSmartPlaylistTracks(
-	database: BunSQLiteDatabase,
+	database: DrizzleDatabase,
 	schema: PlaylistBlueprint
 ): AsyncResult<BaseTrack[], unknown> {
 	const { rules } = schema
@@ -43,7 +42,7 @@ export function getSmartPlaylistTracks(
 	return Result.fromAsyncCatching(
 		database
 			.select(selectorBaseTrack)
-			.from(tracksTable)
+			.from(tableTracks)
 			// nessecary as otherwise Drizzle doesnt know the type
 			.where(and(...(filterGroups as unknown as undefined[])))
 	).map(R.map(nullsToUndefined))
@@ -65,8 +64,6 @@ function transfromRuleGroup(groupRule: MetaOperator): SQL {
 	return combine(...subqueries) ?? sql`1=1`
 }
 
-/**
- */
 type ColumnFilter = (column: TrackColumn) => SQL | undefined
 
 /**
@@ -80,7 +77,7 @@ function transformRuleColumn(schema: TrackColumnSchema): SQL {
 		.with({ _type: "string" }, rulesString)
 		.exhaustive()
 
-	return applyFilter(tracksTable[schema.column]) ?? sql`1=1`
+	return applyFilter(tableTracks[schema.column]) ?? sql`1=1`
 }
 
 function rulesBoolean(schema: BooleanSchema): ColumnFilter {

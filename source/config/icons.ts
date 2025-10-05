@@ -28,6 +28,13 @@ export const iconsSchema = z
 			.string()
 			.default("")
 			.describe("Icon used to indicate a playlist."),
+
+		album: z.string().default("󰀥").describe("Icon used to indicate an album."),
+		artist: z
+			.string()
+			.default("")
+			.describe("Icon used to indicate an artist."),
+
 		command: z
 			.string()
 			.default("❯")

@@ -2,7 +2,7 @@ import { mkdir, readdir } from "node:fs/promises"
 import path from "node:path"
 import { type ChokidarOptions, watch } from "chokidar"
 import { distinctUntilChanged, Observable, share } from "rxjs"
-import { Result } from "typescript-result"
+import { Result, type AsyncResult } from "typescript-result"
 import { DATA_DIRECTORY, playlistsDirectory } from "./constants"
 import { examplePlaylist } from "./smartPlaylists/examplePlaylist"
 import type { Stats } from "node:fs"
@@ -50,16 +50,20 @@ export function createWatcher(
  *
  * @return true if the directory existed, otherwise false
  * */
-export async function ensureDirectoryExists(
+export function ensureDirectoryExists(
 	directoryPath: FilePath
-): Promise<Result<boolean, Error>> {
-	const exists = await checkDirectoryExists(directoryPath)
+): AsyncResult<boolean, Error> {
+	return Result.fromAsyncCatching(
+		(async () => {
+			const exists = await checkDirectoryExists(directoryPath)
 
-	return exists
-		? Result.ok(exists)
-		: Result.fromAsyncCatching(mkdir(directoryPath, { recursive: true })).map(
-				() => false
-			)
+			return exists
+				? Result.ok(exists)
+				: Result.fromAsyncCatching(
+						mkdir(directoryPath, { recursive: true })
+					).map(() => false)
+		})()
+	)
 }
 
 async function checkDirectoryExists(directoryPath: FilePath): Promise<boolean> {
@@ -73,11 +77,10 @@ async function checkDirectoryExists(directoryPath: FilePath): Promise<boolean> {
  * including an example playlist
  */
 export async function setupFiles() {
-	await ensureDirectoryExists(DATA_DIRECTORY)
+	const _ = await ensureDirectoryExists(DATA_DIRECTORY).getOrThrow()
 
-	const playlistsDirExists = (
-		await ensureDirectoryExists(playlistsDirectory)
-	).getOrThrow()
+	const playlistsDirExists =
+		await ensureDirectoryExists(playlistsDirectory).getOrThrow()
 
 	if (!playlistsDirExists) {
 		return Bun.write(

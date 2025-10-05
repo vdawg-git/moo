@@ -14,7 +14,7 @@ type PlaylistProps = {
 	id: PlaylistId
 }
 
-export function Playlist({ id }: PlaylistProps) {
+export function PlaylistPage({ id }: PlaylistProps) {
 	const query = useCallback(() => database.getPlaylist(id), [id])
 	const response = useQuery(createQueryKey.playlist(id), query)
 	const playingIndex = usePlayingIndex({ type: "playlist", id })

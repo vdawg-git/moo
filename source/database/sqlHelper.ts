@@ -1,6 +1,6 @@
 import { getTableColumns, type SQL, sql } from "drizzle-orm"
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
 import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
+import type { DrizzleDatabase } from "./types"
 
 /**
  * Upsert a table, updating the columns if the key already exists.
@@ -19,7 +19,7 @@ export async function upsert<
 	/** First key should be the primary key, then other unique keys */
 	primaryKey: E,
 	database:
-		| BunSQLiteDatabase
+		| DrizzleDatabase
 		| SQLiteTransaction<
 				"sync",
 				void,

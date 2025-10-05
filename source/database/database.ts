@@ -1,5 +1,5 @@
 import { eq, inArray, notInArray, or } from "drizzle-orm"
-import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
+import { drizzle } from "drizzle-orm/bun-sqlite"
 import * as R from "remeda"
 import { Subject } from "rxjs"
 import { Result } from "typescript-result"
@@ -8,36 +8,54 @@ import { nullsToUndefined } from "#/helpers.js"
 import { enumarateError, logg } from "#/logs.js"
 import { getPlaylistBlueprintFromId } from "#/smartPlaylists/parsing.js"
 import { getSmartPlaylistTracks } from "#/smartPlaylists/toSql.js"
-// @ts-expect-error
-import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 import { createLocalPlayer } from "../player/player.js"
 import { databaseLogger } from "./logger.js"
 import { sortTracks } from "./naturalSorting.js"
+import * as schema from "./schema.js"
 import {
-	albumsTable,
-	artistsTable,
-	composersTable,
 	DATABASE_VERSION,
-	movementsTable,
-	playlistsTable,
 	type TrackFileMeta,
-	tracksTable,
+	tableAlbums,
+	tableArtists,
+	tableComposers,
+	tableMovements,
+	tablePlaylists,
+	tableTracks,
 	versionTable
 } from "./schema.js"
-import { selectorBaseTrack, selectorTrackSort } from "./selectors.js"
+import {
+	selectorBaseTrack,
+	selectorBaseTrackForQuery,
+	selectorTrackSort
+} from "./selectors.js"
 import { upsert } from "./sqlHelper.js"
 import {
 	type AlbumId,
+	type AppDatabase,
 	type ArtistId,
-	type Database,
+	type DrizzleDatabase,
 	type Playlist,
 	Track,
 	type TrackId
 } from "./types.js"
 
-export const database = connectDatabase()
+// @ts-expect-error
+import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 
-function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
+export const database = await connectDatabase()
+
+async function connectDatabase(): Promise<AppDatabase> {
+	logg.info("database init", {
+		databasePath: databasePath,
+		dbVersion: DATABASE_VERSION,
+		isDev: IS_DEV,
+		dataDir: DATA_DIRECTORY
+	})
+
+	const db = drizzle(databasePath, { logger: databaseLogger, schema })
+
+	const _waitForInit = await initDatabase(db)
+
 	const changed$ = new Subject<string>()
 
 	// A lot of the api is not needed yet,
@@ -47,8 +65,8 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 			Result.fromAsyncCatching(
 				db
 					.select({ ...selectorBaseTrack })
-					.from(tracksTable)
-					.where(eq(tracksTable.id, id))
+					.from(tableTracks)
+					.where(eq(tableTracks.id, id))
 					.then(([track]) => track && nullsToUndefined(track))
 			),
 
@@ -59,10 +77,10 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 						...selectorBaseTrack,
 						...selectorTrackSort
 					})
-					.from(tracksTable)
+					.from(tableTracks)
 					.where(
 						ids.length > 0
-							? inArray(tracksTable.id, ids as TrackId[])
+							? inArray(tableTracks.id, ids as TrackId[])
 							: undefined
 					)
 			)
@@ -71,18 +89,18 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 
 		getTracksFileMetadata: async (ids) => {
 			const toSelect = {
-				mtime: tracksTable.mtime,
-				size: tracksTable.size
+				mtime: tableTracks.mtime,
+				size: tableTracks.size
 			} satisfies Record<keyof TrackFileMeta, unknown>
 
 			return Result.fromAsyncCatching(
 				db
 					.select({
-						id: tracksTable.id,
+						id: tableTracks.id,
 						...toSelect
 					})
-					.from(tracksTable)
-					.where(ids && inArray(tracksTable.id, ids as TrackId[]))
+					.from(tableTracks)
+					.where(ids && inArray(tableTracks.id, ids as TrackId[]))
 			).map(
 				R.reduce(
 					(accumulator, current) => {
@@ -116,14 +134,13 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 					)
 			}),
 
-		getPlaylists: async (ids) => {
-			return Result.fromAsyncCatching(
+		getPlaylists: (ids) =>
+			Result.fromAsyncCatching(
 				db
 					.select()
-					.from(playlistsTable)
-					.where(ids && or(...ids.map((id) => eq(playlistsTable.id, id))))
-			)
-		},
+					.from(tablePlaylists)
+					.where(ids && or(...ids.map((id) => eq(tablePlaylists.id, id))))
+			),
 
 		upsertSmartPlaylist: (data) => {
 			return upsertSmartPlaylist(db)(data).onSuccess(() => changed$.next(""))
@@ -131,7 +148,7 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 
 		deletePlaylist: (id) => {
 			return Result.fromAsyncCatching(
-				db.delete(playlistsTable).where(eq(playlistsTable.id, id))
+				db.delete(tablePlaylists).where(eq(tablePlaylists.id, id))
 			)
 				.map(() => id)
 				.onSuccess(() => changed$.next(""))
@@ -157,72 +174,53 @@ function connectDatabaseUnproxied(db: BunSQLiteDatabase): Database {
 		deleteTracksInverted: async (ids) =>
 			Result.fromAsyncCatching(
 				db
-					.delete(tracksTable)
-					.where(notInArray(tracksTable.id, ids as TrackId[]))
+					.delete(tableTracks)
+					.where(notInArray(tableTracks.id, ids as TrackId[]))
 			),
 
-		getAlbum: async () => {
-			throw new Error("getAlbum is not implemented")
-		},
-		getAlbums: async (_ids = []) => {
-			throw new Error("getAlbums is not implemented")
-		},
-		getArtist: async () => {
-			throw new Error("getArtist is not implemented")
-		},
-		getArtists: async () => {
-			throw new Error("getArtists is not implemented")
-		},
+		getAlbum: (id: AlbumId) =>
+			Result.fromAsyncCatching(
+				db.query.tableAlbums.findFirst({
+					where: (columns, { eq }) => eq(columns.id, id),
+					with: {
+						tracks: { columns: selectorBaseTrackForQuery }
+					}
+				})
+			).map((result) => result && nullsToUndefined(result)),
+
+		getAlbums: (ids = []) =>
+			Result.fromAsyncCatching(
+				db.query.tableAlbums.findMany({
+					where: (columns, { inArray }) =>
+						ids.length > 0 ? inArray(columns.id, ids) : undefined
+				})
+			),
+
+		getArtist: (name) =>
+			Result.fromAsyncCatching(
+				db.query.tableArtists.findFirst({
+					where: (columns, { eq }) => eq(columns.name, name),
+					with: {
+						albums: {
+							with: { tracks: { columns: selectorBaseTrackForQuery } }
+						},
+						tracks: {
+							columns: selectorBaseTrackForQuery
+						}
+					}
+				})
+			).map((result) => result && nullsToUndefined(result)),
+
+		getArtists: (names = []) =>
+			Result.fromAsyncCatching(
+				db.query.tableArtists.findMany({
+					where: (columns, { inArray }) =>
+						names.length > 0 ? inArray(columns.name, names) : undefined
+				})
+			),
 
 		changed$
-	} satisfies Database
-}
-
-/**
- * Proxies access to the database object,
- * so that all methods first await the initialization/migration
- * of the database
- */
-function connectDatabase(): Database {
-	logg.info("database init", {
-		databasePath: databasePath,
-		dbVersion: DATABASE_VERSION,
-		isDev: IS_DEV,
-		dataDir: DATA_DIRECTORY
-	})
-
-	const db = drizzle(databasePath, { logger: databaseLogger })
-
-	const waitForInit = initDatabase(db)
-	const base = connectDatabaseUnproxied(db)
-
-	/**
-	 * We need this as the proxy returns
-	 * a new function on each get,
-	 * defeating Reacts hook system
-	 */
-
-	// biome-ignore lint/complexity/noBannedTypes: We want to type "any" function
-	const stableIdentityFunctions: Record<string | symbol, Function> = {}
-
-	return new Proxy(base, {
-		get: (target, prop) => {
-			// @ts-expect-error
-			const gotten = target[prop]
-
-			if (typeof gotten === "function") {
-				if (!stableIdentityFunctions[prop]) {
-					stableIdentityFunctions[prop] = async (...args: unknown[]) => {
-						return waitForInit.then(() => gotten(...args))
-					}
-				}
-
-				return stableIdentityFunctions[prop]
-			}
-
-			return gotten
-		}
-	})
+	} satisfies AppDatabase
 }
 
 const localPlayer = createLocalPlayer()
@@ -233,7 +231,7 @@ export class LocalTrack extends Track {
 	}
 }
 
-const addTracks: (database: BunSQLiteDatabase) => Database["upsertTracks"] = (
+const addTracks: (database: DrizzleDatabase) => AppDatabase["upsertTracks"] = (
 	db
 ) => {
 	return async (tracks) => {
@@ -241,18 +239,18 @@ const addTracks: (database: BunSQLiteDatabase) => Database["upsertTracks"] = (
 			return Result.ok()
 		}
 
-		const movements: (typeof movementsTable.$inferInsert)[] = tracks
+		const movements: (typeof tableMovements.$inferInsert)[] = tracks
 			.flatMap((track) => track.movement ?? [])
 			.map((title) => ({ title }))
 
-		const artists: (typeof artistsTable.$inferInsert)[] = tracks.flatMap(
+		const artists: (typeof tableArtists.$inferInsert)[] = tracks.flatMap(
 			(track) =>
 				track.artist
 					? { name: track.artist as ArtistId, sort: track.artistsort }
 					: []
 		)
 
-		const albumArtists: (typeof artistsTable.$inferInsert)[] = tracks.flatMap(
+		const albumArtists: (typeof tableArtists.$inferInsert)[] = tracks.flatMap(
 			(track) =>
 				track.albumartist
 					? {
@@ -263,19 +261,22 @@ const addTracks: (database: BunSQLiteDatabase) => Database["upsertTracks"] = (
 		)
 		const artistsToAdd = mergeDepuplicate([...artists, ...albumArtists], "name")
 
-		const albums: (typeof albumsTable.$inferInsert)[] = tracks.flatMap(
-			(track) =>
-				track.album
+		const albums: (typeof tableAlbums.$inferInsert)[] = tracks.flatMap(
+			(track) => {
+				const artist = track.albumartist || track.artist
+
+				return track.album
 					? {
-							title: track.album as AlbumId,
+							title: track.album,
+							artist,
 							sort: track.albumsort,
-							// id reference problem. See in schema.ts
-							id: "" as AlbumId
+							id: (track.album + (artist ?? "")) as AlbumId
 						}
 					: []
+			}
 		)
 
-		const composer: (typeof composersTable.$inferInsert)[] = tracks.flatMap(
+		const composer: (typeof tableComposers.$inferInsert)[] = tracks.flatMap(
 			(track) =>
 				track.composer ? { name: track.composer, sort: track.composersort } : []
 		)
@@ -284,23 +285,23 @@ const addTracks: (database: BunSQLiteDatabase) => Database["upsertTracks"] = (
 			db.transaction(
 				async (tx) => {
 					if (artistsToAdd.length > 0) {
-						await upsert(artistsTable, artistsToAdd, "name", tx)
+						await upsert(tableArtists, artistsToAdd, "name", tx)
 					}
 
 					if (movements.length > 0) {
-						await upsert(movementsTable, movements, "title", tx)
+						await upsert(tableMovements, movements, "title", tx)
 					}
 
 					if (albums.length > 0) {
-						await upsert(albumsTable, albums, "id", tx)
+						await upsert(tableAlbums, albums, "id", tx)
 					}
 
 					if (composer.length > 0) {
-						await upsert(composersTable, composer, "name", tx)
+						await upsert(tableComposers, composer, "name", tx)
 					}
 
 					if (tracks.length > 0) {
-						await upsert(tracksTable, tracks, "id", tx)
+						await upsert(tableTracks, tracks, "id", tx)
 					}
 				},
 				{ behavior: "immediate" }
@@ -310,11 +311,11 @@ const addTracks: (database: BunSQLiteDatabase) => Database["upsertTracks"] = (
 }
 
 function upsertSmartPlaylist(
-	database: BunSQLiteDatabase
-): Database["upsertSmartPlaylist"] {
+	database: DrizzleDatabase
+): AppDatabase["upsertSmartPlaylist"] {
 	return ({ id, schema }) =>
 		Result.fromAsyncCatching(
-			upsert(playlistsTable, [{ id, displayName: schema.name }], "id", database)
+			upsert(tablePlaylists, [{ id, displayName: schema.name }], "id", database)
 		)
 }
 
@@ -349,7 +350,7 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
  * Can throw and shoudn't be handled,
  * as the database setup is needed for everything
  */
-async function initDatabase(db: BunSQLiteDatabase): Promise<void> {
+async function initDatabase(db: DrizzleDatabase): Promise<void> {
 	const shouldRecreate = await db
 		.select()
 		.from(versionTable)

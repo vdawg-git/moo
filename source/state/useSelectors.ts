@@ -8,7 +8,7 @@ import type { AppState, PlaybackSource } from "./types"
 
 // /
 // Hooks for the global state.
-// You can also just use `useSelector` from XState directly
+// You can also just use `useSelector` from XState directly, but those are nicer
 // /
 
 export function useCurrentTrack(): BaseTrack | undefined {
