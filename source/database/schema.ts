@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm"
+import { relations } from "drizzle-orm"
 import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import type { ILyricsTag } from "music-metadata"
 import type { FilePath } from "#/types/types"

@@ -18,8 +18,8 @@ import { observeQuery } from "#/database/useQuery"
 import { keybindsState } from "#/keybindManager/keybindsState"
 import { enumarateError, logg } from "#/logs"
 import { addErrorNotification, appState } from "#/state/state"
+import { type SearchMode, searchModes, searchModesEntries } from "./consts"
 import { openRunner, type RunnerItem } from "./runner"
-import { searchModes, searchModesEntries, type SearchMode } from "./consts"
 
 export function useRunnerItems(): {
 	setInput: (input: string | undefined) => void

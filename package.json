@@ -14,6 +14,7 @@
 		"compile": "NODE_ENV=production bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
 		"release": "dotenv -- release-it",
 		"types": "tsc",
+		"lint": "biome check",
 		"postinstall": "bun2nix -o ./nix/bun.nix || echo 'bun2nix not installed. skipping..'",
 		"drizzleStudio": "DEV=true bunx drizzle-kit studio"
 	},

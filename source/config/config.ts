@@ -13,8 +13,8 @@ import { enumarateError, logg } from "#/logs"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
 import type { BunFile } from "bun"
-import type { FilePath } from "#/types/types"
 import type { Color } from "tuir"
+import type { FilePath } from "#/types/types"
 
 const zFilePath: z.Schema<FilePath> = z.string() as any
 export const schemaUrl =

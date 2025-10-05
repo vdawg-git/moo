@@ -1,4 +1,4 @@
-import { Text, type Color } from "tuir"
+import { type Color, Text } from "tuir"
 import { appConfig } from "#/config/config"
 
 type PlaylistTitleProps = {

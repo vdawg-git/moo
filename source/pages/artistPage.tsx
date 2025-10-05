@@ -3,13 +3,13 @@ import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
+import { appConfig } from "#/config/config"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { createQueryKey } from "#/queryKey"
 import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import type { ArtistId } from "#/database/types"
-import { appConfig } from "#/config/config"
 
 type ArtistPageProps = {
 	id: ArtistId

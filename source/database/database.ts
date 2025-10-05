@@ -8,6 +8,8 @@ import { nullsToUndefined } from "#/helpers.js"
 import { enumarateError, logg } from "#/logs.js"
 import { getPlaylistBlueprintFromId } from "#/smartPlaylists/parsing.js"
 import { getSmartPlaylistTracks } from "#/smartPlaylists/toSql.js"
+// @ts-expect-error
+import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 import { createLocalPlayer } from "../player/player.js"
 import { databaseLogger } from "./logger.js"
 import { sortTracks } from "./naturalSorting.js"
@@ -38,9 +40,6 @@ import {
 	Track,
 	type TrackId
 } from "./types.js"
-
-// @ts-expect-error
-import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 
 export const database = await connectDatabase()
 
