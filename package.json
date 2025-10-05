@@ -14,17 +14,18 @@
 		"compile": "NODE_ENV=production bun build --compile --minify ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
 		"release": "dotenv -- release-it",
 		"types": "tsc",
-		"postinstall": "bun2nix -o ./nix/bun.nix || echo 'bun2nix not installed. skipping..'"
+		"postinstall": "bun2nix -o ./nix/bun.nix || echo 'bun2nix not installed. skipping..'",
+		"drizzleStudio": "DEV=true bunx drizzle-kit studio"
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "^0.11.0",
 		"@jellybrick/mpris-service": "^2.1.5",
-		"@libsql/client": "^0.14.0",
+		"@libsql/client": "^0.15.15",
 		"@xstate/store": "^3.9.2",
 		"any-date-parser": "^2.2.3",
 		"chokidar": "^4.0.3",
 		"cowsay": "^1.6.0",
-		"drizzle-orm": "0.40.0",
+		"drizzle-orm": "0.44.6",
 		"env-paths": "^3.0.0",
 		"fuse.js": "^7.1.0",
 		"json5": "^2.2.3",

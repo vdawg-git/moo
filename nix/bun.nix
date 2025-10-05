@@ -614,27 +614,27 @@
   };
   "@libsql/client" = {
     out_path = "@libsql/client";
-    name = "@libsql/client@0.14.0";
-    url = "https://registry.npmjs.org/@libsql/client/-/client-0.14.0.tgz";
-    hash = "sha512-/9HEKfn6fwXB5aTEEoMeFh4CtG0ZzbncBb1e++OCdVpgKZ/xyMsIVYXm0w7Pv4RUel803vE6LwniB3PqD72R0Q==";
+    name = "@libsql/client@0.15.15";
+    url = "https://registry.npmjs.org/@libsql/client/-/client-0.15.15.tgz";
+    hash = "sha512-twC0hQxPNHPKfeOv3sNT6u2pturQjLcI+CnpTM0SjRpocEGgfiZ7DWKXLNnsothjyJmDqEsBQJ5ztq9Wlu470w==";
   };
   "@libsql/core" = {
     out_path = "@libsql/core";
-    name = "@libsql/core@0.14.0";
-    url = "https://registry.npmjs.org/@libsql/core/-/core-0.14.0.tgz";
-    hash = "sha512-nhbuXf7GP3PSZgdCY2Ecj8vz187ptHlZQ0VRc751oB2C1W8jQUXKKklvt7t1LJiUTQBVJuadF628eUk+3cRi4Q==";
+    name = "@libsql/core@0.15.15";
+    url = "https://registry.npmjs.org/@libsql/core/-/core-0.15.15.tgz";
+    hash = "sha512-C88Z6UKl+OyuKKPwz224riz02ih/zHYI3Ho/LAcVOgjsunIRZoBw7fjRfaH9oPMmSNeQfhGklSG2il1URoOIsA==";
   };
   "@libsql/darwin-arm64" = {
     out_path = "@libsql/darwin-arm64";
-    name = "@libsql/darwin-arm64@0.4.7";
-    url = "https://registry.npmjs.org/@libsql/darwin-arm64/-/darwin-arm64-0.4.7.tgz";
-    hash = "sha512-yOL742IfWUlUevnI5PdnIT4fryY3LYTdLm56bnY0wXBw7dhFcnjuA7jrH3oSVz2mjZTHujxoITgAE7V6Z+eAbg==";
+    name = "@libsql/darwin-arm64@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/darwin-arm64/-/darwin-arm64-0.5.22.tgz";
+    hash = "sha512-4B8ZlX3nIDPndfct7GNe0nI3Yw6ibocEicWdC4fvQbSs/jdq/RC2oCsoJxJ4NzXkvktX70C1J4FcmmoBy069UA==";
   };
   "@libsql/darwin-x64" = {
     out_path = "@libsql/darwin-x64";
-    name = "@libsql/darwin-x64@0.4.7";
-    url = "https://registry.npmjs.org/@libsql/darwin-x64/-/darwin-x64-0.4.7.tgz";
-    hash = "sha512-ezc7V75+eoyyH07BO9tIyJdqXXcRfZMbKcLCeF8+qWK5nP8wWuMcfOVywecsXGRbT99zc5eNra4NEx6z5PkSsA==";
+    name = "@libsql/darwin-x64@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/darwin-x64/-/darwin-x64-0.5.22.tgz";
+    hash = "sha512-ny2HYWt6lFSIdNFzUFIJ04uiW6finXfMNJ7wypkAD8Pqdm6nAByO+Fdqu8t7sD0sqJGeUCiOg480icjyQ2/8VA==";
   };
   "@libsql/hrana-client" = {
     out_path = "@libsql/hrana-client";
@@ -660,35 +660,47 @@
     url = "https://registry.npmjs.org/ws/-/ws-8.18.0.tgz";
     hash = "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==";
   };
+  "@libsql/linux-arm-gnueabihf" = {
+    out_path = "@libsql/linux-arm-gnueabihf";
+    name = "@libsql/linux-arm-gnueabihf@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/linux-arm-gnueabihf/-/linux-arm-gnueabihf-0.5.22.tgz";
+    hash = "sha512-3Uo3SoDPJe/zBnyZKosziRGtszXaEtv57raWrZIahtQDsjxBVjuzYQinCm9LRCJCUT5t2r5Z5nLDPJi2CwZVoA==";
+  };
+  "@libsql/linux-arm-musleabihf" = {
+    out_path = "@libsql/linux-arm-musleabihf";
+    name = "@libsql/linux-arm-musleabihf@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/linux-arm-musleabihf/-/linux-arm-musleabihf-0.5.22.tgz";
+    hash = "sha512-LCsXh07jvSojTNJptT9CowOzwITznD+YFGGW+1XxUr7fS+7/ydUrpDfsMX7UqTqjm7xG17eq86VkWJgHJfvpNg==";
+  };
   "@libsql/linux-arm64-gnu" = {
     out_path = "@libsql/linux-arm64-gnu";
-    name = "@libsql/linux-arm64-gnu@0.4.7";
-    url = "https://registry.npmjs.org/@libsql/linux-arm64-gnu/-/linux-arm64-gnu-0.4.7.tgz";
-    hash = "sha512-WlX2VYB5diM4kFfNaYcyhw5y+UJAI3xcMkEUJZPtRDEIu85SsSFrQ+gvoKfcVh76B//ztSeEX2wl9yrjF7BBCA==";
+    name = "@libsql/linux-arm64-gnu@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/linux-arm64-gnu/-/linux-arm64-gnu-0.5.22.tgz";
+    hash = "sha512-KSdnOMy88c9mpOFKUEzPskSaF3VLflfSUCBwas/pn1/sV3pEhtMF6H8VUCd2rsedwoukeeCSEONqX7LLnQwRMA==";
   };
   "@libsql/linux-arm64-musl" = {
     out_path = "@libsql/linux-arm64-musl";
-    name = "@libsql/linux-arm64-musl@0.4.7";
-    url = "https://registry.npmjs.org/@libsql/linux-arm64-musl/-/linux-arm64-musl-0.4.7.tgz";
-    hash = "sha512-6kK9xAArVRlTCpWeqnNMCoXW1pe7WITI378n4NpvU5EJ0Ok3aNTIC2nRPRjhro90QcnmLL1jPcrVwO4WD1U0xw==";
+    name = "@libsql/linux-arm64-musl@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/linux-arm64-musl/-/linux-arm64-musl-0.5.22.tgz";
+    hash = "sha512-mCHSMAsDTLK5YH//lcV3eFEgiR23Ym0U9oEvgZA0667gqRZg/2px+7LshDvErEKv2XZ8ixzw3p1IrBzLQHGSsw==";
   };
   "@libsql/linux-x64-gnu" = {
     out_path = "@libsql/linux-x64-gnu";
-    name = "@libsql/linux-x64-gnu@0.4.7";
-    url = "https://registry.npmjs.org/@libsql/linux-x64-gnu/-/linux-x64-gnu-0.4.7.tgz";
-    hash = "sha512-CMnNRCmlWQqqzlTw6NeaZXzLWI8bydaXDke63JTUCvu8R+fj/ENsLrVBtPDlxQ0wGsYdXGlrUCH8Qi9gJep0yQ==";
+    name = "@libsql/linux-x64-gnu@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/linux-x64-gnu/-/linux-x64-gnu-0.5.22.tgz";
+    hash = "sha512-kNBHaIkSg78Y4BqAdgjcR2mBilZXs4HYkAmi58J+4GRwDQZh5fIUWbnQvB9f95DkWUIGVeenqLRFY2pcTmlsew==";
   };
   "@libsql/linux-x64-musl" = {
     out_path = "@libsql/linux-x64-musl";
-    name = "@libsql/linux-x64-musl@0.4.7";
-    url = "https://registry.npmjs.org/@libsql/linux-x64-musl/-/linux-x64-musl-0.4.7.tgz";
-    hash = "sha512-nI6tpS1t6WzGAt1Kx1n1HsvtBbZ+jHn0m7ogNNT6pQHZQj7AFFTIMeDQw/i/Nt5H38np1GVRNsFe99eSIMs9XA==";
+    name = "@libsql/linux-x64-musl@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/linux-x64-musl/-/linux-x64-musl-0.5.22.tgz";
+    hash = "sha512-UZ4Xdxm4pu3pQXjvfJiyCzZop/9j/eA2JjmhMaAhe3EVLH2g11Fy4fwyUp9sT1QJYR1kpc2JLuybPM0kuXv/Tg==";
   };
   "@libsql/win32-x64-msvc" = {
     out_path = "@libsql/win32-x64-msvc";
-    name = "@libsql/win32-x64-msvc@0.4.7";
-    url = "https://registry.npmjs.org/@libsql/win32-x64-msvc/-/win32-x64-msvc-0.4.7.tgz";
-    hash = "sha512-7pJzOWzPm6oJUxml+PCDRzYQ4A1hTMHAciTAHfFK4fkbDZX33nWPVG7Y3vqdKtslcwAzwmrNDc6sXy2nwWnbiw==";
+    name = "@libsql/win32-x64-msvc@0.5.22";
+    url = "https://registry.npmjs.org/@libsql/win32-x64-msvc/-/win32-x64-msvc-0.5.22.tgz";
+    hash = "sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==";
   };
   "@neon-rs/load" = {
     out_path = "@neon-rs/load";
@@ -920,9 +932,9 @@
   };
   "@xstate/store" = {
     out_path = "@xstate/store";
-    name = "@xstate/store@3.9.2";
-    url = "https://registry.npmjs.org/@xstate/store/-/store-3.9.2.tgz";
-    hash = "sha512-wOMS4WNrDA3STbO8JtGnOvFdXlIG4rCRsWas7MNljFm87lQUIL3dj7yQ2Smb5WQq/M88gYLd9Ju2d+cyLBRt1Q==";
+    name = "@xstate/store@3.9.3";
+    url = "https://registry.npmjs.org/@xstate/store/-/store-3.9.3.tgz";
+    hash = "sha512-jI/C99E96r3ZXbj8NXKOXyR9tQvRuA5tPnapYhw8mqbgrRLzPWfUSMd2EUm/sFEg/WoHw8CMa1Crt1lJ3ceGVQ==";
   };
   "agent-base" = {
     out_path = "agent-base";
@@ -1494,9 +1506,9 @@
   };
   "drizzle-orm" = {
     out_path = "drizzle-orm";
-    name = "drizzle-orm@0.40.0";
-    url = "https://registry.npmjs.org/drizzle-orm/-/drizzle-orm-0.40.0.tgz";
-    hash = "sha512-7ptk/HQiMSrEZHnAsSlBESXWj52VwgMmyTEfoNmpNN2ZXpcz13LwHfXTIghsAEud7Z5UJhDOp8U07ujcqme7wg==";
+    name = "drizzle-orm@0.44.6";
+    url = "https://registry.npmjs.org/drizzle-orm/-/drizzle-orm-0.44.6.tgz";
+    hash = "sha512-uy6uarrrEOc9K1u5/uhBFJbdF5VJ5xQ/Yzbecw3eAYOunv5FDeYkR2m8iitocdHBOHbvorviKOW5GVw0U1j4LQ==";
   };
   "dunder-proto" = {
     out_path = "dunder-proto";
@@ -2378,9 +2390,9 @@
   };
   "libsql" = {
     out_path = "libsql";
-    name = "libsql@0.4.7";
-    url = "https://registry.npmjs.org/libsql/-/libsql-0.4.7.tgz";
-    hash = "sha512-T9eIRCs6b0J1SHKYIvD8+KCJMcWZ900iZyxdnSCdqxN12Z1ijzT+jY5nrk72Jw4B0HGzms2NgpryArlJqvc3Lw==";
+    name = "libsql@0.5.22";
+    url = "https://registry.npmjs.org/libsql/-/libsql-0.5.22.tgz";
+    hash = "sha512-NscWthMQt7fpU8lqd7LXMvT9pi+KhhmTHAJWUB/Lj6MWa0MKFv0F2V4C6WKKpjCVZl0VwcDz4nOI3CyaT1DDiA==";
   };
   "lines-and-columns" = {
     out_path = "lines-and-columns";
@@ -3456,9 +3468,9 @@
       "tsc" = "../typescript/bin/tsc";
       "tsserver" = "../typescript/bin/tsserver";
     };
-    name = "typescript@5.7.3";
-    url = "https://registry.npmjs.org/typescript/-/typescript-5.7.3.tgz";
-    hash = "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==";
+    name = "typescript@5.9.3";
+    url = "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz";
+    hash = "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==";
   };
   "typescript-result" = {
     out_path = "typescript-result";
