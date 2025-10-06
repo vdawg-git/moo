@@ -103,7 +103,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		// but maybe there is another registration with different keybindings in my config
 		// Need to check later
 		const toUnregister =
-			mode === "Commands" && pickCommands(["runner.openCommands"])
+			mode === "commands" && pickCommands(["runner.openCommands"])
 
 		if (toUnregister) {
 			unregisterKeybinds(toUnregister)
