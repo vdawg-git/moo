@@ -15,6 +15,10 @@ import { keybindingsSchema } from "./keybindings"
 import type { BunFile } from "bun"
 import type { Color } from "tuir"
 import type { FilePath } from "#/types/types"
+import { getTableColumns } from "drizzle-orm"
+import { tableTracks } from "#/database/schema"
+
+const trackColumnNames = Object.keys(getTableColumns(tableTracks))
 
 const zFilePath: z.Schema<FilePath> = z.string() as any
 export const schemaUrl =
@@ -53,7 +57,23 @@ export const appConfigSchema = z
 			albums: z.string().default("cyan" satisfies Color),
 			playlists: z.string().default("magenta" satisfies Color),
 			commands: z.string().default("yellow" satisfies Color)
-		})
+		}),
+
+		tagSeperator: z
+			.string()
+			.default("|")
+			.describe(
+				"The tag used to join a list into a single tag. For example multiple genres for a track are seperated with a '|' by default"
+			),
+
+		quickEditTags: z
+			.string()
+			.refine(
+				(input) => trackColumnNames.includes(input),
+				`Invalid quickEditTag. Must be one the supported tag types.\n${trackColumnNames.join("\n")}`
+			)
+			.array()
+			.describe("The tags to show when doing a quick tag edit on a track.")
 	})
 	.strict()
 
@@ -66,7 +86,8 @@ const defaultConfig: z.input<typeof appConfigSchema> = {
 	version: "0.1",
 	icons: {},
 	keybindings: [],
-	colors: {}
+	colors: {},
+	quickEditTags: []
 }
 
 const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")
