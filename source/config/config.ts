@@ -1,4 +1,5 @@
 import path from "node:path"
+import { getTableColumns } from "drizzle-orm"
 import json5 from "json5"
 import { Result } from "typescript-result"
 import untildify from "untildify"
@@ -9,14 +10,13 @@ import {
 	type ValidationError
 } from "zod-validation-error"
 import { CONFIG_DIRECTORY } from "#/constants"
+import { tableTracks } from "#/database/schema"
 import { enumarateError, logg } from "#/logs"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
 import type { BunFile } from "bun"
 import type { Color } from "tuir"
 import type { FilePath } from "#/types/types"
-import { getTableColumns } from "drizzle-orm"
-import { tableTracks } from "#/database/schema"
 
 const trackColumnNames = Object.keys(getTableColumns(tableTracks))
 
@@ -98,7 +98,7 @@ async function parseConfig(
 	const config = Result.fromAsyncCatching(json5.parse(await file.text()))
 		.map((data) =>
 			Result.try(() => appConfigSchema.parse(data)).mapError(
-				toValidationError()
+				toValidationError({ prefix: `Failed to parse config. ${file.name}` })
 			)
 		)
 		.mapError((error) =>
