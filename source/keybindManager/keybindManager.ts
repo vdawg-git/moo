@@ -1,22 +1,29 @@
-import { useSelector } from "@xstate/store/react"
 import { useEffect, useState } from "react"
 import { isTruthy } from "remeda"
-import { map, Subject, scan } from "rxjs"
+import {
+	combineLatest,
+	distinctUntilChanged,
+	filter,
+	map,
+	type Observable,
+	scan,
+	shareReplay,
+	startWith,
+	withLatestFrom
+} from "rxjs"
 import { match, P } from "ts-pattern"
-import { type Key, useInput } from "tuir"
-import { appState } from "#/state/state"
+import { callAll } from "#/helpers"
+import { appState$ } from "#/state/state"
 import {
 	type KeybindCommand,
 	type KeybindNextUp,
 	keybindsState
 } from "./keybindsState"
+import { type KeyTypeData, keys$ as keyEvents$ } from "./keysStream"
+import type { KeyEvent } from "@opentui/core"
 import type { GeneralCommand } from "#/commands/appCommands"
-import type { KeyBinding, KeyInput } from "#/config/shortcutParser"
+import type { KeyBinding, KeyInput } from "#/lib/keybinds"
 
-/** This is a mirror of the internal `SpecialKeys`,
- * which does not get exported, but used in `useInput` */
-type SpecialKeySet = Omit<Record<keyof typeof Key | "ctrl", boolean>, "sigint">
-type InputData = { key: string; specialKeys: SpecialKeySet }
 type CallbacksOrSequence =
 	| { type: "callbacks"; callbacks: readonly KeybindCommand["callback"][] }
 	| { type: "sequence"; sequence: SequencePart }
@@ -25,49 +32,57 @@ export type SequencePart = {
 	nextUp: readonly KeybindNextUp[]
 }
 
+const areKeybindingsDisabled$: Observable<boolean> = appState$.pipe(
+	map((state) => state.modals.length > 0),
+	startWith(false),
+	distinctUntilChanged(),
+	shareReplay()
+)
+
+const keySequenceResult$: Observable<CallbacksOrSequence | undefined> =
+	keyEvents$.pipe(
+		withLatestFrom(areKeybindingsDisabled$),
+		filter(([_, isDisabled]) => !isDisabled),
+		map(([event]) => event),
+		filter(
+			(data): data is { type: "keypress" } & KeyTypeData =>
+				data.type === "keypress"
+		),
+		map((keypress) => keypress.event),
+		map(openTuiInputToKeyInput),
+		scan(reduceInputs, undefined),
+		distinctUntilChanged()
+	)
+
+export function handleKeybinds() {
+	const subscription = keySequenceResult$.subscribe((inputResult) => {
+		if (inputResult?.type !== "callbacks") return
+
+		callAll(inputResult.callbacks)
+	})
+
+	return () => subscription.unsubscribe()
+}
+
 /**
  * This is currently only for global keybinds.
  * All configurable keybinds are global right now.
- *
- * Later we want to support multiple instances of this,
- * in different contexts (like the 'when' property in VS Code keybinds)
  */
-export function useManageKeybinds(): SequencePart | undefined {
-	const isDisabled = useSelector(
-		appState,
-		(snapshot) => snapshot.context.disableGlobalKeybinds
-	)
-	const [inputs$] = useState(new Subject<InputData>())
+export function useGetNextKeySequence(): SequencePart | undefined {
 	const [nextUpCommands, setKeySequence] = useState<SequencePart | undefined>(
 		undefined
 	)
 
-	useInput((key, specialKeys) => inputs$.next({ key, specialKeys }), {
-		isActive: !isDisabled
-	})
-
 	useEffect(() => {
-		const subscription = inputs$
-			.pipe(
-				map(tuirInputToKeyInput),
+		const subscription = keySequenceResult$.subscribe((inputResult) => {
+			const sequenceMaybe =
+				inputResult?.type === "sequence" ? inputResult.sequence : undefined
 
-				scan(reduceInputs, undefined as CallbacksOrSequence | undefined)
-			)
-			.subscribe((inputResult) => {
-				const sequencePart =
-					inputResult === undefined || inputResult.type === "callbacks"
-						? undefined
-						: inputResult.sequence
-
-				setKeySequence(sequencePart && sequencePart)
-
-				if (inputResult?.type === "callbacks") {
-					inputResult.callbacks.forEach((callback) => callback())
-				}
-			})
+			setKeySequence(sequenceMaybe)
+		})
 
 		return () => subscription.unsubscribe()
-	}, [inputs$])
+	}, [])
 
 	return nextUpCommands
 }
@@ -125,27 +140,22 @@ function reduceInputs(
 		.exhaustive()
 }
 
-const altKeycode = "\u001b"
+const isLatinLetterRegex = /[a-z]/
 
-function tuirInputToKeyInput({ key, specialKeys }: InputData): KeyInput {
+function openTuiInputToKeyInput(event: KeyEvent): KeyInput {
+	const { ctrl, option, shift, name } = event
+
+	// open-tui always gives the lowercase version of letters. Dunno why
+	const shouldUppercase = shift && isLatinLetterRegex.test(name)
+	const key = shouldUppercase ? name.toUpperCase() : name
+
 	const modifiers: KeyInput["modifiers"] = [
-		key.startsWith(altKeycode) && ("alt" as const),
-		// for some reason ctrl is always true when pressing tab
-		specialKeys.ctrl && !specialKeys.tab && ("ctrl" as const)
+		ctrl && ("ctrl" as const),
+		option && ("alt" as const),
+		shift && !shouldUppercase && ("shift" as const)
 	].filter(isTruthy)
 
-	const specialKeysArray = Object.entries(specialKeys) as [
-		keyof SpecialKeySet,
-		boolean
-	][]
-
-	const input =
-		specialKeysArray.find(
-			([specialKey, isSet]) => isSet && specialKey !== "ctrl"
-		)?.[0] ?? //
-		key.replace(altKeycode, "").replace(" ", "space")
-
-	return { key: input, modifiers }
+	return { key, modifiers }
 }
 
 /** Returns the unregister function */

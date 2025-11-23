@@ -1,4 +1,5 @@
 import os from "node:os"
+import MprisService from "@jellybrick/mpris-service"
 import * as R from "remeda"
 import { filter } from "rxjs"
 import { logg } from "#/logs"
@@ -7,12 +8,10 @@ import { appState } from "#/state/state"
 import type { MprisEventsCatalog } from "@jellybrick/mpris-service"
 
 /** Handles mpris. Does nothing if not compiled for Linux */
-export async function handleMpris() {
+export function handleMpris() {
 	if (os.platform() !== "linux") {
-		return
+		return () => {}
 	}
-
-	const { default: MprisService } = await import("@jellybrick/mpris-service")
 
 	const mpris = new MprisService({
 		name: "org.mpris.MediaPlayer2.moo",
@@ -20,31 +19,33 @@ export async function handleMpris() {
 		identity: "moo"
 	})
 
-	currentTrack$.pipe(filter(R.isNonNullish)).subscribe((_track) => {
-		// TODO fixme
-		// mpris-service logs warnings when passing undefined as it tries to parse it into values,
-		// so we conditonally spread the object
-		// mpris.metadata = {
-		// 	"mpris:trackid": track.id,
-		// 	...(track.title && { "xesam:title": track.title }),
-		// 	...(track.album && { "xesam:album": track.album }),
-		// 	...(track.artist && {
-		// 		"xesam:artist": [track.artist]
-		// 	}),
-		// 	...(track.picture && {
-		// 		"mpris:artUrl": `file://${track.picture}`
-		// 	}),
-		// 	...(track.genre && {
-		// 		"xesam:genre": [track.genre]
-		// 	})
-		// }
-		// Setting duration crashes
-		// "mpris:length": track?.duration,
-		// I dont get what I should pass as ID, but it works without it
-		// "mpris:trackid": track?.id,
-	})
+	const subscriptionCurrentTrack = currentTrack$
+		.pipe(filter(R.isNonNullish))
+		.subscribe((_track) => {
+			// TODO fixme
+			// mpris-service logs warnings when passing undefined as it tries to parse it into values,
+			// so we conditonally spread the object
+			// mpris.metadata = {
+			// 	"mpris:trackid": track.id,
+			// 	...(track.title && { "xesam:title": track.title }),
+			// 	...(track.album && { "xesam:album": track.album }),
+			// 	...(track.artist && {
+			// 		"xesam:artist": [track.artist]
+			// 	}),
+			// 	...(track.picture && {
+			// 		"mpris:artUrl": `file://${track.picture}`
+			// 	}),
+			// 	...(track.genre && {
+			// 		"xesam:genre": [track.genre]
+			// 	})
+			// }
+			// Setting duration crashes
+			// "mpris:length": track?.duration,
+			// I dont get what I should pass as ID, but it works without it
+			// "mpris:trackid": track?.id,
+		})
 
-	playState$.subscribe((playState) => {
+	const subscriptionPlayState = playState$.subscribe((playState) => {
 		const hasPlayback = playState !== "stopped"
 
 		mpris.canControl = hasPlayback
@@ -63,7 +64,7 @@ export async function handleMpris() {
 					: "Stopped"
 	})
 
-	loop$.subscribe((loop) => {
+	const subscriptionLoop = loop$.subscribe((loop) => {
 		mpris.loopStatus =
 			loop === "loop_track"
 				? "Track"
@@ -99,5 +100,11 @@ export async function handleMpris() {
 			//@ts-expect-error
 			handler(data)
 		})
+	}
+
+	return () => {
+		subscriptionLoop.unsubscribe()
+		subscriptionPlayState.unsubscribe()
+		subscriptionCurrentTrack.unsubscribe()
 	}
 }

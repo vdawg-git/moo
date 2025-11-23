@@ -8,6 +8,7 @@ import {
 	type Observable,
 	Subject,
 	shareReplay,
+	startWith,
 	switchMap
 } from "rxjs"
 import { match, P } from "ts-pattern"
@@ -21,14 +22,24 @@ import { addErrorNotification, appState } from "#/state/state"
 import { type SearchMode, searchModes, searchModesEntries } from "./consts"
 import { openRunner, type RunnerItem } from "./runner"
 
-export function useRunnerItems(): {
+type ParsedInput = {
+	searchMode: SearchMode
+	value: string
+}
+
+export function useRunnerItems({
+	initialValue
+}: {
+	initialValue: string | undefined
+}): {
 	setInput: (input: string | undefined) => void
+	input: string | undefined
 	items: readonly RunnerItem[]
 	mode: SearchMode | undefined
 } {
 	const [items, setItems] = useState<readonly RunnerItem[]>([])
 	const [mode, setMode] = useState<SearchMode | undefined>(undefined)
-	const [input, setInput] = useState<string | undefined>()
+	const [input, setInput] = useState<string | undefined>(initialValue)
 
 	// used to bridge rxjs with React
 	const [resultsInput$, setResultsInput$] = useState<
@@ -39,39 +50,32 @@ export function useRunnerItems(): {
 		const { results$, mode$, input$ } = createGetRunnerItems()
 		setResultsInput$(input$)
 
-		const subscriptions = [
-			results$
-				.pipe(
-					map(
-						(result) =>
-							result
-								?.onFailure((error) =>
-									addErrorNotification("Failed to get search results", error)
-								)
-								.getOrDefault([]) ?? []
-					)
-				)
-				.subscribe(setItems),
-
-			mode$.subscribe(setMode)
-		]
+		const itemsSubscription = results$.subscribe(setItems)
+		const modeSubscription = mode$.subscribe(setMode)
 
 		return () =>
-			subscriptions.forEach((subscription) => subscription.unsubscribe())
+			[itemsSubscription, modeSubscription].forEach((subscription) =>
+				subscription.unsubscribe()
+			)
 	}, [])
 
 	useEffect(() => resultsInput$.next(input), [input, resultsInput$])
+	useEffect(
+		() => resultsInput$.next(initialValue),
+		[initialValue, resultsInput$]
+	)
 
 	return {
 		setInput,
 		mode,
-		items
+		items,
+		input
 	}
 }
 
 function createGetRunnerItems(): {
 	input$: Subject<string | undefined>
-	results$: Observable<Result<readonly RunnerItem[], unknown> | undefined>
+	results$: Observable<readonly RunnerItem[]>
 	mode$: Observable<SearchMode>
 } {
 	const input$ = new Subject<string | undefined>()
@@ -79,6 +83,7 @@ function createGetRunnerItems(): {
 		map((input) => input?.trim()),
 		filter(R.isNonNullish),
 		distinctUntilChanged(),
+		startWith(""),
 		map(rawInputToPrefixed),
 		shareReplay({ refCount: true })
 	)
@@ -89,65 +94,43 @@ function createGetRunnerItems(): {
 		switchMap((input) => {
 			const queryRunnerItems = getQueryForRunnerItems(input.searchMode)
 
-			return observeQuery(input.searchMode, queryRunnerItems)
-		}),
-		map((result) =>
-			// TODO handle errors
-			result.data?.map((items) => ({
-				items,
-				fuse: new Fuse(items, {
-					isCaseSensitive: false,
-					findAllMatches: false,
-					shouldSort: true,
-					keys: ["label", "id"] satisfies (keyof RunnerItem)[]
-				})
-			}))
-		),
-		shareReplay({ refCount: true, bufferSize: 1 })
-	)
-
-	const filtered$ = inputParsed$.pipe(
-		switchMap(({ value }) =>
-			results$.pipe(
-				map((result) =>
-					result?.map(({ items, fuse }) =>
-						!value
-							? items
-							: fuse.search(value, { limit: 35 }).map(({ item }) => item)
-					)
+			return observeQuery(
+				[input.searchMode, input.value],
+				queryRunnerItems
+			).pipe(
+				map(
+					(result) =>
+						result.data?.fold(
+							(items) =>
+								input.value
+									? new Fuse(items, {
+											isCaseSensitive: false,
+											findAllMatches: false,
+											shouldSort: true,
+											keys: ["label", "id"] satisfies (keyof RunnerItem)[]
+										})
+											.search(input.value, { limit: 35 })
+											.map(({ item }) => {
+												return item
+											})
+									: items,
+							(error) => {
+								logg.error("failed to query runner items", {
+									error: enumarateError(error)
+								})
+								return []
+							}
+						) ?? []
 				)
 			)
-		)
+		})
 	)
 
 	return {
 		input$,
-		results$: filtered$,
+		results$,
 		mode$: inputParsed$.pipe(map(({ searchMode }) => searchMode))
 	}
-}
-
-async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
-	return Result.fromAsync(database.getPlaylists())
-		.map(
-			R.map(
-				({ displayName, id }) =>
-					({
-						id: `playlist-${id}`,
-						label: displayName ?? id,
-						icon: appConfig.icons.playlist,
-						onSelect: () =>
-							appState.send({
-								type: "navigateTo",
-								goTo: { route: "playlist", parameter: { id } }
-							})
-					}) satisfies RunnerItem
-			)
-		)
-		.onFailure((error) =>
-			addErrorNotification("Failed to get playlists for search", error)
-		)
-		.getOrDefault([] as RunnerItem[])
 }
 
 function rawInputToPrefixed(input: string): ParsedInput {
@@ -158,14 +141,9 @@ function rawInputToPrefixed(input: string): ParsedInput {
 	return searchMode
 		? {
 				searchMode: searchMode[0],
-				value: input.slice(searchMode[1].prefix.length)
+				value: input.slice(searchMode[1].prefix.length).trim()
 			}
-		: { searchMode: "goTo", value: input }
-}
-
-type ParsedInput = {
-	searchMode: SearchMode
-	value: string
+		: { searchMode: "goTo", value: input.trim() }
 }
 
 function getQueryForRunnerItems(
@@ -286,4 +264,27 @@ async function getGoTos(): Promise<readonly RunnerItem[]> {
 	const playlist = await getPlaylistRunnerItems()
 
 	return [home, artists, albums, queue, ...playlist]
+}
+
+async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
+	return Result.fromAsync(database.getPlaylists())
+		.map(
+			R.map(
+				({ displayName, id }) =>
+					({
+						id: `playlist-${id}`,
+						label: displayName ?? id,
+						icon: appConfig.icons.playlist,
+						onSelect: () =>
+							appState.send({
+								type: "navigateTo",
+								goTo: { route: "playlist", parameter: { id } }
+							})
+					}) satisfies RunnerItem
+			)
+		)
+		.onFailure((error) =>
+			addErrorNotification("Failed to get playlists for search", error)
+		)
+		.getOrDefault([] as RunnerItem[])
 }

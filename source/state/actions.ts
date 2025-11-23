@@ -239,12 +239,6 @@ const clearNotifications = createAction((context) => {
 	context.notifications = []
 })
 
-const disableGlobalKeybinds = createAction<{ disabled: boolean }>(
-	(context, { disabled }) => {
-		context.disableGlobalKeybinds = disabled
-	}
-)
-
 // navigation
 
 const navigateTo = createAction<{ goTo: ViewPage }>((context, { goTo }) => {
@@ -290,7 +284,6 @@ export const appStateActionsInternal = {
 	addToManualQueueLast,
 	clearNotifications,
 	closeModal,
-	disableGlobalKeybinds,
 	navigateBack,
 	navigateForward,
 	navigateTo,

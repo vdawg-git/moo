@@ -1,8 +1,8 @@
 import { useCallback } from "react"
-import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
+import { colors } from "#/constants"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { createQueryKey } from "#/queryKey"
@@ -24,11 +24,11 @@ export function PlaylistPage({ id }: PlaylistProps) {
 
 	return (
 		<>
-			<Box flexGrow={1} flexDirection="column">
+			<box flexGrow={1} flexDirection="column">
 				<PlaylistTitle title={displayName} tracksAmount={amount ?? 0} />
 
 				{response.isLoading ? (
-					<Text>Loading...</Text>
+					<text>Loading...</text>
 				) : (
 					response.data.fold(
 						(playlist) => (
@@ -47,10 +47,10 @@ export function PlaylistPage({ id }: PlaylistProps) {
 								key={JSON.stringify(playlist.tracks)}
 							/>
 						),
-						(error) => <Text color={"red"}>Error: {String(error)}</Text>
+						(error) => <text fg={colors.red}>Error: {String(error)}</text>
 					)
 				)}
-			</Box>
+			</box>
 
 			<Playbar />
 		</>

@@ -1,8 +1,10 @@
+import { TextAttributes } from "@opentui/core"
+import { useKeyboard } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { match } from "ts-pattern"
-import { Box, Text, useKeymap } from "tuir"
 import { appConfig } from "#/config/config"
+import { colors } from "#/constants"
 import { appState } from "#/state/state"
 import { BracketButton } from "./button"
 import type { AppNotification } from "#/state/types"
@@ -16,43 +18,48 @@ export function NotificationModal() {
 		deepEquals
 	)
 
-	const { useEvent } = useKeymap(
-		{ clearNotifications: { input: "x" } },
-		{ priority: "always" }
-	)
-
-	useEvent("clearNotifications", () => {
-		appState.send({ type: "clearNotifications" })
-		appState.send({ type: "closeModal", id: notificationModalId })
+	useKeyboard((key) => {
+		if (key.name === "x") {
+			appState.send({ type: "clearNotifications" })
+			appState.send({ type: "closeModal", id: notificationModalId })
+		}
 	})
 
 	return (
-		<Box flexDirection="column">
+		<box flexDirection="column">
 			{notifications.map(({ type, message, id }) => (
-				<Box key={id}>
+				<box key={id}>
 					<NotificationIcon type={type} />
-					<Text bold={type === "error"}> {message}</Text>
-				</Box>
+					{typeof message === "object" ? (
+						message
+					) : (
+						<text
+							attributes={type === "error" ? TextAttributes.BOLD : undefined}
+						>
+							{message}
+						</text>
+					)}
+				</box>
 			))}
 
-			<Box
+			<box
 				paddingTop={1}
-				onClick={() => appState.send({ type: "clearNotifications" })}
+				onMouse={() => appState.send({ type: "clearNotifications" })}
 			>
-				<Text color={"blue"}>
-					<BracketButton>x</BracketButton>
-					Clear notifications
-				</Text>
-			</Box>
-		</Box>
+				<BracketButton>x</BracketButton>
+				<text fg={colors.blue}>Clear notifications</text>
+			</box>
+		</box>
 	)
 }
 
 function NotificationIcon({ type }: { type: AppNotification["type"] }) {
 	return match(type)
-		.with("default", () => <Text color="blue">{appConfig.icons.info}</Text>)
-		.with("error", () => <Text color="red">{appConfig.icons.error}</Text>)
-		.with("warn", () => <Text color="yellow">{appConfig.icons.warn}</Text>)
-		.with("success", () => <Text color="green">{appConfig.icons.success}</Text>)
+		.with("default", () => <text fg={colors.blue}>{appConfig.icons.info}</text>)
+		.with("error", () => <text fg={colors.red}>{appConfig.icons.error}</text>)
+		.with("warn", () => <text fg={colors.yellow}>{appConfig.icons.warn}</text>)
+		.with("success", () => (
+			<text fg={colors.green}>{appConfig.icons.success}</text>
+		))
 		.exhaustive()
 }

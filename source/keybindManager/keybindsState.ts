@@ -1,4 +1,4 @@
-import { displayKeybinding, type KeyBinding } from "#/config/shortcutParser"
+import { displayKeybinding, type KeyBinding } from "#/lib/keybinds"
 import type { Except } from "type-fest"
 
 type TrieNode = {

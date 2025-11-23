@@ -21,6 +21,7 @@
 				"noExplicitAny": "off",
 				"useIterableCallbackReturn": "off"
 			},
+			"a11y": "off",
 			"style": {
 				"noDefaultExport": "error",
 				"noYodaExpression": "error",

@@ -1,5 +1,6 @@
 import path from "node:path"
 import envPaths from "env-paths"
+import { mapValues } from "remeda"
 import packageJson from "#/../package.json"
 import type { FilePath } from "./types/types"
 
@@ -46,3 +47,57 @@ export const databasePath = (
 ) as FilePath
 
 export const playlistExtension = ".yml"
+
+// Calling the renderer is a huge side-effect which causes weird behaviour outside of the rendering.
+// Like crashes. So for now lets just use default colors
+// This needs to be reactive anyway once we have reactive themes.
+//
+// const {
+// 	palette: [
+// 		black,
+// 		red,
+// 		green,
+// 		yellow,
+// 		blue,
+// 		magenta,
+// 		cyan,
+// 		white,
+// 		brightBlack,
+// 		brightRed,
+// 		brightGreen,
+// 		brightYellow,
+// 		brightBlue,
+// 		brightMagenta,
+// 		brightCyan,
+// 		brightWhite
+// 	],
+// 	defaultForeground: fg,
+// 	defaultBackground: bg
+// } = await renderer.getPalette()
+
+export const colors = mapValues(
+	{
+		black: "black",
+		red: "red",
+		green: "green",
+		yellow: "yellow",
+		blue: "blue",
+		magenta: "magenta",
+		cyan: "cyan",
+		white: "white",
+		brightBlack: "grey",
+		brightRed: "red",
+		brightGreen: "green",
+		brightYellow: "yellow",
+		brightBlue: "blue",
+		brightMagenta: "magenta",
+		brightCyan: "cyan",
+		brightWhite: "white",
+		fg: "white",
+		bg: "black"
+	} as const,
+	(value, key) => (value ?? key) as AppColor
+)
+
+export type AppColor = string
+// export type AppColor = Tagged<string, "app_color">

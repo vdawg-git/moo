@@ -51,3 +51,8 @@ export function unshuffleFromMap<T>(
 	})
 	return unshuffled
 }
+
+/** Calls all provided callbacks */
+export function callAll(callbacks: readonly (() => unknown)[]): void {
+	callbacks.forEach((callback) => callback())
+}

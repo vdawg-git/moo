@@ -1,9 +1,9 @@
 import { useCallback } from "react"
-import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
 import { appConfig } from "#/config/config"
+import { colors } from "#/constants"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { createQueryKey } from "#/queryKey"
@@ -25,7 +25,7 @@ export function AlbumPage({ id }: AlbumPageProps) {
 
 	return (
 		<>
-			<Box flexGrow={1} flexDirection="column">
+			<box flexGrow={1} flexDirection="column">
 				<PlaylistTitle
 					title={displayName}
 					tracksAmount={amount ?? 0}
@@ -34,7 +34,7 @@ export function AlbumPage({ id }: AlbumPageProps) {
 				/>
 
 				{response.isLoading ? (
-					<Text>Loading...</Text>
+					<text>Loading...</text>
 				) : (
 					response.data.fold(
 						(album) =>
@@ -56,10 +56,10 @@ export function AlbumPage({ id }: AlbumPageProps) {
 							) : (
 								"Album not found. Diz is a bug"
 							),
-						(error) => <Text color={"red"}>Error: {String(error)}</Text>
+						(error) => <text fg={colors.red}>Error: {String(error)}</text>
 					)
 				)}
-			</Box>
+			</box>
 
 			<Playbar />
 		</>

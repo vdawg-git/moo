@@ -14,6 +14,7 @@ import {
 import { match } from "ts-pattern"
 import { pickCommands } from "#/commands/commandFunctions"
 import { LocalTrack } from "#/database/database"
+import { callAll } from "#/helpers"
 import {
 	registerKeybinds,
 	unregisterKeybinds
@@ -39,11 +40,13 @@ const toPlay$: Observable<Track | undefined> = combineLatest([
  * Returns the subscription which can be unsubscribed from.
  */
 export function handleAudioPlayback() {
-	handleMpris()
+	const unsubscribers = [
+		handlePlayer(),
+		registeringPlaybackCommands(),
+		handleMpris()
+	]
 
-	const subscriptions = [handlePlayer(), registeringPlaybackCommands()]
-
-	return () => subscriptions.forEach((unsubscribe) => unsubscribe())
+	return () => callAll(unsubscribers)
 }
 
 /**  Registers playback commands reactivly */

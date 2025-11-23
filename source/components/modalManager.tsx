@@ -1,40 +1,54 @@
+import { useKeyboard } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
-import { useState } from "react"
-import { Modal, useModal } from "tuir"
+import { useCallback, useState } from "react"
+import { colors } from "#/constants"
 import { appState } from "#/state/state"
 import type { AppModal } from "#/state/types"
 
 export function ModalManager() {
-	const modals = useSelector(appState, (state) => state.context.modals)
-	const toRender = modals.at(-1)
+	const modal = useSelector(
+		appState,
+		(state) => state.context.modals.at(-1),
+		(a, b) => a?.id === b?.id
+	)
 
-	return toRender && <ModalWrapper key={toRender.id} {...toRender} />
+	return modal && <ModalWrapper key={modal.id} {...modal} />
 }
 
 function ModalWrapper({ Content, id, title }: AppModal) {
 	const [displayTitle, setTitle] = useState(title)
-	const { modal } = useModal({
-		// The manager shows/hide the modal
-		show: [],
-		hide: [{ key: "esc" }, { input: "q" }]
+
+	const hideModal = useCallback(() => {
+		appState.send({ type: "closeModal", id })
+	}, [id])
+
+	useKeyboard((key) => {
+		if (key.name === "escape") {
+			hideModal()
+		}
 	})
 
-	const hideModal: (typeof modal)["_hideModal"] = () => {
-		appState.send({ type: "closeModal", id })
-		modal._hideModal()
-	}
-
 	return (
-		<Modal
-			modal={{ ...modal, _hideModal: hideModal, _vis: true }}
-			borderStyle={"round"}
-			borderColor={"gray"}
-			minHeight={5}
-			minWidth={5}
+		<box
+			zIndex={800}
 			flexDirection="column"
-			titleTopLeft={{ title: displayTitle, bold: true, color: "blue" }}
+			justifyContent="center"
+			alignItems="center"
+			position="absolute"
+			width={"100%"}
+			height={"100%"}
 		>
-			<Content closeModal={hideModal} changeTitle={setTitle} />
-		</Modal>
+			<box
+				title={displayTitle}
+				titleAlignment={"left"}
+				backgroundColor={colors.bg}
+				borderStyle={"rounded"}
+				borderColor={"gray"}
+				minHeight={5}
+				minWidth={5}
+			>
+				<Content onCloseModal={hideModal} onChangeTitle={setTitle} />
+			</box>
+		</box>
 	)
 }

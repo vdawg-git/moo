@@ -1,13 +1,13 @@
-import path from "node:path"
-import { preserveScreen, render, setConsole } from "tuir"
+import { createRoot } from "@opentui/react"
 import { Result } from "typescript-result"
 import { App } from "./App"
 import { registerGlobalCommands } from "./commands/commandFunctions"
 import { appConfig } from "./config/config"
-import { databasePath, IS_DEV, LOGS_DIRECTORY } from "./constants"
+import { databasePath, IS_DEV } from "./constants"
 import { database } from "./database/database"
 import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { logg } from "./logs"
+import { renderer } from "./renderer"
 import {
 	updateSmartPlaylists,
 	watchPlaylists
@@ -15,20 +15,6 @@ import {
 
 export async function startApp() {
 	logg.info("Starting app..", { isDev: IS_DEV, dbPath: databasePath })
-
-	const consoleLogsPath = path.join(LOGS_DIRECTORY, "console.log")
-	setConsole({ enabled: true, path: consoleLogsPath })
-
-	if (IS_DEV) {
-		const { initialize, connectToDevTools } = await import(
-			//@ts-expect-error
-			"react-devtools-core"
-		)
-
-		initialize()
-		// Must be called before packages like react or react-native are imported
-		connectToDevTools()
-	}
 
 	if (appConfig.watchDirectories) {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)
@@ -42,11 +28,8 @@ export async function startApp() {
 		})
 
 	const watcher = watchPlaylists()
-	preserveScreen()
-	const instance = render(<App />, { patchConsole: false, throttle: 8 })
-	registerGlobalCommands()
-	await instance.waitUntilExit()
 
+	createRoot(renderer).render(<App />)
+	registerGlobalCommands()
 	watcher.unsubscribe()
-	setConsole({ enabled: false, path: consoleLogsPath })
 }

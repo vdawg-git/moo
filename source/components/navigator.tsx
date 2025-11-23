@@ -1,18 +1,18 @@
 import { useSelector } from "@xstate/store/react"
-import { Text } from "tuir"
 import { AlbumPage } from "#/pages/albumPage"
 import { All } from "#/pages/allPage"
 import { ArtistPage } from "#/pages/artistPage"
 import { PlaylistPage } from "#/pages/playlistPage"
 import { QueuePage } from "#/pages/queuePage"
 import { appState } from "#/state/state"
+import type { ReactNode } from "react"
 import type { ViewPage, ViewPages } from "#/state/types"
 
-type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => JSX.Element }
+type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => ReactNode }
 const routes: Routes = {
 	home: () => <All />,
 	playlist: ({ id }) => <PlaylistPage id={id} />,
-	search: () => <Text>Search is not implemented yet</Text>,
+	search: () => <text>Search is not implemented yet</text>,
 	queue: () => <QueuePage />,
 	album: ({ id }) => <AlbumPage id={id} />,
 	artist: ({ id }) => <ArtistPage id={id} />
@@ -31,7 +31,7 @@ export function Navigator() {
 	return renderRoute(viewData)
 }
 
-function renderRoute(view: ViewPage): JSX.Element {
+function renderRoute(view: ViewPage): ReactNode {
 	const Component = routes[view.route]
 
 	// @ts-expect-error

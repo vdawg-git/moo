@@ -1,16 +1,15 @@
-import { Box, Text } from "tuir"
 import { CowSay } from "./cowsay"
 
 export function ErrorScreen({ error }: { error: Error | string }) {
 	return (
-		<Box flexDirection="column">
+		<box flexDirection="column">
 			<CowSay d>{error instanceof Error ? error.message : error}</CowSay>
 			{error instanceof Error && (
-				<Text>
-					<Text color="red">Stack:</Text>
+				<text>
+					<span fg="red">Stack:</span>
 					{error.stack}
-				</Text>
+				</text>
 			)}
-		</Box>
+		</box>
 	)
 }

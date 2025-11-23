@@ -1,4 +1,4 @@
-import type { KeyBinding } from "#/config/shortcutParser"
+import type { KeyBinding } from "#/lib/keybinds"
 
 /**
  * Used for the keybindings config schema generation
@@ -80,7 +80,7 @@ export const appCommandsBase = Object.freeze({
 
 	showKeybinds: {
 		label: "Show keybindings",
-		keybindings: [[{ key: "?", modifiers: [] }]] as KeyBinding[],
+		keybindings: [[{ key: "?", modifiers: [] }]],
 		description: "Show all keybinds"
 	}
 } as const satisfies AppCommandBase)

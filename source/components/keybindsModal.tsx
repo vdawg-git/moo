@@ -1,25 +1,30 @@
-import { useMemo } from "react"
-import { Box, Text } from "tuir"
+import { type ReactNode, useMemo } from "react"
 import { appConfig } from "#/config/config"
-import { displayKeybinding } from "#/config/shortcutParser"
+import { colors } from "#/constants"
+import { displayKeybinding } from "#/lib/keybinds"
 
-export function KeybindsModal(): JSX.Element {
+export function KeybindsModal(): ReactNode {
 	const toDisplay = useMemo(getKeybinds, [])
 
 	return (
-		<Box flexDirection="column" minWidth={30}>
+		<box flexDirection="column" minWidth={30} backgroundColor={colors.bg}>
 			{toDisplay.map(([id, { label, keybindings }]) => (
-				<Box key={id} alignItems="flex-start" justifyContent="space-between">
-					<Text color={"cyanBright"}>{label}</Text>
+				<box
+					key={id}
+					alignItems="flex-start"
+					justifyContent="space-between"
+					flexDirection="row"
+				>
+					<text fg={colors.brightCyan}>{label}</text>
 
-					<Box flexDirection="column">
+					<box flexDirection="column">
 						{keybindings.map((binding) => (
-							<Text key={binding.join("")}>{displayKeybinding(binding)}</Text>
+							<text key={binding.join("")}>{displayKeybinding(binding)}</text>
 						))}
-					</Box>
-				</Box>
+					</box>
+				</box>
 			))}
-		</Box>
+		</box>
 	)
 }
 

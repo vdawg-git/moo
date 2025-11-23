@@ -9,13 +9,12 @@ import {
 	toValidationError,
 	type ValidationError
 } from "zod-validation-error"
-import { CONFIG_DIRECTORY } from "#/constants"
+import { CONFIG_DIRECTORY, colors } from "#/constants"
 import { tableTracks } from "#/database/schema"
 import { enumarateError, logg } from "#/logs"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
 import type { BunFile } from "bun"
-import type { Color } from "tuir"
 import type { FilePath } from "#/types/types"
 
 const trackColumnNames = Object.keys(getTableColumns(tableTracks))
@@ -53,10 +52,10 @@ export const appConfigSchema = z
 		keybindings: keybindingsSchema,
 
 		colors: z.object({
-			artists: z.string().default("blue" satisfies Color),
-			albums: z.string().default("cyan" satisfies Color),
-			playlists: z.string().default("magenta" satisfies Color),
-			commands: z.string().default("yellow" satisfies Color)
+			artists: z.string().default(colors.blue),
+			albums: z.string().default(colors.cyan),
+			playlists: z.string().default(colors.magenta),
+			commands: z.string().default(colors.yellow)
 		}),
 
 		tagSeperator: z
@@ -73,6 +72,7 @@ export const appConfigSchema = z
 				`Invalid quickEditTag. Must be one the supported tag types.\n${trackColumnNames.join("\n")}`
 			)
 			.array()
+			.optional()
 			.describe("The tags to show when doing a quick tag edit on a track.")
 	})
 	.strict()
