@@ -38,11 +38,6 @@ export interface AppState {
 
 	notifications: readonly AppNotification[]
 	modals: readonly AppModal[]
-	/**
-	 * Wether the {@linkcode KeybindingsManager} should stop listening to input.
-	 * Used to disable it when a textinput or the runner is focused
-	 */
-	disableGlobalKeybinds: boolean
 }
 
 /**
@@ -64,8 +59,8 @@ export type AppModal = Readonly<{
 }>
 export type AppModalContentProps = {
 	/** Removes the current modal */
-	closeModal: () => void
-	changeTitle: (title: string) => void
+	onCloseModal: () => void
+	onChangeTitle: (title: string) => void
 }
 
 /** A notification in Moo */
@@ -100,9 +95,6 @@ export type PlaybackSource =
  * This dictates the navigation
  * Each key is a route. The value is the data that is passed to the page
  * */
-// We use an interface because it is extensible (for plugins),
-// and it is easier to make a union type of the keys than making
-// an interface out of an union type
 export interface ViewPages {
 	// the homeview should be configurable via the config
 	home: undefined

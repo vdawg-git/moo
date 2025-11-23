@@ -1,18 +1,9 @@
 import path from "node:path"
-import { useEffect, useId } from "react"
-import {
-	Box,
-	type Color,
-	List,
-	Text,
-	useKeymap,
-	useList,
-	useListItem
-} from "tuir"
 import { appConfig } from "#/config/config"
-import { useRegisterListNavigationCommands } from "#/hooks/hooks"
+import { type AppColor, colors } from "#/constants"
 import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { appState } from "#/state/state"
+import { List, type ListItem, useList } from "./list"
 import type { GeneralCommand } from "#/commands/appCommands"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack, TrackId } from "../database/types"
@@ -37,110 +28,84 @@ export function Tracklist({
 	shuffleMap,
 	playState
 }: PlaylistProps) {
-	const { listView, items, control } = useList(tracks, {
-		windowSize: "fit",
-		unitSize: 1,
-		navigation: "none",
-		centerScroll: false,
-		fallthrough: false
-	})
-
-	const uid = useId()
 	const playIndex = shuffleMap ? shuffleMap[basePlayIndex ?? 0] : basePlayIndex
 
-	useRegisterListNavigationCommands({
-		control,
-		itemsLength: items.length,
-		uid: uid + "-tracklist"
+	const listItems: readonly ListItem<BaseTrack>[] = tracks.map(
+		(track, index) => ({
+			data: track,
+			onSelect: () => onPlay(index),
+			onFocus: () => registerQueueCommands(track.id),
+			render: ({ focused: isFocus }) => (
+				<TrackItem
+					track={track}
+					focused={isFocus}
+					state={
+						index === playIndex
+							? playState === "playing"
+								? "playing"
+								: "paused"
+							: undefined
+					}
+					key={track.id}
+				/>
+			)
+		})
+	)
+
+	const listReturn = useList({
+		items: listItems
 	})
 
-	return (
-		<Box flexDirection="column">
-			{items.length === 0 && <Text>No tracks here :(</Text>}
-
-			<List
-				listView={listView}
-				batchMap={{
-					batchSize: 200,
-					items: tracks,
-					map: (track, index) => (
-						<TrackItem
-							track={track}
-							state={
-								index === playIndex
-									? playState === "playing"
-										? "playing"
-										: "paused"
-									: undefined
-							}
-							key={track.id}
-							onPlay={() => onPlay(index)}
-							onFocus={() => registerQueueCommands(track.id)}
-						/>
-					)
-				}}
-			/>
-		</Box>
+	return tracks.length === 0 ? (
+		<text>No tracks here :(</text>
+	) : (
+		<List register={listReturn} />
 	)
 }
 
 export type TrackItemProps = {
 	state: "playing" | "paused" | undefined
-	onPlay: () => void
-	/**
-	 * Gets executed when the element gets focused.
-	 * If a function is returned it will be called onBlur
-	 */
-	onFocus?: () => undefined | (() => void)
-	// we pass those instead of using them from `useListItem`, as sometimes the item is undefined
-	// still not sure though if this is really the bug, but it looks like it
 	track: BaseTrack
 	/** Sets the default color. Gets overriden by the `state` color  */
-	color?: Color
+	color?: AppColor
+	focused: boolean
 }
 
 export function TrackItem({
-	onPlay: onSelect,
 	state,
 	track,
-	onFocus,
-	color
+	color,
+	focused
 }: TrackItemProps): React.ReactNode {
-	const { isFocus, control, listIndex } = useListItem<BaseTrack[]>()
-
 	const hasPlaybackIndex = !!state
-	const bgColor: Color | undefined =
-		isFocus && hasPlaybackIndex ? "green" : isFocus ? "blue" : undefined
-	const textColor: Color | undefined =
-		bgColor && hasPlaybackIndex ? "black" : hasPlaybackIndex ? "green" : color
+	const bgColor: AppColor | undefined =
+		focused && hasPlaybackIndex
+			? colors.green
+			: focused
+				? colors.blue
+				: undefined
+	const textColor: AppColor | undefined =
+		bgColor && hasPlaybackIndex
+			? colors.fg
+			: hasPlaybackIndex
+				? colors.green
+				: color
 
 	const titleDisplay = track.title ?? path.basename(track.id)
 
-	const { useEvent } = useKeymap({ submit: { key: "return" } })
-	useEvent("submit", onSelect)
 	const icon = state === "playing" ? appConfig.icons.playingIndicator : ""
 
-	useEffect(() => {
-		if (!isFocus) return
-
-		return onFocus?.()
-	}, [isFocus, onFocus])
-
 	return (
-		<Box
-			width="100"
-			backgroundColor={bgColor}
-			onClick={() => (isFocus ? onSelect() : control.goToIndex(listIndex))}
-		>
-			<Text color={textColor}>
+		<box width="100%" backgroundColor={bgColor} height={1} flexDirection="row">
+			<text fg={textColor}>
 				{icon}
 				{"  "}
-			</Text>
+			</text>
 
-			<Text color={textColor} wrap="truncate-end">
+			<text fg={textColor} wrapMode="none">
 				{titleDisplay}
-			</Text>
-		</Box>
+			</text>
+		</box>
 	)
 }
 

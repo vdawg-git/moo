@@ -15,7 +15,7 @@ export type KeyBinding = readonly KeyInput[]
  * Shift wont get registered.
  * Instead only the uppercase letters get send from the terminal.
  */
-const keyModifiers = ["ctrl", "alt"] as const
+const keyModifiers = ["ctrl", "alt", "shift"] as const
 type KeyModifier = (typeof keyModifiers)[number]
 
 const specialKeys = [
@@ -54,33 +54,37 @@ const tooManyPlusRg = /\+{3,}/
 export const shortcutSchema = z
 	.string()
 	.min(1)
-	.transform<KeyBinding>((toParse, ctx) => {
-		const inputs = pipe(
-			toParse, //
-			removeDuplicateWhitespace,
-			(rawKeybinding) =>
-				rawKeybinding.split(" ").filter((string) => string !== "")
-		)
-
-		const parsed: KeyInput[] = []
-		for (const input of inputs) {
-			const result = parseSequencePart(input)
-			if (result.isError()) {
+	.transform<KeyBinding>((toParse, ctx) =>
+		parseKeybind(toParse).fold(
+			(value) => value,
+			(error) => {
 				ctx.addIssue({
-					message: result.error,
-					code: z.ZodIssueCode.custom,
+					message: error,
+					code: "custom",
 					fatal: true
 				})
 				return z.NEVER
 			}
-			parsed.push(result.getOrThrow())
-		}
-
-		return parsed
-	})
+		)
+	)
 	.describe(
 		'A keybinding. You can add modifiers like this `<modifier>+key`. You can also sequence keys by seperating them with a space like this "a b c"'
 	)
+
+function parseKeybind(raw: string): Result<KeyBinding, string> {
+	return pipe(
+		raw.trim(), //
+		removeDuplicateWhitespace,
+		(input) =>
+			input
+				.split(" ")
+				.filter((string) => string !== "")
+				.map(parseSequencePart),
+		(results) => {
+			return Result.all(...results) as Result<KeyBinding, string>
+		}
+	)
+}
 
 /**
  * This parses a sequence part of a keybinding.
@@ -94,7 +98,7 @@ function parseSequencePart(input: string): Result<KeyInput, string> {
 
 	// The parts of the keybinding, with leading modifiers if there are some
 	const parts = splitOnPlus(input)
-	const { key, modifiers } =
+	const { key, modifiers = [] } =
 		parts.length > 1
 			? { modifiers: parts.slice(0, -1), key: parts.at(-1) }
 			: { key: parts[0] }
@@ -114,11 +118,9 @@ function parseSequencePart(input: string): Result<KeyInput, string> {
 		)
 	}
 
-	const isModifierInvalid = modifiers
-		? modifiers.some(
-				(modifier) => !keyModifiers.includes(modifier as KeyModifier)
-			)
-		: false
+	const isModifierInvalid = modifiers.some(
+		(modifier) => !keyModifiers.includes(modifier as KeyModifier)
+	)
 	if (isModifierInvalid) {
 		return Result.error(
 			stripIndent(`Invalid modifier. Allowed ones are: 
@@ -126,7 +128,7 @@ function parseSequencePart(input: string): Result<KeyInput, string> {
 		)
 	}
 
-	return Result.ok({ key, modifiers: (modifiers ?? []) as KeyModifier[] })
+	return Result.ok({ key, modifiers: modifiers as KeyModifier[] })
 }
 
 /**
@@ -156,4 +158,23 @@ export function displayKeybinding(keySequence: KeyBinding): string {
 			modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key
 		)
 		.join(" ")
+}
+
+// We always allow for multiple keybinds to exists for different actions,
+// so it makes more sense to always return an array here
+/**
+ * A helper to create keybind defintions.
+ *
+ * If a string is given it creates a single keybind.
+ * If an array of strings is given it creates one sequenced keybind.
+ *
+ * See {@link shortcutSchema } for the syntax
+ * ! This is unsafe and should not be used for user code
+ */
+export function keybinding(
+	input: string | readonly string[]
+): readonly KeyBinding[] {
+	return Array.isArray(input)
+		? input.map(parseKeybind).map((result) => result.getOrThrow())
+		: [parseKeybind(input).getOrThrow()]
 }

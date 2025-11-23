@@ -1,10 +1,11 @@
-import { type Color, Text } from "tuir"
+import { TextAttributes } from "@opentui/core"
 import { appConfig } from "#/config/config"
+import type { AppColor } from "#/constants"
 
 type PlaylistTitleProps = {
 	title: string
 	tracksAmount: number
-	color?: Color
+	color?: AppColor
 	icon?: string
 }
 
@@ -15,11 +16,11 @@ export function PlaylistTitle({
 	icon = appConfig.icons.playlist
 }: PlaylistTitleProps) {
 	return (
-		<Text color={color} bold>
-			{icon} {title}{" "}
-			<Text color={"gray"}>
-				{tracksAmount ? `(${tracksAmount} tracks)` : ""}
-			</Text>
-		</Text>
+		<box justifyContent="space-between" flexDirection="row" height={1}>
+			<text fg={color} attributes={TextAttributes.BOLD}>
+				{icon} {title}{" "}
+			</text>
+			<text fg={"gray"}>{tracksAmount ? `${tracksAmount} titles` : ""}</text>
+		</box>
 	)
 }

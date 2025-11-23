@@ -1,5 +1,6 @@
-import { Box, Text } from "tuir"
+import { TextAttributes } from "@opentui/core"
 import { appConfig } from "#/config/config"
+import { colors } from "#/constants"
 import { appState } from "#/state/state"
 import { useCurrentTrack, usePlaybackData } from "#/state/useSelectors"
 import type { BaseTrack } from "#/database/types"
@@ -8,23 +9,25 @@ export function Playbar() {
 	const currentTrack = useCurrentTrack()
 
 	return (
-		<Box flexDirection="column" width={"100%"}>
-			<Box borderStyle={"round"} height={4} borderDimColor paddingX={1}>
-				<Box flexGrow={1}>
-					{currentTrack ? (
-						<TrackDisplay track={currentTrack} />
-					) : (
-						<Box alignSelf="center">
-							<Text dimColor color={"gray"} italic>
-								Moo
-							</Text>
-						</Box>
-					)}
-				</Box>
+		<box
+			border
+			borderStyle={"rounded"}
+			height={4}
+			borderColor={colors.fg}
+			paddingLeft={1}
+			paddingRight={1}
+			flexDirection="row"
+		>
+			<box flexGrow={1} alignItems="flex-start" justifyContent="flex-start">
+				{currentTrack ? (
+					<TrackDisplay track={currentTrack} />
+				) : (
+					<text fg={colors.brightBlack}>{"^^\n(oo)"}</text>
+				)}
+			</box>
 
-				<MediaControl />
-			</Box>
-		</Box>
+			<MediaControl />
+		</box>
 	)
 }
 
@@ -34,39 +37,47 @@ function MediaControl() {
 	const isShuffling = !!shuffleMap
 
 	return (
-		<Box flexDirection="column">
-			<Box>
-				<Box
-					paddingX={1}
-					onClick={() => appState.send({ type: "previousTrack" })}
+		<box flexDirection="column" height={2}>
+			<box flexDirection="row">
+				<box
+					onMouse={() => appState.send({ type: "previousTrack" })}
+					paddingLeft={1}
+					paddingRight={1}
 				>
-					<Text dimColor={!hasPlayback}>{appConfig.icons.previous}</Text>
-				</Box>
+					<text attributes={hasPlayback ? undefined : TextAttributes.DIM}>
+						{appConfig.icons.previous}
+					</text>
+				</box>
 
-				<Box
-					onClick={() => appState.send({ type: "togglePlayback" })}
-					paddingX={1}
+				<box
+					onMouse={() => appState.send({ type: "togglePlayback" })}
+					paddingLeft={1}
+					paddingRight={1}
 				>
-					<Text dimColor={!hasPlayback}>
+					<text attributes={hasPlayback ? undefined : TextAttributes.DIM}>
 						{playState === "playing"
 							? appConfig.icons.pause
 							: appConfig.icons.play}
-					</Text>
-				</Box>
+					</text>
+				</box>
 
-				<Box paddingX={1} onClick={() => appState.send({ type: "nextTrack" })}>
-					<Text dimColor={!hasPlayback}>{appConfig.icons.next}</Text>
-				</Box>
-			</Box>
+				<box
+					onMouse={() => appState.send({ type: "nextTrack" })}
+					paddingLeft={1}
+					paddingRight={1}
+				>
+					<text attributes={hasPlayback ? undefined : TextAttributes.DIM}>
+						{appConfig.icons.next}
+					</text>
+				</box>
+			</box>
 
-			<Box>
-				<Box onClick={() => appState.send({ type: "toggleShuffle" })}>
-					<Text dimColor={!isShuffling}>
-						{isShuffling ? appConfig.icons.shuffle : appConfig.icons.linear}
-					</Text>
-				</Box>
-			</Box>
-		</Box>
+			<box onMouseUp={() => appState.send({ type: "toggleShuffle" })}>
+				<text attributes={isShuffling ? undefined : TextAttributes.DIM}>
+					{isShuffling ? appConfig.icons.shuffle : appConfig.icons.linear}
+				</text>
+			</box>
+		</box>
 	)
 }
 
@@ -74,13 +85,13 @@ function TrackDisplay({ track }: { track: BaseTrack }) {
 	const artist = track.artist ?? track.albumartist
 
 	return (
-		<Box paddingLeft={1} flexDirection="column">
-			<Box>
-				<Text>{track.title ?? track.id}</Text>
-			</Box>
-			<Box>
-				<Text dimColor>{artist ?? "Unknown"}</Text>
-			</Box>
-		</Box>
+		<box paddingLeft={1} flexDirection="column">
+			<box>
+				<text>{track.title ?? track.id}</text>
+			</box>
+			<box>
+				<text attributes={TextAttributes.DIM}>{artist ?? "Unknown"}</text>
+			</box>
+		</box>
 	)
 }

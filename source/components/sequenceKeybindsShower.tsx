@@ -1,7 +1,7 @@
-import { Box, Text } from "tuir"
+import { colors } from "#/constants"
 import {
 	type SequencePart,
-	useManageKeybinds
+	useGetNextKeySequence
 } from "#/keybindManager/keybindManager"
 
 type NextUpKeybind = { label: string; toPress: string; id: string }
@@ -10,44 +10,46 @@ type NextUpKeybind = { label: string; toPress: string; id: string }
  * Shows which keybinds can be pressed next.
  */
 export function NextUpKeybinds() {
-	const sequencePartMaybe = useManageKeybinds()
+	const sequencePartMaybe = useGetNextKeySequence()
 
 	const toDisplay = sequencePartMaybe && sequencePartToNextUp(sequencePartMaybe)
 
 	return (
 		toDisplay &&
 		toDisplay.length > 0 && (
-			<Box
+			<box
 				position="absolute"
 				justifyContent="flex-end"
 				alignItems="flex-end"
 				height="100%"
 				width="100%"
 			>
-				<Box
-					marginX={1}
-					key={2}
-					borderStyle={"single"}
-					borderColor={"yellow"}
+				<box
+					marginLeft={1}
+					marginRight={1}
+					backgroundColor={colors.bg}
+					borderStyle={"rounded"}
+					borderColor={colors.yellow}
 					justifyContent="space-between"
+					flexDirection="row"
 				>
-					<Box flexDirection="column">
+					<box flexDirection="column">
 						{toDisplay.map(({ toPress, id }) => (
-							<Box key={id}>
-								<Text color={"cyan"}>{toPress} </Text>
-							</Box>
+							<box key={id}>
+								<text fg={colors.cyan}>{toPress} </text>
+							</box>
 						))}
-					</Box>
+					</box>
 
-					<Box flexDirection="column">
+					<box flexDirection="column">
 						{toDisplay.map(({ label, id }) => (
-							<Box key={id}>
-								<Text>{label} </Text>
-							</Box>
+							<box key={id}>
+								<text>{label} </text>
+							</box>
 						))}
-					</Box>
-				</Box>
-			</Box>
+					</box>
+				</box>
+			</box>
 		)
 	)
 }

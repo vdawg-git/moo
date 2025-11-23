@@ -1,8 +1,8 @@
 import { useSelector } from "@xstate/store/react"
-import { Box, Text } from "tuir"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
+import { colors } from "#/constants"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { appState, playNewPlayback } from "#/state/state"
@@ -20,11 +20,11 @@ export function All() {
 
 	return (
 		<>
-			<Box flexGrow={1} flexDirection="column">
+			<box flexGrow={1} flexDirection="column">
 				<PlaylistTitle title={"All tracks"} tracksAmount={amount ?? 0} />
 
 				{response.isLoading ? (
-					<Text>Loading...</Text>
+					<text>Loading...</text>
 				) : (
 					response.data.fold(
 						(tracks) => (
@@ -41,10 +41,10 @@ export function All() {
 								playingIndex={playingIndex}
 							/>
 						),
-						(error) => <Text color={"red"}>Error: {String(error)}</Text>
+						(error) => <text fg={colors.red}>Error: {String(error)}</text>
 					)
 				)}
-			</Box>
+			</box>
 			<Playbar />
 		</>
 	)

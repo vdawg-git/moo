@@ -45,7 +45,6 @@ export const appState = createStore({
 
 		addNotification: a.addNotification,
 		clearNotifications: a.clearNotifications,
-		disableGlobalKeybinds: a.disableGlobalKeybinds,
 
 		////////////////////////
 		// navigation
@@ -81,8 +80,7 @@ function createInitalState(): AppState {
 			history: [{ route: "home" }]
 		},
 		notifications: [],
-		modals: [],
-		disableGlobalKeybinds: false
+		modals: []
 	}
 }
 

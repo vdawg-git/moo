@@ -1,5 +1,4 @@
 import { appConfig } from "#/config/config"
-import type { Color } from "tuir"
 import type { Entries, Except } from "type-fest"
 
 export type SearchMode =
@@ -37,7 +36,7 @@ export const searchModes = Object.freeze({
 }) satisfies Except<
 	Record<
 		SearchMode,
-		{ label: string; icon: string; color: Color; prefix: string }
+		{ label: string; icon: string; color: string; prefix: string }
 	>,
 	"goTo"
 >

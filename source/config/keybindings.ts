@@ -11,7 +11,7 @@ import {
 	type KeyBinding,
 	type KeyInput,
 	shortcutSchema
-} from "./shortcutParser"
+} from "../lib/keybinds"
 import type { WritableDeep } from "type-fest"
 import type { AppCommandsMap } from "#/commands/appCommands"
 
