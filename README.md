@@ -75,26 +75,18 @@ You can use the provided flake or just clone the repo and run `bun prod`.
 * [Bun](https://bun.sh/)
 * Terminal with Nerdfonts support like [Kitty](https://github.com/kovidgoyal/kitty) or [Ghostty](https://ghostty.org/) or use a [patched font](https://github.com/ryanoasis/nerd-fonts).
 
-  You can also change all Nerdfont icons to regular letters in the config though.
+You can also change all Nerdfont icons to regular letters in the config though.
 
-### Steps
 
-* Install the required depedencies (mpv and Bun)
-
-```bash
-  # Clone the repo
-  git clone git@github.com:vdawg-git/moo.git
-  cd moo
-  # Install the dependencies
-  bun install
-  # Compile into a single executable
-  bun compile
-```
-
-The executable app will be compiled into `./dist/moo`
 
 
 ## Credits
-- [Tuir](https://github.com/max5961/tuir): React TUI library which powers the app.
+- [OpenTui](https://github.com/sst/opentui/): TUI library which powers the app. It's awesome.
+- [Tuir](https://github.com/max5961/tuir): React TUI library which powered the app. Now unmaintained.
 - [Kew](https://github.com/ravachol/kew): Design inspiration
 - [Musikcube](https://github.com/clangen/musikcube): Design inspiration
+
+## What's with the name?
+Three letters are awesome for cli apps. 
+
+Also "Music" -> "Moosic" -> "Moo - Sick (terminal music player)"
