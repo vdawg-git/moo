@@ -1,7 +1,7 @@
 import { useKeyboard } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
 import { useCallback, useState } from "react"
-import { colors } from "#/constants"
+import { useColors } from "#/hooks/useColors"
 import { appState } from "#/state/state"
 import type { AppModal } from "#/state/types"
 
@@ -27,6 +27,8 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 			hideModal()
 		}
 	})
+
+	const colors = useColors()
 
 	return (
 		<box

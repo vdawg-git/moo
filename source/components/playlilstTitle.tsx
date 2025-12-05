@@ -1,6 +1,6 @@
 import { TextAttributes } from "@opentui/core"
 import { appConfig } from "#/config/config"
-import type { AppColor } from "#/constants"
+import type { AppColor } from "#/config/theme"
 
 type PlaylistTitleProps = {
 	title: string
@@ -12,7 +12,7 @@ type PlaylistTitleProps = {
 export function PlaylistTitle({
 	title,
 	tracksAmount,
-	color = appConfig.colors.playlists,
+	color,
 	icon = appConfig.icons.playlist
 }: PlaylistTitleProps) {
 	return (

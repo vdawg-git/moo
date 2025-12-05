@@ -1,10 +1,11 @@
 import path from "node:path"
 import { appConfig } from "#/config/config"
-import { type AppColor, colors } from "#/constants"
+import { useColors } from "#/hooks/useColors"
 import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { appState } from "#/state/state"
 import { List, type ListItem, useList } from "./list"
 import type { GeneralCommand } from "#/commands/appCommands"
+import type { AppColor } from "#/config/theme"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack, TrackId } from "../database/types"
 
@@ -77,6 +78,7 @@ export function TrackItem({
 	color,
 	focused
 }: TrackItemProps): React.ReactNode {
+	const colors = useColors()
 	const hasPlaybackIndex = !!state
 	const bgColor: AppColor | undefined =
 		focused && hasPlaybackIndex
@@ -92,7 +94,6 @@ export function TrackItem({
 				: color
 
 	const titleDisplay = track.title ?? path.basename(track.id)
-
 	const icon = state === "playing" ? appConfig.icons.playingIndicator : ""
 
 	return (

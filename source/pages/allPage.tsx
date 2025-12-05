@@ -2,9 +2,9 @@ import { useSelector } from "@xstate/store/react"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
-import { colors } from "#/constants"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
+import { useColors } from "#/hooks/useColors"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 
@@ -17,6 +17,7 @@ export function All() {
 		(snapshot) => snapshot.context.playback.playState
 	)
 	const amount = response.data?.getOrNull()?.length
+	const colors = useColors()
 
 	return (
 		<>

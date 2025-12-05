@@ -19,11 +19,16 @@ import { observeQuery } from "#/database/useQuery"
 import { keybindsState } from "#/keybindManager/keybindsState"
 import { enumarateError, logg } from "#/logs"
 import { addErrorNotification, appState } from "#/state/state"
-import { type SearchMode, searchModes, searchModesEntries } from "./consts"
+import {
+	type SearchMode,
+	type SearchModeType,
+	searchModes,
+	searchModesList
+} from "./consts"
 import { openRunner, type RunnerItem } from "./runner"
 
 type ParsedInput = {
-	searchMode: SearchMode
+	searchMode: SearchMode | undefined
 	value: string
 }
 
@@ -76,7 +81,7 @@ export function useRunnerItems({
 function createGetRunnerItems(): {
 	input$: Subject<string | undefined>
 	results$: Observable<readonly RunnerItem[]>
-	mode$: Observable<SearchMode>
+	mode$: Observable<SearchMode | undefined>
 } {
 	const input$ = new Subject<string | undefined>()
 	const inputParsed$ = input$.pipe(
@@ -92,12 +97,11 @@ function createGetRunnerItems(): {
 	// as we want to do fuzzy searching (which SQLite doesnt support)
 	const results$ = inputParsed$.pipe(
 		switchMap((input) => {
-			const queryRunnerItems = getQueryForRunnerItems(input.searchMode)
+			const searchModeType: SearchModeType = input.searchMode?.type ?? "goTo"
 
-			return observeQuery(
-				[input.searchMode, input.value],
-				queryRunnerItems
-			).pipe(
+			const queryRunnerItems = getQueryForRunnerItems(searchModeType)
+
+			return observeQuery([searchModeType, input.value], queryRunnerItems).pipe(
 				map(
 					(result) =>
 						result.data?.fold(
@@ -134,20 +138,20 @@ function createGetRunnerItems(): {
 }
 
 function rawInputToPrefixed(input: string): ParsedInput {
-	const searchMode = searchModesEntries.find(([_, { prefix }]) =>
+	const searchMode = searchModesList.find(({ prefix }) =>
 		input.startsWith(prefix)
 	)
 
 	return searchMode
 		? {
-				searchMode: searchMode[0],
-				value: input.slice(searchMode[1].prefix.length).trim()
+				searchMode,
+				value: input.slice(searchMode.prefix.length).trim()
 			}
-		: { searchMode: "goTo", value: input.trim() }
+		: { searchMode: undefined, value: input.trim() }
 }
 
 function getQueryForRunnerItems(
-	mode: SearchMode
+	mode: SearchModeType
 ): () => Promise<readonly RunnerItem[]> {
 	return match(mode)
 		.returnType<() => Promise<readonly RunnerItem[]>>()

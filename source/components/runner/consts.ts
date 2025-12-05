@@ -1,46 +1,52 @@
 import { appConfig } from "#/config/config"
-import type { Entries, Except } from "type-fest"
+import type { AppColorName } from "#/config/theme"
 
-export type SearchMode =
+export type SearchModeType =
 	| "playlists"
 	| "goTo"
 	| "commands"
 	| "albums"
 	| "artists"
 
-export const searchModes = Object.freeze({
-	commands: {
+export type SearchMode = {
+	label: string
+	icon: string
+	color: AppColorName
+	prefix: string
+	type: SearchModeType
+}
+
+export const searchModesList: readonly SearchMode[] = [
+	{
 		prefix: ">",
 		label: "Execute commands",
-		color: appConfig.colors.commands,
-		icon: ">"
+		color: "commands",
+		icon: ">",
+		type: "commands"
 	},
-	artists: {
+	{
 		prefix: "a:",
 		label: "Search artists",
-		color: appConfig.colors.artists,
-		icon: appConfig.icons.artist
+		color: "artists",
+		icon: appConfig.icons.artist,
+		type: "artists"
 	},
-	albums: {
+	{
 		prefix: "al:",
 		label: "Search albums",
-		color: appConfig.colors.albums,
-		icon: appConfig.icons.album
+		color: "albums",
+		icon: appConfig.icons.album,
+		type: "albums"
 	},
-	playlists: {
+	{
 		prefix: "p:",
 		label: "Search playlists",
-		color: appConfig.colors.playlists,
-		icon: appConfig.icons.playlist
+		color: "playlists",
+		icon: appConfig.icons.playlist,
+		type: "playlists"
 	}
-}) satisfies Except<
-	Record<
-		SearchMode,
-		{ label: string; icon: string; color: string; prefix: string }
-	>,
-	"goTo"
->
+]
 
-export const searchModesEntries = Object.entries(searchModes) as Entries<
-	typeof searchModes
->
+export const searchModes = Object.freeze(
+	Object.groupBy(searchModesList, (list) => list.type)
+) as unknown as Readonly<Record<SearchModeType, SearchMode>>

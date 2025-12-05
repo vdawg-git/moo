@@ -1,4 +1,4 @@
-import { colors } from "#/constants"
+import { useColors } from "#/hooks/useColors"
 import {
 	type SequencePart,
 	useGetNextKeySequence
@@ -13,6 +13,7 @@ export function NextUpKeybinds() {
 	const sequencePartMaybe = useGetNextKeySequence()
 
 	const toDisplay = sequencePartMaybe && sequencePartToNextUp(sequencePartMaybe)
+	const colors = useColors()
 
 	return (
 		toDisplay &&
