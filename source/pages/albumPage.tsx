@@ -3,9 +3,9 @@ import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
 import { appConfig } from "#/config/config"
-import { colors } from "#/constants"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
+import { useColors } from "#/hooks/useColors"
 import { createQueryKey } from "#/queryKey"
 import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
@@ -22,6 +22,7 @@ export function AlbumPage({ id }: AlbumPageProps) {
 	const playback = usePlaybackData()
 	const amount = response.data?.getOrNull()?.tracks.length
 	const displayName = response.data?.getOrNull()?.title ?? id
+	const colors = useColors()
 
 	return (
 		<>
@@ -29,7 +30,7 @@ export function AlbumPage({ id }: AlbumPageProps) {
 				<PlaylistTitle
 					title={displayName}
 					tracksAmount={amount ?? 0}
-					color={appConfig.colors.albums}
+					color={colors.albums}
 					icon={appConfig.icons.album}
 				/>
 

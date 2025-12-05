@@ -3,9 +3,9 @@ import { List, type ListItem, useList } from "#/components/list"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { TrackItem } from "#/components/tracklist"
-import { colors } from "#/constants"
 import { database } from "#/database/database"
 import { type QueryResult, useQuery } from "#/database/useQuery"
+import { useColors } from "#/hooks/useColors"
 import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { keybinding } from "#/lib/keybinds"
 import { appState } from "#/state/state"
@@ -37,6 +37,8 @@ export function QueuePage() {
 			}
 		})
 	)
+
+	const colors = useColors()
 
 	return (
 		<>
@@ -83,6 +85,8 @@ function QueueView({
 	playIndex,
 	playState
 }: QueueViewProps) {
+	const colors = useColors()
+
 	const manual: readonly ListItem<BaseTrack>[] = manuallyAdded.map((track) => ({
 		data: track,
 		onSelect: ({ itemIndex }) =>

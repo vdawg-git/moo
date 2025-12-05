@@ -1,10 +1,11 @@
 import { type ReactNode, useMemo } from "react"
 import { appConfig } from "#/config/config"
-import { colors } from "#/constants"
+import { useColors } from "#/hooks/useColors"
 import { displayKeybinding } from "#/lib/keybinds"
 
 export function KeybindsModal(): ReactNode {
 	const toDisplay = useMemo(getKeybinds, [])
+	const colors = useColors()
 
 	return (
 		<box flexDirection="column" minWidth={30} backgroundColor={colors.bg}>

@@ -1,4 +1,3 @@
-import { type ScrollBoxProps, useKeyboard } from "@opentui/react"
 import {
 	type ReactNode,
 	useCallback,
@@ -11,6 +10,7 @@ import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { keybinding } from "#/lib/keybinds"
 import { logg } from "#/logs"
 import type { ScrollBoxRenderable } from "@opentui/core"
+import type { ScrollBoxProps } from "@opentui/react"
 import type { Except } from "type-fest"
 import type { GeneralCommand } from "#/commands/appCommands"
 

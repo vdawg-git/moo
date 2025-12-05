@@ -1,5 +1,4 @@
 import path from "node:path"
-import { getTableColumns } from "drizzle-orm"
 import json5 from "json5"
 import { Result } from "typescript-result"
 import untildify from "untildify"
@@ -9,15 +8,14 @@ import {
 	toValidationError,
 	type ValidationError
 } from "zod-validation-error"
-import { CONFIG_DIRECTORY, colors } from "#/constants"
-import { tableTracks } from "#/database/schema"
+import { CONFIG_DIRECTORY } from "#/constants"
 import { enumarateError, logg } from "#/logs"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
 import type { BunFile } from "bun"
 import type { FilePath } from "#/types/types"
 
-const trackColumnNames = Object.keys(getTableColumns(tableTracks))
+// const trackColumnNames = Object.keys(getTableColumns(tableTracks))
 
 const zFilePath: z.Schema<FilePath> = z.string() as any
 export const schemaUrl =
@@ -51,29 +49,22 @@ export const appConfigSchema = z
 		/** All keybindings. Default ones and those overriden by the user. */
 		keybindings: keybindingsSchema,
 
-		colors: z.object({
-			artists: z.string().default(colors.blue),
-			albums: z.string().default(colors.cyan),
-			playlists: z.string().default(colors.magenta),
-			commands: z.string().default(colors.yellow)
-		}),
-
 		tagSeperator: z
 			.string()
 			.default("|")
 			.describe(
 				"The tag used to join a list into a single tag. For example multiple genres for a track are seperated with a '|' by default"
-			),
-
-		quickEditTags: z
-			.string()
-			.refine(
-				(input) => trackColumnNames.includes(input),
-				`Invalid quickEditTag. Must be one the supported tag types.\n${trackColumnNames.join("\n")}`
 			)
-			.array()
-			.optional()
-			.describe("The tags to show when doing a quick tag edit on a track.")
+
+		// quickEditTags: z
+		// 	.string()
+		// 	.refine(
+		// 		(input) => trackColumnNames.includes(input),
+		// 		`Invalid quickEditTag. Must be one the supported tag types.\n${trackColumnNames.join("\n")}`
+		// 	)
+		// 	.array()
+		// 	.optional()
+		// 	.describe("The tags to show when doing a quick tag edit on a track.")
 	})
 	.strict()
 
@@ -85,9 +76,7 @@ const defaultConfig: z.input<typeof appConfigSchema> = {
 	watchDirectories: true,
 	version: "0.1",
 	icons: {},
-	keybindings: [],
-	colors: {},
-	quickEditTags: []
+	keybindings: []
 }
 
 const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")

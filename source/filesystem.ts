@@ -21,7 +21,7 @@ type WatcherData = {
 }
 
 /**
- * Creates a directory watcher and emits changed files.
+ * Creates a directory/file watcher and emits changed files.
  */
 export function createWatcher(
 	toWatch: string,

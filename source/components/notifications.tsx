@@ -4,9 +4,10 @@ import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { match } from "ts-pattern"
 import { appConfig } from "#/config/config"
-import { colors } from "#/constants"
+import { useColors } from "#/hooks/useColors"
 import { appState } from "#/state/state"
 import { BracketButton } from "./button"
+import type { AppColors } from "#/config/theme"
 import type { AppNotification } from "#/state/types"
 
 export const notificationModalId = "_notificationModalaid_"
@@ -25,11 +26,13 @@ export function NotificationModal() {
 		}
 	})
 
+	const colors = useColors()
+
 	return (
 		<box flexDirection="column">
 			{notifications.map(({ type, message, id }) => (
 				<box key={id}>
-					<NotificationIcon type={type} />
+					<NotificationIcon type={type} colors={colors} />
 					{typeof message === "object" ? (
 						message
 					) : (
@@ -53,7 +56,13 @@ export function NotificationModal() {
 	)
 }
 
-function NotificationIcon({ type }: { type: AppNotification["type"] }) {
+function NotificationIcon({
+	type,
+	colors
+}: {
+	type: AppNotification["type"]
+	colors: AppColors
+}) {
 	return match(type)
 		.with("default", () => <text fg={colors.blue}>{appConfig.icons.info}</text>)
 		.with("error", () => <text fg={colors.red}>{appConfig.icons.error}</text>)

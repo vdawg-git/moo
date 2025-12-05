@@ -1,12 +1,13 @@
 import { TextAttributes } from "@opentui/core"
 import { appConfig } from "#/config/config"
-import { colors } from "#/constants"
+import { useColors } from "#/hooks/useColors"
 import { appState } from "#/state/state"
 import { useCurrentTrack, usePlaybackData } from "#/state/useSelectors"
 import type { BaseTrack } from "#/database/types"
 
 export function Playbar() {
 	const currentTrack = useCurrentTrack()
+	const colors = useColors()
 
 	return (
 		<box

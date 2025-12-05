@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from "react"
 import { pickCommands } from "#/commands/commandFunctions"
-import { type AppColor, colors } from "#/constants"
+import { useColors } from "#/hooks/useColors"
 import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/keybindManager"
-import { logg } from "#/logs"
 import { appState } from "#/state/state"
 import { useRunnerItems } from "./useRunnerItems"
 import type { KeyEvent } from "@opentui/core"
 import type React from "react"
+import type { AppColor } from "#/config/theme"
 import type { AppModalContentProps } from "#/state/types"
 
 const runnerId = "_runner"
@@ -101,14 +101,17 @@ function Runner({ modal, initialValue }: RunnerProps) {
 	}
 
 	useEffect(() => {
-		if (!mode) return
-		modal.onChangeTitle(mode)
+		if (!mode) {
+			modal.onChangeTitle("Go to..")
+			return
+		}
+		modal.onChangeTitle(mode.icon + " " + mode.type)
 
 		// TODO the command still shows, even though it is removed from the keybindingsState
 		// but maybe there is another registration with different keybindings in my config
 		// Need to check later
 		const toUnregister =
-			mode === "commands" && pickCommands(["runner.openCommands"])
+			mode.type === "commands" && pickCommands(["runner.openCommands"])
 
 		if (toUnregister) {
 			unregisterKeybinds(toUnregister)
@@ -157,6 +160,8 @@ function RunnerInput({
 	onKeyDown,
 	onSubmit
 }: RunnerInputProps): React.ReactNode {
+	const colors = useColors()
+
 	return (
 		<box
 			border={["bottom"]}
@@ -190,7 +195,7 @@ type RunnerListProps = {
 	focused: boolean
 }
 
-export function RunnerList({ items, selectedIndex, focused }: RunnerListProps) {
+export function RunnerList({ items, selectedIndex }: RunnerListProps) {
 	return (
 		<box minHeight={16}>
 			{items.map((item, index) => (
@@ -210,6 +215,8 @@ type RunnerItemProps = {
 }
 
 function RunnerListItem({ item, focused }: RunnerItemProps): React.ReactNode {
+	const colors = useColors()
+
 	const backgroundColor: AppColor | undefined = focused
 		? colors.blue
 		: undefined
