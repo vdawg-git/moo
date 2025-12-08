@@ -209,10 +209,7 @@ const addToManualQueueLast = createAction<{ trackId: TrackId }>(
 )
 const removeFromManualQueue = createAction<{ index: number }>(
 	(context, { index }) => {
-		context.playback.manuallyAdded = context.playback.manuallyAdded.splice(
-			index,
-			1
-		)
+		context.playback.manuallyAdded.splice(index, 1)
 	}
 )
 
@@ -223,7 +220,7 @@ const removeFromQueue = createAction<{ index: number }>((state, { index }) => {
 		return
 	}
 
-	state.playback.queue.tracks = state.playback.queue.tracks.splice(index, 1)
+	state.playback.queue.tracks.splice(index, 1)
 })
 
 // notifications

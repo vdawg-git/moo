@@ -292,13 +292,13 @@ describe("addToManualQueueLast", () => {
 describe("removeFromManualQueue", () => {
 	it("should remove track at given index", () => {
 		const given = trackIdsRange(3)
-		const expected = [given[1]!, given[2]!]
+		const toRemove = 1
+		const expected = [given[0]!, given[2]!]
 
 		const state = createInitialState({ manuallyAdded: given })
 
-		const newState = actions.removeFromManualQueue(state, { index: 1 })
+		const newState = actions.removeFromManualQueue(state, { index: toRemove })
 
-		// Bug: splice returns removed items, not remaining array
 		expect(newState.playback.manuallyAdded).toEqual(expected)
 	})
 })
