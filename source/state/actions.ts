@@ -1,9 +1,9 @@
+import { randomUUID } from "node:crypto"
 import { deepEquals } from "bun"
 import { type Draft, makeCreator } from "mutative"
 import { IS_DEV } from "#/constants"
 import { shuffleWithMap, unshuffleFromMap } from "#/helpers"
 import { logg } from "#/logs"
-import { addErrorNotification } from "./state"
 import type { TrackId } from "../database/types"
 import type {
 	AppModal,
@@ -76,7 +76,9 @@ const playFromManualQueue = createAction<{ index: number }>(
 		const { manuallyAdded } = state.playback
 
 		if (index > manuallyAdded.length - 1) {
-			addErrorNotification("Bug. Index is out of bounds #8764")
+			state.notifications.push(
+				createErrorNotification("Bug. Index is out of bounds #8764")
+			)
 			return
 		}
 
@@ -97,7 +99,9 @@ const playIndex = createAction<{ index: number }>((state, { index }) => {
 
 	if (index > tracksLength) {
 		logg.error("playIndex index out of bounds", { index, tracksLength })
-		addErrorNotification("Bug happened when playing")
+		state.notifications.push(
+			createErrorNotification("Bug happened when playing")
+		)
 	} else {
 		state.playback.index = index
 	}
@@ -213,19 +217,14 @@ const removeFromManualQueue = createAction<{ index: number }>(
 )
 
 /** Removes a single track from the auto queue */
-const removeFromQueue = createAction<{ index: number }>(
-	(context, { index }) => {
-		if (!context.playback.queue) {
-			addErrorNotification("Bug. Queue is not set")
-			return
-		}
-
-		context.playback.queue.tracks = context.playback.queue.tracks.splice(
-			index,
-			1
-		)
+const removeFromQueue = createAction<{ index: number }>((state, { index }) => {
+	if (!state.playback.queue) {
+		state.notifications.push(createErrorNotification("Bug. Queue is not set"))
+		return
 	}
-)
+
+	state.playback.queue.tracks = state.playback.queue.tracks.splice(index, 1)
+})
 
 // notifications
 
@@ -274,6 +273,11 @@ const addModal = createAction<{ modal: AppModal }>((context, { modal }) => {
 const closeModal = createAction<{ id: AppModal["id"] }>((context, { id }) => {
 	context.modals = context.modals.filter(({ id: toClose }) => id !== toClose)
 })
+
+function createErrorNotification(message: string): AppNotification {
+	logg.error("reducer error", { message })
+	return { id: randomUUID(), message, type: "error" }
+}
 
 // Lets export the actions like that to avoid polluting LSP imports.
 // Hopefully one day Typescript improves that..

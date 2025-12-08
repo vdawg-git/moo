@@ -229,7 +229,6 @@ export type ComposerSimple = typeof tableAlbums.$inferSelect
 /**
  * Currently we only support smart-playlists. Might change, but prob not.
  * We might not need to save playlists in the database tbh
- * TODO: think about removing playlists from the db, as we just query them directly anyway and use the FS to know what available
  */
 export const tablePlaylists = sqliteTable("playlists", {
 	id: text().primaryKey().$type<PlaylistId>(),

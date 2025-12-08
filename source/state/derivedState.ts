@@ -5,8 +5,7 @@ import {
 	type Observable,
 	of,
 	shareReplay,
-	switchMap,
-	tap
+	switchMap
 } from "rxjs"
 import { database, LocalTrack } from "#/database/database"
 import { observeQuery } from "#/database/useQuery"
@@ -44,7 +43,6 @@ export const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
 			)
 		)
 	}),
-	tap((track) => logg.debug("currentTrack a", { track: track?.id })),
 	map((trackMaybe) => (trackMaybe ? new LocalTrack(trackMaybe) : trackMaybe)),
 	shareReplay({ bufferSize: 1, refCount: false })
 )
