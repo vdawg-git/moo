@@ -35,7 +35,6 @@ export function useQuery<T>(
 ): QueryResult<T>
 export function useQuery<T>(
 	key: string | string[],
-	/** ! Make sure to wrap the query in `useCallback` */
 	query: () => Promise<T> | Promise<Result<T, any>>
 ): QueryResult<T> {
 	const combinedKey = Array.isArray(key) ? key.join("-") : key
@@ -47,7 +46,8 @@ export function useQuery<T>(
 		isFetched: false
 	})
 
-	const callback = useCallback(query, [])
+	// biome-ignore lint/correctness/useExhaustiveDependencies: This is how it should work
+	const callback = useCallback(query, [combinedKey])
 
 	useEffect(() => {
 		const subscription = observeQuery(combinedKey, callback).subscribe(setState)
