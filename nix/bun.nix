@@ -822,12 +822,6 @@
     url = "https://registry.npmjs.org/@libsql/isomorphic-ws/-/isomorphic-ws-0.1.5.tgz";
     hash = "sha512-DtLWIH29onUYR00i0GlQ3UdcTRC6EP4u9w/h9LxpUZJWRMARk6dQwZ6Jkd+QdwVpuAOrdxt18v0K2uIYR3fwFg==";
   };
-  "@libsql/isomorphic-ws/ws" = {
-    out_path = "@libsql/isomorphic-ws/node_modules/ws";
-    name = "ws@8.18.0";
-    url = "https://registry.npmjs.org/ws/-/ws-8.18.0.tgz";
-    hash = "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==";
-  };
   "@libsql/linux-arm-gnueabihf" = {
     out_path = "@libsql/linux-arm-gnueabihf";
     name = "@libsql/linux-arm-gnueabihf@0.5.22";
@@ -974,51 +968,51 @@
   };
   "@opentui/core" = {
     out_path = "@opentui/core";
-    name = "@opentui/core@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/core/-/core-0.1.46.tgz";
-    hash = "sha512-9682jrr65vYP0hPHfrZRK3xymlCSLVBMrRKNtclFasDi6bRvACUrtziFOIIyMIvPHRJCFWPbtz0MppARmN4zvQ==";
+    name = "@opentui/core@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/core/-/core-0.1.56.tgz";
+    hash = "sha512-TI5cSCPYythHIQYpAEdXyZhewGACn2TfnfC1qZmrSyEq33zFo4W7zpQ4EZNpy9xZJFCI+elAUVJFARwhudp9EQ==";
   };
   "@opentui/core-darwin-arm64" = {
     out_path = "@opentui/core-darwin-arm64";
-    name = "@opentui/core-darwin-arm64@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/core-darwin-arm64/-/core-darwin-arm64-0.1.46.tgz";
-    hash = "sha512-Sp/uFS8J/1yVfhgkTJ43OZfy64hv1/9sdT+oC5yb8XTNPI3QGtg6ixjr3nRoD/Lkxuj2i5SJ30RZufqH6rkCpA==";
+    name = "@opentui/core-darwin-arm64@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/core-darwin-arm64/-/core-darwin-arm64-0.1.56.tgz";
+    hash = "sha512-x5U9J2k1Fmbb9Mdh1nOd/yZVpg4ARCrV5pFngpaeKrIWDhs8RLpQW3ap+r7uyFLGFkSn4h5wBR0jj6Dg+Tyw+A==";
   };
   "@opentui/core-darwin-x64" = {
     out_path = "@opentui/core-darwin-x64";
-    name = "@opentui/core-darwin-x64@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/core-darwin-x64/-/core-darwin-x64-0.1.46.tgz";
-    hash = "sha512-JtxEruRyLQRK8ByPmBm1nYYSvnX6mXNC+mngvd5RDiCzLzkM6qVBQBd/m3Hxp2/s6MO5Z2+iVBzZ8XFH5T4IZw==";
+    name = "@opentui/core-darwin-x64@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/core-darwin-x64/-/core-darwin-x64-0.1.56.tgz";
+    hash = "sha512-7swq9rV/SaNVBWoUbC7mlP1VNyKBl7SSwmyVMkcaBP71lkm95zWuh4pgGj82fLgZ9gITRBD95TJVDmTovOyW0A==";
   };
   "@opentui/core-linux-arm64" = {
     out_path = "@opentui/core-linux-arm64";
-    name = "@opentui/core-linux-arm64@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/core-linux-arm64/-/core-linux-arm64-0.1.46.tgz";
-    hash = "sha512-pN8nR4CwBlkZ5uh5KvoytiXXav2GhkP9cB2d3gPe49c7MBz2XrjGexgb47xjaq0hAVbytv9XUifqdPTcFQdPaQ==";
+    name = "@opentui/core-linux-arm64@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/core-linux-arm64/-/core-linux-arm64-0.1.56.tgz";
+    hash = "sha512-v8b+kiTlynAJzR0hFeVpGFzVi5PGqXAe3Zql9iTiQqTExkm/sR34sfC/P6rBOUhuAnos8ovPDKWtDb6eCTSm9g==";
   };
   "@opentui/core-linux-x64" = {
     out_path = "@opentui/core-linux-x64";
-    name = "@opentui/core-linux-x64@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/core-linux-x64/-/core-linux-x64-0.1.46.tgz";
-    hash = "sha512-oH4/FEYZYce9qMQVqGl4+Btw+Mfsf6ybpWIIJUJjXMWWZlAgsTMAWM8m195Oe6WstfFLF+nRH7NUcm/YOsCHnw==";
+    name = "@opentui/core-linux-x64@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/core-linux-x64/-/core-linux-x64-0.1.56.tgz";
+    hash = "sha512-lbxgvAi5SBswK/2hoMPtLhPvJxASgquPUwvGTRHqzDkCvrOChP/loTjBQpL09/nAFc3jbM3SAbZtnEgA2SGYVw==";
   };
   "@opentui/core-win32-arm64" = {
     out_path = "@opentui/core-win32-arm64";
-    name = "@opentui/core-win32-arm64@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/core-win32-arm64/-/core-win32-arm64-0.1.46.tgz";
-    hash = "sha512-C/rTBJ9bzBcZJRCLIxi9Ka/DANe2SaHtryotseWPk9RDydw7LTHGoi3VtRW0RFijQGqmvFg+31MeNhvY1YZ65Q==";
+    name = "@opentui/core-win32-arm64@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/core-win32-arm64/-/core-win32-arm64-0.1.56.tgz";
+    hash = "sha512-RoCAbvDo+59OevX+6GrEGbaueERiBVnTaWJkrS41hRAD2fFS3CZpW7UuS5jIg7zn5clHmOGyfvCiBkTRXmgkhw==";
   };
   "@opentui/core-win32-x64" = {
     out_path = "@opentui/core-win32-x64";
-    name = "@opentui/core-win32-x64@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/core-win32-x64/-/core-win32-x64-0.1.46.tgz";
-    hash = "sha512-d2DXSlA93LbSriX+pDDZ5sMwkcW1+eVoeykxeW4UParSb4/3ceBCD4aSARaZ6yoq0rR1IWOdgKdiihZH4mwdJQ==";
+    name = "@opentui/core-win32-x64@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/core-win32-x64/-/core-win32-x64-0.1.56.tgz";
+    hash = "sha512-i6N5TjZU5gRkJsKmH8e/qY9vwSk0rh6A5t37mHDGlzN4E5yO/MbBrYH4ppLp5stps9Zfi1Re51ofJX1s2hZY/Q==";
   };
   "@opentui/react" = {
     out_path = "@opentui/react";
-    name = "@opentui/react@0.1.46";
-    url = "https://registry.npmjs.org/@opentui/react/-/react-0.1.46.tgz";
-    hash = "sha512-+XjXnn8rKp1+5nMQ5N8yGSZ00KN94NmUCEYz68eJ/np6B8b/x7k2FRKdGlu5i3sIbZ3WcB7OIu+lSaS2zBXtJg==";
+    name = "@opentui/react@0.1.56";
+    url = "https://registry.npmjs.org/@opentui/react/-/react-0.1.56.tgz";
+    hash = "sha512-BZMS6yMUpj+SPvFmizz0okknuZTQ5aD/BDfiUFYba0l1d2334vyQdCQ9aKuqnnlvEyxOvzFVLvNYskc1GuqPgA==";
   };
   "@petamoriken/float16" = {
     out_path = "@petamoriken/float16";
@@ -1701,6 +1695,12 @@
     name = "detect-libc@2.0.2";
     url = "https://registry.npmjs.org/detect-libc/-/detect-libc-2.0.2.tgz";
     hash = "sha512-UX6sGumvvqSaXgdKGUsgZWqcUyIXZ/vZTrlRT/iobiKhGL0zL4d3osHj3uqllWJK+i+sixDS/3COVEOFbupFyw==";
+  };
+  "diff" = {
+    out_path = "diff";
+    name = "diff@8.0.2";
+    url = "https://registry.npmjs.org/diff/-/diff-8.0.2.tgz";
+    hash = "sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==";
   };
   "dot-prop" = {
     out_path = "dot-prop";
@@ -3231,12 +3231,6 @@
     url = "https://registry.npmjs.org/react/-/react-19.2.0.tgz";
     hash = "sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ==";
   };
-  "react-devtools-core" = {
-    out_path = "react-devtools-core";
-    name = "react-devtools-core@6.1.5";
-    url = "https://registry.npmjs.org/react-devtools-core/-/react-devtools-core-6.1.5.tgz";
-    hash = "sha512-ePrwPfxAnB+7hgnEr8vpKxL9cmnp7F322t8oqcPshbIQQhDKgFDW4tjhF2wjVbdXF9O/nyuy3sQWd9JGpiLPvA==";
-  };
   "react-error-boundary" = {
     out_path = "react-error-boundary";
     name = "react-error-boundary@5.0.0";
@@ -4002,9 +3996,9 @@
   };
   "ws" = {
     out_path = "ws";
-    name = "ws@7.5.10";
-    url = "https://registry.npmjs.org/ws/-/ws-7.5.10.tgz";
-    hash = "sha512-+dbF1tHwZpXcbOJdVOkzLDxZP1ailvSxM6ZweXTegylPny803bFhA+vqBYw4s31NSAk4S2Qz+AKXK9a4wkdjcQ==";
+    name = "ws@8.18.0";
+    url = "https://registry.npmjs.org/ws/-/ws-8.18.0.tgz";
+    hash = "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==";
   };
   "xdg-basedir" = {
     out_path = "xdg-basedir";
