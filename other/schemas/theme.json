@@ -1,0 +1,112 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "object",
+	"properties": {
+		"$schema": {
+			"default": "https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/master/other/schemas/theme.json",
+			"type": "string"
+		},
+		"variables": {
+			"description": "Your color variables. You can reference those in the other sections of the theme.",
+			"default": {},
+			"type": "object",
+			"additionalProperties": false
+		},
+		"palette": {
+			"type": "object",
+			"properties": {
+				"black": {
+					"type": "string"
+				},
+				"red": {
+					"type": "string"
+				},
+				"green": {
+					"type": "string"
+				},
+				"yellow": {
+					"type": "string"
+				},
+				"blue": {
+					"type": "string"
+				},
+				"magenta": {
+					"type": "string"
+				},
+				"cyan": {
+					"type": "string"
+				},
+				"white": {
+					"type": "string"
+				},
+				"brightBlack": {
+					"type": "string"
+				},
+				"brightRed": {
+					"type": "string"
+				},
+				"brightGreen": {
+					"type": "string"
+				},
+				"brightYellow": {
+					"type": "string"
+				},
+				"brightBlue": {
+					"type": "string"
+				},
+				"brightMagenta": {
+					"type": "string"
+				},
+				"brightCyan": {
+					"type": "string"
+				},
+				"brightWhite": {
+					"type": "string"
+				},
+				"fg": {
+					"description": "Default foreground color. Usually text and borders.",
+					"type": "string"
+				},
+				"bg": {
+					"description": "Default background color for most things.",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"ui": {
+			"description": "Set the colors for different parts of the app. You can reference colors defined in `palette` here by name.",
+			"default": {
+				"albums": "cyan",
+				"artists": "blue",
+				"commands": "yellow",
+				"playlists": "magenta"
+			},
+			"type": "object",
+			"properties": {
+				"artists": {
+					"description": "The color to signify that this is an artist",
+					"default": "blue",
+					"type": "string"
+				},
+				"albums": {
+					"description": "The color to signify that this is an album",
+					"default": "cyan",
+					"type": "string"
+				},
+				"playlists": {
+					"description": "The color to signify that this is an playlist",
+					"default": "magenta",
+					"type": "string"
+				},
+				"commands": {
+					"description": "The color to signify that this is a command",
+					"default": "yellow",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"additionalProperties": false
+}

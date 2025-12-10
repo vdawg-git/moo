@@ -63,7 +63,7 @@ type TerminalPalette = typeof colors
 const schemaUrl =
 	"https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/master/other/schemas/theme.json"
 
-export const schemaTheme = z.object({
+export const appThemeSchema = z.object({
 	$schema: z.string().optional().default(schemaUrl),
 
 	variables: z
@@ -131,7 +131,7 @@ export const schemaTheme = z.object({
 			"Set the colors for different parts of the app. You can reference colors defined in `palette` here by name."
 		)
 })
-type ConfigTheme = z.output<typeof schemaTheme>
+type ConfigTheme = z.output<typeof appThemeSchema>
 
 async function lazyRendererPalette() {
 	return import("#/renderer")
@@ -143,10 +143,10 @@ function createThemeConfigStream(): Observable<ConfigTheme> {
 	return createWatcher(themePath, { ignoreInitial: false }).pipe(
 		switchMap(async ({ filePath }) =>
 			readFile(filePath, "utf-8")
-				.then((text) => schemaTheme.parseAsync(JSON.parse(text)))
-				.catch(() => schemaTheme.parseAsync({}))
+				.then((text) => appThemeSchema.parseAsync(JSON.parse(text)))
+				.catch(() => appThemeSchema.parseAsync({}))
 		),
-		startWith(schemaTheme.parse({})),
+		startWith(appThemeSchema.parse({})),
 		shareReplay()
 	)
 }

@@ -25,7 +25,6 @@
 		},
 		"icons": {
 			"description": "Change the icons used in the app.",
-			"default": {},
 			"type": "object",
 			"properties": {
 				"play": {
@@ -76,6 +75,16 @@
 				"playlist": {
 					"description": "Icon used to indicate a playlist.",
 					"default": "",
+					"type": "string"
+				},
+				"album": {
+					"description": "Icon used to indicate an album.",
+					"default": "󰀥",
+					"type": "string"
+				},
+				"artist": {
+					"description": "Icon used to indicate an artist.",
+					"default": "",
 					"type": "string"
 				},
 				"command": {
@@ -238,9 +247,14 @@
 					}
 				]
 			}
+		},
+		"tagSeperator": {
+			"description": "The tag used to join a list into a single tag. For example multiple genres for a track are seperated with a '|' by default",
+			"default": "|",
+			"type": "string"
 		}
 	},
-	"required": ["musicDirectories", "version"],
+	"required": ["musicDirectories", "version", "icons"],
 	"additionalProperties": false,
 	"definitions": {
 		"__schema0": {

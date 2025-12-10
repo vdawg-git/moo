@@ -16,6 +16,7 @@
 		"types": "tsc",
 		"lint": "biome check",
 		"postinstall": "./scripts/nixBun.sh",
+		"format": "biome format --write",
 		"drizzleStudio": "DEV=true bunx drizzle-kit studio"
 	},
 	"dependencies": {

@@ -1,11 +1,13 @@
 import path from "node:path"
 import { type ZodType, z } from "zod"
 import { appConfigSchema } from "#/config/config"
+import { appThemeSchema } from "#/config/theme"
 import { APP_ROOT } from "#/constants"
 import { playlistBlueprintSchema } from "#/smartPlaylists/schema"
 
 const schemas = [
 	["mooConfig.json", appConfigSchema],
+	["theme.json", appThemeSchema],
 	["mooPlaylist.json", playlistBlueprintSchema]
 ] as const
 
