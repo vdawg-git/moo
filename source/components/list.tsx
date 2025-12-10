@@ -1,3 +1,4 @@
+import Fuse from "fuse.js"
 import {
 	type ReactNode,
 	useCallback,
@@ -41,9 +42,13 @@ export function useList<T>({
 	items,
 	focused = true,
 	name,
-	wrapNavigation = false
+	wrapNavigation = false,
+	searchKeys,
+	searchPerfection: searchThreshold = 0.1
 }: {
 	items: readonly ListItem<T>[]
+
+	searchKeys: { name: string; getFunction: (data: T) => string }[]
 	/**
 	 * Wether the cursor should jump back
 	 * to the start/end if the navigation goes over the end/start
@@ -55,12 +60,35 @@ export function useList<T>({
 	 * But we dont do that rn, but maybe who knows, life is hectic
 	 */
 	name?: string
+
+	/** How closely the search results should match the input. Default is quite strict */
+	searchPerfection?: number
 }): UseListReturn<T> {
 	const [index, setIndex] = useState(0)
 	const scrollboxRef = useRef<ScrollBoxRenderable>(null)
 	const id = (name ?? "") + useId()
+	const [searchTerm, setSearchTerm] = useState<string | undefined>()
+	const [searchedItems, setSearchedItems] = useState(items)
 
-	const itemsAmount = items.length
+	useEffect(() => {
+		const results = searchTerm
+			? new Fuse(items, {
+					keys: searchKeys.map(({ name, getFunction }) => {
+						const getFn = (listItem: ListItem<T>) => getFunction(listItem.data)
+
+						return { name, getFn }
+					}),
+					shouldSort: true,
+					threshold: searchThreshold
+				})
+					.search(searchTerm)
+					.map(({ item }) => item)
+			: items
+
+		setSearchedItems(results)
+	}, [items, searchTerm, searchKeys.map, searchThreshold])
+
+	const itemsAmount = searchedItems.length
 	const indexLastElement = itemsAmount - 1
 
 	useEffect(() => {
@@ -144,22 +172,22 @@ export function useList<T>({
 	}, [])
 
 	const selectItem = useCallback(() => {
-		const item = items[index]
+		const item = searchedItems[index]
 
 		item?.onSelect({ focused: true, itemIndex: index })
-	}, [items, index])
+	}, [searchedItems, index])
 
 	useEffect(() => {
 		if (!focused) return
 
-		const item = items[index]
+		const item = searchedItems[index]
 		if (!item) {
 			logg.warn("no item found #+hg")
 			return
 		}
 
 		return item.onFocus?.({ focused: true, itemIndex: index })
-	}, [items, index, focused])
+	}, [searchedItems, index, focused])
 
 	useEffect(() => {
 		if (!focused) return
@@ -222,6 +250,28 @@ export function useList<T>({
 		focused
 	])
 
+	useEffect(() => {
+		if (!searchTerm) {
+			return registerKeybinds([
+				{
+					id: "search" + id,
+					callback: () => setSearchTerm(""),
+					keybindings: keybinding("/"),
+					label: "List: Search"
+				}
+			])
+		} else {
+			return registerKeybinds([
+				{
+					id: "exit_search" + id,
+					callback: () => setSearchTerm(undefined),
+					keybindings: keybinding(["escape", "return"]),
+					label: "List: Exit search"
+				}
+			])
+		}
+	}, [searchTerm, id])
+
 	return {
 		goLast,
 		goNext,
@@ -233,7 +283,7 @@ export function useList<T>({
 		setIndex,
 		scrollTo,
 		scrollboxRef,
-		items
+		items: searchedItems
 	}
 }
 
@@ -248,8 +298,9 @@ export function List<T>({
 
 	return (
 		<scrollbox {...scrollboxProps} ref={scrollboxRef}>
-			{items.map((item, itemIndex) => {
-				const focused = indexFocused === itemIndex
+			{items.map((item) => {
+				const itemIndex = item.index
+				const focused = indexFocused === item.index
 				return (
 					<box
 						onMouseDown={() =>
@@ -272,6 +323,8 @@ export function List<T>({
 
 export type ListItem<T> = {
 	data: T
+	/** The index of the item without any filtering applied */
+	index: number
 	onSelect: (context: ListItemContextData) => void
 	onFocus?: (context: ListItemContextData) => void
 	render: (context: ListItemContextData) => ReactNode

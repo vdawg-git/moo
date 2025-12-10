@@ -34,6 +34,7 @@ export function Tracklist({
 	const listItems: readonly ListItem<BaseTrack>[] = tracks.map(
 		(track, index) => ({
 			data: track,
+			index,
 			onSelect: () => onPlay(index),
 			onFocus: () => registerQueueCommands(track.id),
 			render: ({ focused: isFocus }) => (
@@ -54,7 +55,10 @@ export function Tracklist({
 	)
 
 	const listReturn = useList({
-		items: listItems
+		items: listItems,
+		searchKeys: [
+			{ name: "title", getFunction: (item) => item.title ?? item.id }
+		]
 	})
 
 	return tracks.length === 0 ? (
