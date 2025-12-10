@@ -40,44 +40,42 @@ function MediaControl() {
 	return (
 		<box flexDirection="column" height={2}>
 			<box flexDirection="row">
-				<box
-					onMouse={() => appState.send({ type: "previousTrack" })}
+				<text
+					attributes={hasPlayback ? undefined : TextAttributes.DIM}
+					onMouseUp={() => appState.send({ type: "previousTrack" })}
 					paddingLeft={1}
 					paddingRight={1}
 				>
-					<text attributes={hasPlayback ? undefined : TextAttributes.DIM}>
-						{appConfig.icons.previous}
-					</text>
-				</box>
+					{appConfig.icons.previous}
+				</text>
 
-				<box
-					onMouse={() => appState.send({ type: "togglePlayback" })}
+				<text
+					attributes={hasPlayback ? undefined : TextAttributes.DIM}
+					onMouseUp={() => appState.send({ type: "togglePlayback" })}
 					paddingLeft={1}
 					paddingRight={1}
 				>
-					<text attributes={hasPlayback ? undefined : TextAttributes.DIM}>
-						{playState === "playing"
-							? appConfig.icons.pause
-							: appConfig.icons.play}
-					</text>
-				</box>
+					{playState === "playing"
+						? appConfig.icons.pause
+						: appConfig.icons.play}
+				</text>
 
-				<box
-					onMouse={() => appState.send({ type: "nextTrack" })}
+				<text
+					attributes={hasPlayback ? undefined : TextAttributes.DIM}
+					onMouseUp={() => appState.send({ type: "nextTrack" })}
 					paddingLeft={1}
 					paddingRight={1}
 				>
-					<text attributes={hasPlayback ? undefined : TextAttributes.DIM}>
-						{appConfig.icons.next}
-					</text>
-				</box>
-			</box>
-
-			<box onMouseUp={() => appState.send({ type: "toggleShuffle" })}>
-				<text attributes={isShuffling ? undefined : TextAttributes.DIM}>
-					{isShuffling ? appConfig.icons.shuffle : appConfig.icons.linear}
+					{appConfig.icons.next}
 				</text>
 			</box>
+
+			<text
+				attributes={isShuffling ? undefined : TextAttributes.DIM}
+				onMouseUp={() => appState.send({ type: "toggleShuffle" })}
+			>
+				{isShuffling ? appConfig.icons.shuffle : appConfig.icons.linear}
+			</text>
 		</box>
 	)
 }

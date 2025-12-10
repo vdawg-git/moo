@@ -88,7 +88,7 @@ export function TrackItem({
 				: undefined
 	const textColor: AppColor | undefined =
 		bgColor && hasPlaybackIndex
-			? colors.fg
+			? colors.bg
 			: hasPlaybackIndex
 				? colors.green
 				: color

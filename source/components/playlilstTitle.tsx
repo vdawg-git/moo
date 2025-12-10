@@ -1,5 +1,6 @@
 import { TextAttributes } from "@opentui/core"
 import { appConfig } from "#/config/config"
+import { useColors } from "#/hooks/useColors"
 import type { AppColor } from "#/config/theme"
 
 type PlaylistTitleProps = {
@@ -15,9 +16,11 @@ export function PlaylistTitle({
 	color,
 	icon = appConfig.icons.playlist
 }: PlaylistTitleProps) {
+	const colors = useColors()
+
 	return (
 		<box justifyContent="space-between" flexDirection="row" height={1}>
-			<text fg={color} attributes={TextAttributes.BOLD}>
+			<text fg={color ?? colors.magenta} attributes={TextAttributes.BOLD}>
 				{icon} {title}{" "}
 			</text>
 			<text fg={"gray"}>{tracksAmount ? `${tracksAmount} titles` : ""}</text>
