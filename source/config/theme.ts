@@ -16,7 +16,6 @@ import z from "zod"
 import { CONFIG_DIRECTORY } from "#/constants"
 import { createWatcher } from "#/filesystem"
 import { stringifyCompare } from "#/lib/functions"
-import { logg } from "#/logs"
 
 const themePath = path.join(CONFIG_DIRECTORY, "theme.json5")
 
@@ -35,8 +34,6 @@ export const themeStream$ = from(lazyRendererPalette()).pipe(
 	distinctUntilChanged(stringifyCompare) as typeof identity,
 	shareReplay()
 )
-
-themeStream$.subscribe((t) => logg.debug("THEME HERE", { t }))
 
 const colors = {
 	black: "black",
@@ -115,7 +112,7 @@ export const appThemeSchema = z.object({
 			playlists: z
 				.string()
 				.default(colors.magenta)
-				.describe("The color to signify that this is an playlist"),
+				.describe("The color to signify that this is a playlist"),
 			commands: z
 				.string()
 				.default(colors.yellow)

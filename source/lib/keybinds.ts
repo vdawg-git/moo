@@ -174,6 +174,7 @@ export function displayKeybinding(keySequence: KeyBinding): string {
 export function keybinding(
 	input: string | readonly string[]
 ): readonly KeyBinding[] {
+	// This freezes when the input is `escape`, idk why
 	return Array.isArray(input)
 		? input.map(parseKeybind).map((result) => result.getOrThrow())
 		: [parseKeybind(input).getOrThrow()]

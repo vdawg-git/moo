@@ -49,6 +49,12 @@ export function handleAudioPlayback() {
 	return () => callAll(unsubscribers)
 }
 
+const toRegisterPlaybackCommands = pickCommands([
+	"player.togglePlayback",
+	"player.next",
+	"player.playPrevious"
+])
+
 /**  Registers playback commands reactivly */
 function registeringPlaybackCommands() {
 	const subscription = appState$
@@ -57,16 +63,10 @@ function registeringPlaybackCommands() {
 			distinctUntilChanged()
 		)
 		.subscribe((hasQueue) => {
-			const toRegister = pickCommands([
-				"player.togglePlayback",
-				"player.next",
-				"player.playPrevious"
-			])
-
 			if (hasQueue) {
-				registerKeybinds(toRegister)
+				registerKeybinds(toRegisterPlaybackCommands)
 			} else {
-				unregisterKeybinds(toRegister)
+				unregisterKeybinds(toRegisterPlaybackCommands)
 			}
 		})
 

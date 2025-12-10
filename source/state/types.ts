@@ -38,6 +38,8 @@ export interface AppState {
 
 	notifications: readonly AppNotification[]
 	modals: readonly AppModal[]
+
+	focusedInputs: readonly string[]
 }
 
 /**

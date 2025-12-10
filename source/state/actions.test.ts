@@ -518,7 +518,8 @@ function createInitialState(options?: {
 			history: [{ route: "home" }]
 		},
 		notifications: [],
-		modals: []
+		modals: [],
+		focusedInputs: []
 	}
 }
 

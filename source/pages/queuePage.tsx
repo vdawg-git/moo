@@ -13,6 +13,8 @@ import { usePlaybackData } from "#/state/useSelectors"
 import type { BaseTrack } from "#/database/types"
 import type { AppState } from "#/state/types"
 
+type ListItemQueue = ListItem<{ type: "auto" | "manual"; track: BaseTrack }>
+
 export function QueuePage() {
 	const playbackState = usePlaybackData()
 	const { queue, manuallyAdded: manuallyAddedIds } = playbackState
@@ -21,21 +23,52 @@ export function QueuePage() {
 	const ids = [...(queue?.tracks ?? []), ...manuallyAddedIds]
 	const totalTracks = queue?.tracks.length ?? 0 + manuallyAddedIds.length
 
-	const response: QueryResult<{
-		autoAdded: readonly BaseTrack[]
-		manualAdded: readonly BaseTrack[]
-	}> = useQuery(["tracks", ...new Set(ids)], () =>
-		Result.fromAsyncCatching(database.getTracks(ids)).map((tracks) => {
-			return {
-				autoAdded:
-					autoTrackIds.flatMap(
+	const response: QueryResult<readonly ListItemQueue[]> = useQuery(
+		["tracks", ...new Set(ids)],
+		() =>
+			Result.fromAsyncCatching(database.getTracks(ids)).map((tracks) => {
+				const autoTracks = autoTrackIds
+					.flatMap(
 						(id) => tracks.find(({ id: trackId }) => id === trackId) ?? []
-					) ?? [],
-				manualAdded: manuallyAddedIds.flatMap(
-					(id) => tracks.find(({ id: trackId }) => trackId === id) ?? []
-				)
-			}
-		})
+					)
+					.map(
+						(track, index) =>
+							({
+								data: { type: "auto", track },
+								index: playbackState.index + index + 1,
+								onSelect: () => appState.send({ type: "playIndex", index }),
+								onFocus: ({ index: itemIndex }) =>
+									registerAutoQueueCommands(
+										itemIndex,
+										"auto_queue_" + index + track.id
+									)
+							}) satisfies ListItemQueue
+					)
+
+				const manualTracks = manuallyAddedIds
+					.flatMap(
+						(id) => tracks.find(({ id: trackId }) => trackId === id) ?? []
+					)
+					.map(
+						(track, index) =>
+							({
+								data: { type: "manual", track },
+								index,
+								onSelect: ({ index: itemIndex }) =>
+									appState.send({
+										type: "playFromManualQueue",
+										index: itemIndex
+									}),
+								onFocus: ({ index: itemIndex }) =>
+									registerManualQueueCommands(
+										itemIndex,
+										"manual_" + itemIndex + track.id
+									)
+							}) satisfies ListItemQueue
+					)
+
+				return [...manualTracks, ...autoTracks]
+			})
 	)
 
 	const colors = useColors()
@@ -49,14 +82,12 @@ export function QueuePage() {
 					<text>Loading...</text>
 				) : (
 					response.data.fold(
-						({ autoAdded, manualAdded }) => (
+						(items) => (
 							<QueueView
-								autoAdded={autoAdded}
-								manuallyAdded={manualAdded}
+								items={items}
 								isPlayingFromManualQueue={
 									playbackState.isPlayingFromManualQueue
 								}
-								playIndex={playbackState.index}
 								playState={playbackState.playState}
 							/>
 						),
@@ -71,88 +102,63 @@ export function QueuePage() {
 }
 
 type QueueViewProps = {
-	manuallyAdded: readonly BaseTrack[]
-	autoAdded: readonly BaseTrack[]
-	playIndex: number
+	items: readonly ListItemQueue[]
 	isPlayingFromManualQueue: boolean
 	playState: AppState["playback"]["playState"]
 }
 
 function QueueView({
-	autoAdded,
 	isPlayingFromManualQueue,
-	manuallyAdded,
-	playIndex,
+	items,
 	playState
 }: QueueViewProps) {
 	const colors = useColors()
 
-	const manual: readonly ListItem<BaseTrack>[] = manuallyAdded.map((track) => ({
-		data: track,
-		onSelect: ({ itemIndex }) =>
-			appState.send({ type: "playFromManualQueue", index: itemIndex }),
-		onFocus: ({ itemIndex }) =>
-			registerManualQueueCommands(itemIndex, "manual_" + itemIndex + track.id),
-		render: ({ itemIndex, focused }) => (
-			<TrackItem
-				track={track}
-				focused={focused}
-				state={
-					isPlayingFromManualQueue && itemIndex === 0
-						? playState === "playing"
-							? "playing"
-							: playState === "paused"
-								? "paused"
-								: undefined
-						: undefined
-				}
-				color={colors.green}
-			/>
-		)
-	}))
-
-	const auto: readonly ListItem<BaseTrack>[] = autoAdded
-		.slice(playIndex)
-		.map((track) => ({
-			data: track,
-			onSelect: ({ itemIndex }) =>
-				appState.send({ type: "playIndex", index: playIndex + itemIndex + 1 }),
-			onFocus: ({ itemIndex }) =>
-				registerAutoQueueCommands(
-					itemIndex,
-					"auto_queue_" + itemIndex + track.id
-				),
-			render: ({ itemIndex, focused }) => (
-				<TrackItem
-					track={track}
-					focused={focused}
-					state={
-						isPlayingFromManualQueue
-							? undefined
-							: itemIndex === 0
-								? playState === "playing"
-									? "playing"
-									: playState === "paused"
-										? "paused"
-										: undefined
-								: undefined
-					}
-				/>
-			)
-		}))
-
-	const items: readonly ListItem<BaseTrack>[] = [...manual, ...auto]
 	const isEmpty = items.length === 0
 
 	const useListReturn = useList({
-		items
+		items,
+		searchKeys: [
+			{ name: "Title", getFunction: ({ track }) => track.title ?? track.id }
+		]
 	})
 
 	if (isEmpty) {
 		return <text>Queue is empty. Start playing a playlist</text>
 	}
 
-	return <List flexDirection="column" register={useListReturn} />
+	return (
+		<List
+			flexDirection="column"
+			register={useListReturn}
+			render={({ type, track }, { indexItem, focused }) => (
+				<TrackItem
+					track={track}
+					focused={focused}
+					state={
+						type === "manual"
+							? isPlayingFromManualQueue && indexItem === 0
+								? playState === "playing"
+									? "playing"
+									: playState === "paused"
+										? "paused"
+										: undefined
+								: undefined
+							: isPlayingFromManualQueue
+								? undefined
+								: indexItem === 0
+									? playState === "playing"
+										? "playing"
+										: playState === "paused"
+											? "paused"
+											: undefined
+									: undefined
+					}
+					color={colors.green}
+				/>
+			)}
+		/>
+	)
 }
 
 function registerManualQueueCommands(index: number, uid: string): () => void {

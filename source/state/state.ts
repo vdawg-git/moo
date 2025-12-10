@@ -59,7 +59,14 @@ export const appState = createStore({
 		////////////////////////
 
 		addModal: a.addModal,
-		closeModal: a.closeModal
+		closeModal: a.closeModal,
+
+		////////////////////////
+		// Keybindings
+		////////////////////////
+
+		addFocusedInput: a.addFocusedInput,
+		removeFocusedInput: a.removeFocusedInput
 	} satisfies { [K in keyof typeof a]: (typeof a)[K] }
 })
 
@@ -80,7 +87,8 @@ function createInitalState(): AppState {
 			history: [{ route: "home" }]
 		},
 		notifications: [],
-		modals: []
+		modals: [],
+		focusedInputs: []
 	}
 }
 

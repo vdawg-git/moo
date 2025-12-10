@@ -1,4 +1,5 @@
 import path from "node:path"
+import { useMemo, useRef } from "react"
 import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
 import { registerKeybinds } from "#/keybindManager/keybindManager"
@@ -31,17 +32,40 @@ export function Tracklist({
 }: PlaylistProps) {
 	const playIndex = shuffleMap ? shuffleMap[basePlayIndex ?? 0] : basePlayIndex
 
-	const listItems: readonly ListItem<BaseTrack>[] = tracks.map(
-		(track, index) => ({
-			data: track,
-			onSelect: () => onPlay(index),
-			onFocus: () => registerQueueCommands(track.id),
-			render: ({ focused: isFocus }) => (
+	const onPlayRef = useRef<PlaylistProps["onPlay"]>(null)
+	if (!onPlayRef.current) {
+		onPlayRef.current = onPlay
+	}
+
+	const listItems: readonly ListItem<BaseTrack>[] = useMemo(
+		() =>
+			tracks.map((track, index) => ({
+				data: track,
+				index,
+				onSelect: ({ index }) => onPlayRef.current?.(index),
+				onFocus: () => registerQueueCommands(track.id)
+			})),
+		[tracks]
+	)
+
+	const listReturn = useList({
+		items: listItems,
+		searchKeys: [
+			{ name: "title", getFunction: (item) => item.title ?? item.id }
+		]
+	})
+
+	return tracks.length === 0 ? (
+		<text>No tracks here :(</text>
+	) : (
+		<List
+			register={listReturn}
+			render={(track, { focused: isFocus, indexDisplayed }) => (
 				<TrackItem
 					track={track}
 					focused={isFocus}
 					state={
-						index === playIndex
+						indexDisplayed === playIndex
 							? playState === "playing"
 								? "playing"
 								: "paused"
@@ -49,18 +73,8 @@ export function Tracklist({
 					}
 					key={track.id}
 				/>
-			)
-		})
-	)
-
-	const listReturn = useList({
-		items: listItems
-	})
-
-	return tracks.length === 0 ? (
-		<text>No tracks here :(</text>
-	) : (
-		<List register={listReturn} />
+			)}
+		/>
 	)
 }
 

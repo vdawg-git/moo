@@ -271,6 +271,15 @@ const closeModal = createAction<{ id: AppModal["id"] }>((context, { id }) => {
 	context.modals = context.modals.filter(({ id: toClose }) => id !== toClose)
 })
 
+const addFocusedInput = createAction<{ id: string }>((context, { id }) => {
+	context.focusedInputs.push(id)
+})
+const removeFocusedInput = createAction<{ id: string }>((context, { id }) => {
+	context.focusedInputs = context.focusedInputs.filter(
+		(someId) => someId !== id
+	)
+})
+
 function createErrorNotification(message: string): AppNotification {
 	logg.error("reducer error", { message })
 	return { id: randomUUID(), message, type: "error" }
@@ -298,5 +307,7 @@ export const appStateActionsInternal = {
 	playFromManualQueue,
 	playIndex,
 	removeFromManualQueue,
-	removeFromQueue
+	removeFromQueue,
+	addFocusedInput,
+	removeFocusedInput
 }

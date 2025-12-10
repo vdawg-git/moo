@@ -46,7 +46,7 @@ export function useQuery<T>(
 		isFetched: false
 	})
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: This is how it should work
+	// biome-ignore lint/correctness/useExhaustiveDependencies: The query should only recalculate when combinedKey changes
 	const callback = useCallback(query, [combinedKey])
 
 	useEffect(() => {

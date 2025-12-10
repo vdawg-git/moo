@@ -1,4 +1,4 @@
-import type { KeyBinding } from "#/lib/keybinds"
+import { type KeyBinding, keybinding } from "#/lib/keybinds"
 
 /**
  * Used for the keybindings config schema generation
@@ -29,14 +29,14 @@ export type AppCommandData = {
 export const appCommandsBase = Object.freeze({
 	"runner.openCommands": {
 		label: "Open runner",
-		keybindings: [[{ key: ":", modifiers: [] }]] as KeyBinding[],
+		keybindings: keybinding(":"),
 		description:
 			"Open the command runner from which you can access all commands for the app."
 	},
 
 	"runner.openGoto": {
 		label: "Go to..",
-		keybindings: [[{ key: ";", modifiers: [] }]] as KeyBinding[],
+		keybindings: keybinding(";"),
 		description:
 			"Open the switcher from where you can go to different parts of your library."
 	},
@@ -44,43 +44,43 @@ export const appCommandsBase = Object.freeze({
 	"player.next": {
 		label: "Play next",
 		description: "Plays the next song in the queue",
-		keybindings: [[{ key: "l", modifiers: [] }]] as KeyBinding[]
+		keybindings: keybinding("l")
 	},
 
 	"player.playPrevious": {
 		label: "Play previous",
-		keybindings: [[{ key: "h", modifiers: [] }]] as KeyBinding[],
+		keybindings: keybinding("h"),
 		description: "Global keybinding. Plays the previous track in the queue."
 	},
 
 	"player.togglePlayback": {
 		label: "Toggle play",
-		keybindings: [[{ key: "space", modifiers: [] }]] as KeyBinding[],
+		keybindings: keybinding("space"),
 		description:
 			"Global keybinding. Toggles the playback from pause to play and vice versa."
 	},
 
 	"player.seekForward": {
 		label: "Seeks forward",
-		keybindings: [[{ key: "L", modifiers: [] }]] as KeyBinding[],
+		keybindings: keybinding("L"),
 		description: "Seeks forward a couple of seconds."
 	},
 
 	"player.seekBackward": {
 		label: "Seeks backward",
-		keybindings: [[{ key: "H", modifiers: [] }]] as KeyBinding[],
+		keybindings: keybinding("H"),
 		description: "Seeks backward a couple of seconds."
 	},
 
 	"player.toggleShuffle": {
 		label: "Toggle shuffle",
-		keybindings: [[{ key: "s", modifiers: [] }]] as KeyBinding[],
+		keybindings: keybinding("s"),
 		description: "Toggles the shuffle mode on/off."
 	},
 
 	showKeybinds: {
 		label: "Show keybindings",
-		keybindings: [[{ key: "?", modifiers: [] }]],
+		keybindings: keybinding("?"),
 		description: "Show all keybinds"
 	}
 } as const satisfies AppCommandBase)

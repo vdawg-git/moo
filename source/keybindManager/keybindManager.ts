@@ -32,7 +32,7 @@ export type SequencePart = {
 }
 
 const areKeybindingsDisabled$: Observable<boolean> = appState$.pipe(
-	map((state) => state.modals.length > 0),
+	map((state) => state.focusedInputs.length > 0),
 	startWith(false),
 	distinctUntilChanged(),
 	shareReplay()
@@ -160,9 +160,9 @@ function openTuiInputToKeyInput(event: KeyEvent): KeyInput {
 /** Returns the unregister function */
 export function registerKeybinds(toRegister: readonly GeneralCommand[]) {
 	toRegister.forEach(({ keybindings, label, callback, id }) =>
-		keybindings.forEach((sequence) =>
+		keybindings.forEach((sequence) => {
 			keybindsState.addSequence(sequence, { callback, id, label })
-		)
+		})
 	)
 
 	return () => unregisterKeybinds(toRegister)

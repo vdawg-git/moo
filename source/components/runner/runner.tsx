@@ -6,6 +6,7 @@ import {
 	unregisterKeybinds
 } from "#/keybindManager/keybindManager"
 import { appState } from "#/state/state"
+import { Input } from "../Input"
 import { useRunnerItems } from "./useRunnerItems"
 import type { KeyEvent } from "@opentui/core"
 import type React from "react"
@@ -172,7 +173,7 @@ function RunnerInput({
 			width={"100%"}
 			minWidth={"100%"}
 		>
-			<input
+			<Input
 				focused
 				value={value}
 				placeholder="Search.."
