@@ -24,6 +24,7 @@ export function NextUpKeybinds() {
 				alignItems="flex-end"
 				height="100%"
 				width="100%"
+				zIndex={999}
 			>
 				<box
 					marginLeft={1}
