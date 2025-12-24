@@ -8,10 +8,13 @@ type TrieNode = {
 
 export type KeybindCommandMap = Map<string, CommandData>
 
+export type KeybindCommandWhen = "default" | "modal"
+
 export type KeybindCommand = {
 	id: string
 	label: string
 	callback: () => void
+	when: KeybindCommandWhen
 }
 export type KeybindNextUp = { command: KeybindCommand; keys: string }
 export type KeybindMatches = Map<string, CommandData>
@@ -130,9 +133,7 @@ class KeybindTrie {
 		function recursion(node: TrieNode) {
 			node.commands
 				.entries()
-				.forEach(([id, { label, callback }]) =>
-					result.set(id, { label, callback })
-				)
+				.forEach(([id, command]) => result.set(id, command))
 
 			node.children.forEach((child) => recursion(child))
 		}

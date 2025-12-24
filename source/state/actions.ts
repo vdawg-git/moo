@@ -9,6 +9,7 @@ import type {
 	AppModal,
 	AppNotification,
 	AppState,
+	KeybindWhenRegistered,
 	Queue,
 	ViewPage
 } from "./types"
@@ -280,6 +281,20 @@ const removeFocusedInput = createAction<{ id: string }>((context, { id }) => {
 	)
 })
 
+const registerKeybindingWhen = createAction<{
+	toRegister: KeybindWhenRegistered
+}>((context, { toRegister }) => {
+	context.keybindingWhen.push(toRegister)
+})
+
+const unregisterKeybindWhen = createAction<{ id: string }>(
+	(context, { id: toRemove }) => {
+		context.keybindingWhen = context.keybindingWhen.filter(
+			({ id }) => id !== toRemove
+		)
+	}
+)
+
 function createErrorNotification(message: string): AppNotification {
 	logg.error("reducer error", { message })
 	return { id: randomUUID(), message, type: "error" }
@@ -309,5 +324,7 @@ export const appStateActionsInternal = {
 	removeFromManualQueue,
 	removeFromQueue,
 	addFocusedInput,
-	removeFocusedInput
+	removeFocusedInput,
+	registerKeybindingWhen,
+	unregisterKeybindWhen
 }

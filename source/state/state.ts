@@ -66,7 +66,9 @@ export const appState = createStore({
 		////////////////////////
 
 		addFocusedInput: a.addFocusedInput,
-		removeFocusedInput: a.removeFocusedInput
+		removeFocusedInput: a.removeFocusedInput,
+		registerKeybindingWhen: a.registerKeybindingWhen,
+		unregisterKeybindWhen: a.unregisterKeybindWhen
 	} satisfies { [K in keyof typeof a]: (typeof a)[K] }
 })
 
@@ -88,7 +90,8 @@ function createInitalState(): AppState {
 		},
 		notifications: [],
 		modals: [],
-		focusedInputs: []
+		focusedInputs: [],
+		keybindingWhen: []
 	}
 }
 

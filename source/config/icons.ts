@@ -40,6 +40,14 @@ export const iconsSchema = z
 			.default("❯")
 			.describe("Icon used to indicate a command."),
 		shuffle: z.string().default("󰒝").describe("Icon used for shuffling."),
-		linear: z.string().default("󰒞").describe("Icon used for linear playback.")
+		linear: z
+			.string()
+			.default("󰒞")
+			.describe("Icon used for linear (non-shuffled) playback."),
+
+		arrow: z
+			.string()
+			.default("")
+			.describe("Generic arrow icon used for example for navigation")
 	})
 	.describe("Change the icons used in the app.")

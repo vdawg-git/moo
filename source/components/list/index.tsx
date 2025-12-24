@@ -83,9 +83,7 @@ export function List<T>({
 						<box
 							onMouseDown={() =>
 								focused
-									? item.onSelect({
-											index: item.index
-										})
+									? register.onSelect(item)
 									: register.setIndex(indexDisplayed)
 							}
 							key={item.index}

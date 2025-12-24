@@ -3,8 +3,11 @@ import { renderer } from "#/renderer"
 import type { KeyEvent, PasteEvent } from "@opentui/core"
 
 export type KeyTypeData =
-	| { type: "keypress" | "keyrelease"; event: KeyEvent }
+	| KeyPressEvent
+	| { type: "keyrelease"; event: KeyEvent }
 	| { type: "paste"; event: PasteEvent }
+
+export type KeyPressEvent = { type: "keypress"; event: KeyEvent }
 
 export const keys$: Observable<KeyTypeData> = new Observable<KeyTypeData>(
 	(subscriber) => {

@@ -2,6 +2,7 @@ import { useKeyboard } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
 import { useCallback, useState } from "react"
 import { useColors } from "#/hooks/useColors"
+import { KeybindingWhenProvider } from "#/keybindManager/useKeybindings"
 import { appState } from "#/state/state"
 import type { AppModal } from "#/state/types"
 
@@ -31,26 +32,28 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 	const colors = useColors()
 
 	return (
-		<box
-			zIndex={800}
-			flexDirection="column"
-			justifyContent="center"
-			alignItems="center"
-			position="absolute"
-			width={"100%"}
-			height={"100%"}
-		>
+		<KeybindingWhenProvider when="modal">
 			<box
-				title={displayTitle}
-				titleAlignment={"left"}
-				backgroundColor={colors.bg}
-				borderStyle={"rounded"}
-				borderColor={"gray"}
-				minHeight={5}
-				minWidth={5}
+				zIndex={800}
+				flexDirection="column"
+				justifyContent="center"
+				alignItems="center"
+				position="absolute"
+				width={"100%"}
+				height={"100%"}
 			>
-				<Content onCloseModal={hideModal} onChangeTitle={setTitle} />
+				<box
+					title={displayTitle}
+					titleAlignment={"left"}
+					backgroundColor={colors.bg}
+					borderStyle={"rounded"}
+					borderColor={"gray"}
+					minHeight={5}
+					minWidth={5}
+				>
+					<Content onCloseModal={hideModal} onChangeTitle={setTitle} />
+				</box>
 			</box>
-		</box>
+		</KeybindingWhenProvider>
 	)
 }

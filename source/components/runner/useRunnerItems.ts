@@ -171,7 +171,7 @@ function getQueryForRunnerItems(
 								({
 									id: album.id,
 									label: album.title,
-									icon: appConfig.icons.album,
+									type: "album",
 									onSelect: () =>
 										appState.send({
 											type: "navigateTo",
@@ -200,6 +200,7 @@ function getQueryForRunnerItems(
 								({
 									id: artist.name,
 									label: artist.name,
+									type: "artist",
 									onSelect: () =>
 										appState.send({
 											type: "navigateTo",
@@ -225,12 +226,15 @@ function getRunnerCommands(): RunnerItem[] {
 	return keybindsState
 		.getAllCommands()
 		.entries()
-		.map(([id, { label, callback }]) => ({
-			id,
-			label,
-			onSelect: callback,
-			icon: appConfig.icons.command
-		}))
+		.map(
+			([id, { label, callback }]) =>
+				({
+					id,
+					label,
+					onSelect: callback,
+					type: "command"
+				}) satisfies RunnerItem
+		)
 		.toArray()
 }
 
@@ -238,6 +242,7 @@ async function getGoTos(): Promise<readonly RunnerItem[]> {
 	const artists: RunnerItem = {
 		id: "go-to-artists",
 		label: "Artists",
+		type: "go-to",
 		icon: appConfig.icons.artist,
 		onSelect: () => openRunner(searchModes.artists.prefix)
 	}
@@ -245,6 +250,7 @@ async function getGoTos(): Promise<readonly RunnerItem[]> {
 	const albums: RunnerItem = {
 		id: "go-to-albums",
 		label: "Albums",
+		type: "go-to",
 		icon: appConfig.icons.album,
 		onSelect: () => openRunner(searchModes.albums.prefix)
 	}
@@ -252,6 +258,7 @@ async function getGoTos(): Promise<readonly RunnerItem[]> {
 	const home: RunnerItem = {
 		id: "all-tracks",
 		label: "All tracks",
+		type: "go-to",
 		icon: appConfig.icons.playlist,
 		onSelect: () =>
 			appState.send({ type: "navigateTo", goTo: { route: "home" } })
@@ -260,6 +267,7 @@ async function getGoTos(): Promise<readonly RunnerItem[]> {
 	const queue: RunnerItem = {
 		id: "queue-page",
 		label: "Queue",
+		type: "go-to",
 		icon: appConfig.icons.playlist,
 		onSelect: () =>
 			appState.send({ type: "navigateTo", goTo: { route: "queue" } })
@@ -278,7 +286,7 @@ async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
 					({
 						id: `playlist-${id}`,
 						label: displayName ?? id,
-						icon: appConfig.icons.playlist,
+						type: "playlist",
 						onSelect: () =>
 							appState.send({
 								type: "navigateTo",

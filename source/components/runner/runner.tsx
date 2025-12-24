@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useState } from "react"
+import { useKeyboard } from "@opentui/react"
+import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { pickCommands } from "#/commands/commandFunctions"
+import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
 import {
 	registerKeybinds,
@@ -7,8 +9,9 @@ import {
 } from "#/keybindManager/keybindManager"
 import { appState } from "#/state/state"
 import { Input } from "../Input"
+import { List, useList } from "../list"
 import { useRunnerItems } from "./useRunnerItems"
-import type { KeyEvent } from "@opentui/core"
+import type { InputRenderable, KeyEvent, RGBA } from "@opentui/core"
 import type React from "react"
 import type { AppColor } from "#/config/theme"
 import type { AppModalContentProps } from "#/state/types"
@@ -29,8 +32,12 @@ export function openRunner(initialSearch?: string) {
 export type RunnerItem = {
 	/** This gets displayed */
 	label: string
-	/** Gets shown before the label */
+	/**
+	 * Optional icon. If not set the default icon for the type will get rendered.
+	 * Usually used for `go-to` types to make them less generic.
+	 */
 	icon?: string
+	type: "album" | "playlist" | "command" | "artist" | "go-to"
 	/** Must be unique */
 	id: string
 	onSelect: () => void
@@ -49,6 +56,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [focused, setFocused] = useState<"input" | "list">("input")
 	const activeItem = items[selectedIndex]
+	const inputRef = useRef<InputRenderable>(null)
 
 	const onClose = useCallback(() => {
 		modal.onCloseModal()
@@ -60,46 +68,47 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		onClose()
 	}
 
-	useEffect(() => {
-		input
-		setSelectedIndex(0)
-		setFocused("input")
-	}, [input])
-
 	const onInput = (newText: string) => {
-		const key = newText.at(-1)
-
-		// We want to allow for vim bindings list navigation if it is focused
-		if (focused === "list" && (key === "j" || key === "k")) return
-
 		setInput(newText)
 	}
 
-	const onKeyDown = (key: KeyEvent) => {
-		const name = key.name
+	useKeyboard((event) => {
+		const name = event.name
 		if (name === "tab") {
 			setFocused((previous) => (previous === "input" ? "list" : "input"))
 			return
 		}
 		if (name === "down") {
 			setFocused("list")
-			setSelectedIndex((previous) =>
-				previous >= items.length - 1 ? 0 : previous + 1
-			)
 			return
 		}
+
+		if (name === "up" && selectedIndex === 0) {
+			setFocused("input")
+			setSelectedIndex(0)
+			return
+		}
+
 		if (name === "up") {
 			setFocused("list")
-			setSelectedIndex((previous) =>
-				previous <= 0 ? items.length - 1 : previous - 1
-			)
 			return
 		}
 		if (name === "return") {
 			onSubmit()
 			return
 		}
-	}
+
+		if (focused === "list" && event.name.length === 1) {
+			const newInput = (input ?? "") + event.name
+			setInput(newInput)
+			if (inputRef.current) {
+				inputRef.current.cursorPosition === 999
+			}
+			setFocused("input")
+
+			return
+		}
+	})
 
 	useEffect(() => {
 		if (!mode) {
@@ -120,25 +129,29 @@ function Runner({ modal, initialValue }: RunnerProps) {
 
 		return () => {
 			if (toUnregister) {
-				registerKeybinds(toUnregister)
+				registerKeybinds(toUnregister, { when: "default" })
 			}
 		}
 	}, [mode, modal.onChangeTitle])
 
 	return (
 		<box flexDirection="column" minWidth={"50%"} width={"50%"} maxWidth={50}>
+			<text>{selectedIndex}</text>
 			<RunnerInput
 				value={input}
 				focused={focused === "input"}
 				onInput={onInput}
-				onKeyDown={onKeyDown}
 				onSubmit={onSubmit}
+				onGetFocus={() => setFocused("input")}
+				ref={inputRef}
 			/>
 
 			<RunnerList
 				focused={focused === "list"}
 				items={items}
 				selectedIndex={selectedIndex}
+				onIndexChange={setSelectedIndex}
+				onSelect={onSubmit}
 			/>
 		</box>
 	)
@@ -147,11 +160,13 @@ function Runner({ modal, initialValue }: RunnerProps) {
 type RunnerInputProps = {
 	value: string | undefined
 	onInput: (newValue: string) => void
-	onKeyDown: (key: KeyEvent) => void
+	onKeyDown?: (key: KeyEvent) => void
 	onSubmit: (value: string) => void
+	onGetFocus: () => void
 	/** Only visual focus. We use the input to drive the input value so it is always focused,
 	 * but just not visually */
 	focused: boolean
+	ref: RefObject<InputRenderable | null>
 }
 
 function RunnerInput({
@@ -159,7 +174,9 @@ function RunnerInput({
 	value,
 	onInput,
 	onKeyDown,
-	onSubmit
+	onSubmit,
+	onGetFocus,
+	ref
 }: RunnerInputProps): React.ReactNode {
 	const colors = useColors()
 
@@ -172,14 +189,17 @@ function RunnerInput({
 			height={2}
 			width={"100%"}
 			minWidth={"100%"}
+			onMouseDown={onGetFocus}
 		>
 			<Input
-				focused
+				ref={ref}
+				focused={focused}
 				value={value}
 				placeholder="Search.."
 				onInput={onInput}
 				onKeyDown={onKeyDown}
-				textColor={focused ? colors.brightWhite : colors.white}
+				focusedTextColor={colors.blue}
+				textColor={colors.brightBlack}
 				onSubmit={onSubmit}
 				cursorStyle={{
 					blinking: focused,
@@ -194,18 +214,39 @@ type RunnerListProps = {
 	items: readonly RunnerItem[]
 	selectedIndex: number
 	focused: boolean
+	onIndexChange: (index: number) => void
+	onSelect: (index: number) => void
 }
 
-export function RunnerList({ items, selectedIndex }: RunnerListProps) {
+export function RunnerList({
+	items,
+	onSelect,
+	selectedIndex,
+	onIndexChange,
+	focused
+}: RunnerListProps) {
+	const list = useList({
+		name: "runner",
+		index: selectedIndex,
+		items,
+		onSelect: ({ index }) => onSelect(index),
+		onFocusItem: ({ index }) => onIndexChange(index),
+		focused,
+		searchKeys: [{ name: "label", getFunction: (item) => item.label }]
+	})
+
 	return (
 		<box minHeight={16}>
-			{items.map((item, index) => (
-				<RunnerListItem
-					item={item}
-					focused={selectedIndex === index}
-					key={item.id}
-				/>
-			))}
+			<List
+				register={list}
+				render={(item, { focused: itemFocused }) => (
+					<RunnerListItem
+						listFocused={focused}
+						focused={itemFocused}
+						item={item}
+					/>
+				)}
+			/>
 		</box>
 	)
 }
@@ -213,22 +254,50 @@ export function RunnerList({ items, selectedIndex }: RunnerListProps) {
 type RunnerItemProps = {
 	item: RunnerItem
 	focused: boolean
+	listFocused: boolean
 }
 
-function RunnerListItem({ item, focused }: RunnerItemProps): React.ReactNode {
+// const itemIconColor: Record<RunnerItem['type'], RGBA>
+
+const runnerListItemIconByType: Record<RunnerItem["type"], string> = {
+	"go-to": appConfig.icons.arrow,
+	album: appConfig.icons.album,
+	artist: appConfig.icons.artist,
+	command: appConfig.icons.command,
+	playlist: appConfig.icons.playlist
+}
+
+function RunnerListItem({
+	item,
+	focused,
+	listFocused
+}: RunnerItemProps): React.ReactNode {
 	const colors = useColors()
 
 	const backgroundColor: AppColor | undefined = focused
-		? colors.blue
+		? listFocused
+			? colors.blue
+			: colors.black
 		: undefined
 	const color: AppColor = focused ? colors.bg : colors.fg
 
-	const { label, icon } = item
+	const { label } = item
+
+	const iconColors: Record<RunnerItem["type"], RGBA> = {
+		"go-to": colors.fg,
+		album: colors.albums,
+		artist: colors.artists,
+		command: colors.fg,
+		playlist: colors.playlists
+	}
+
+	const iconColor = iconColors[item.type]
+	const icon = item.icon ?? runnerListItemIconByType[item.type]
 
 	return (
 		<box minWidth={40} flexDirection="row">
 			<box marginRight={1} width={1}>
-				<text fg={backgroundColor}>{icon ?? ""}</text>
+				<text fg={iconColor}>{icon ?? ""}</text>
 			</box>
 			<text bg={backgroundColor} fg={color}>
 				{label}

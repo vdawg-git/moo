@@ -15,7 +15,7 @@ export function registerGlobalCommands() {
 		"player.toggleShuffle"
 	])
 
-	registerKeybinds(toRegister)
+	registerKeybinds(toRegister, { when: "default" })
 }
 
 /**

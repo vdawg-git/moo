@@ -1,12 +1,15 @@
 import path from "node:path"
 import { TextAttributes } from "@opentui/core"
-import { useMemo, useRef } from "react"
+import { useRef } from "react"
 import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
-import { registerKeybinds } from "#/keybindManager/keybindManager"
+import {
+	type GeneralCommandArgument,
+	registerKeybinds
+} from "#/keybindManager/keybindManager"
+import { keybinding } from "#/lib/keybinds"
 import { appState } from "#/state/state"
-import { List, type ListItem, useList } from "./list"
-import type { GeneralCommand } from "#/commands/appCommands"
+import { List, useList } from "./list"
 import type { AppColor } from "#/config/theme"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack, TrackId } from "../database/types"
@@ -38,19 +41,10 @@ export function Tracklist({
 		onPlayRef.current = onPlay
 	}
 
-	const listItems: readonly ListItem<BaseTrack>[] = useMemo(
-		() =>
-			tracks.map((track, index) => ({
-				data: track,
-				index,
-				onSelect: ({ index }) => onPlayRef.current?.(index),
-				onFocus: () => registerQueueCommands(track.id)
-			})),
-		[tracks]
-	)
-
 	const listReturn = useList({
-		items: listItems,
+		items: tracks,
+		onSelect: ({ index }) => onPlayRef.current?.(index),
+		onFocusItem: ({ data: track }) => registerQueueCommands(track.id),
 		searchKeys: [
 			{ name: "title", getFunction: (item) => item.title ?? item.id }
 		]
@@ -144,7 +138,7 @@ export function TrackItem({
  * which should be called when unmounting
  * */
 function registerQueueCommands(trackId: TrackId): () => void {
-	const commands: GeneralCommand[] = [
+	const commands: GeneralCommandArgument[] = [
 		{
 			label: "Play next",
 			id: "play_next" + trackId,
@@ -153,12 +147,7 @@ function registerQueueCommands(trackId: TrackId): () => void {
 					type: "addToManualQueueFirst",
 					trackId: trackId
 				}),
-			keybindings: [
-				[
-					{ key: "q", modifiers: [] },
-					{ key: "f", modifiers: [] }
-				]
-			]
+			keybindings: keybinding("q f")
 		},
 		{
 			label: "Play last",
@@ -168,12 +157,7 @@ function registerQueueCommands(trackId: TrackId): () => void {
 					type: "addToManualQueueFirst",
 					trackId: trackId
 				}),
-			keybindings: [
-				[
-					{ key: "q", modifiers: [] },
-					{ key: "l", modifiers: [] }
-				]
-			]
+			keybindings: keybinding("q l")
 		}
 	]
 

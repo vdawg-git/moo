@@ -17,10 +17,21 @@ export type UseListReturn<T> = {
 	items: readonly ListItem<T>[]
 	searchString: string | undefined
 	mode: ListMode
+	onSelect: (item: ListItem<T>) => void
 }
 
 export type UseListArgument<T> = {
-	items: readonly ListItem<T>[]
+	items: readonly T[]
+
+	onSelect: (item: ListItem<T>) => void
+
+	/**
+	 * Gets called when the an item gets selected.
+	 * The returned function function gets called when the item gets unselected again.
+	 */
+
+	// biome-ignore lint/suspicious/noConfusingVoidType: TS cries if we the provided function returns void and we specify undefinded
+	onFocusItem?: (item: ListItem<T>) => void | (() => void)
 
 	/** Required to make the list searchable. Should have at least one item */
 	searchKeys: {
@@ -28,6 +39,9 @@ export type UseListArgument<T> = {
 		/** The function to get the search data from the list item */
 		getFunction: (data: T) => string
 	}[]
+
+	/** If set, makes the list controlled. */
+	index?: number
 
 	focused?: boolean
 	/**
@@ -49,7 +63,10 @@ export function useList<T>({
 	name,
 	searchKeys,
 	searchThreshold = 0.1,
-	focused = true
+	focused = true,
+	index: indexProp,
+	onFocusItem,
+	onSelect
 }: UseListArgument<T>): UseListReturn<T> {
 	const scrollboxRef = useRef<ScrollBoxRenderable>(null)
 	const id = (name ?? "") + useId()
@@ -85,19 +102,38 @@ export function useList<T>({
 	)
 
 	useEffect(() => {
+		if (!focused) return
+
+		// biome-ignore lint/complexity/noUselessUndefinedInitialization: TS cries
+		// biome-ignore lint/suspicious/noConfusingVoidType: But thats the type
+		let unfocusFunction: (() => void) | void = undefined
+		stateRef.current.state
+			.select(({ index, items }) => ({ index, items }))
+			.subscribe(({ items, index }) => {
+				const item = items[index]
+
+				unfocusFunction?.()
+				unfocusFunction = item && onFocusItem?.(item)
+			})
+
+		return unfocusFunction
+	}, [focused, onFocusItem])
+
+	useEffect(() => {
 		logg.silly("set new list items")
 		stateRef.current.state.trigger.setItems({
 			items: itemsUnfiltered
 		})
 	}, [itemsUnfiltered])
 
+	const indexRef = useRef(index)
+	indexRef.current = index
+
 	useEffect(() => {
-		if (!focused) return
+		if (indexProp === undefined || indexProp === indexRef.current) return
 
-		const item = items[index]
-
-		return item?.onFocus?.({ index })
-	}, [items, index, focused])
+		stateRef.current.state.trigger.setIndex({ index: indexProp })
+	}, [indexProp])
 
 	useKeybindings(
 		() => [
@@ -142,7 +178,14 @@ export function useList<T>({
 				callback: () => {
 					const { context } = stateRef.current.state.get()
 					const item = context.items[context.index]
-					item?.onSelect({ index: item?.index })
+
+					if (item) {
+						onSelect(item)
+					} else {
+						logg.warn("useList: Did not found matching onSelect item", {
+							index: context.index
+						})
+					}
 				},
 				label: "List: Select focused item",
 				keybindings: keybinding("return")
@@ -184,7 +227,7 @@ export function useList<T>({
 			})
 
 		return () => subscription.unsubscribe()
-	})
+	}, [])
 
 	return {
 		index,
@@ -195,7 +238,8 @@ export function useList<T>({
 		setIndex: (index) => stateRef.current.state.trigger.setIndex({ index }),
 		setMode: (mode) => stateRef.current.state.trigger.setMode({ mode }),
 		setSearchString: (searchString) =>
-			stateRef.current.state.trigger.setSearchString({ searchString })
+			stateRef.current.state.trigger.setSearchString({ searchString }),
+		onSelect
 	}
 }
 
@@ -215,7 +259,7 @@ function createListState<T>({
 	searchKeys,
 	searchThreshold
 }: {
-	items: readonly ListItem<T>[]
+	items: readonly T[]
 	scrollboxRef: RefObject<ScrollBoxRenderable | null>
 	/** Required to make the list searchable. Should have at least one item */
 	searchKeys: {
@@ -229,7 +273,7 @@ function createListState<T>({
 }) {
 	const defaultState: ListState<T> = {
 		index: 0,
-		items: itemsUnfiltered,
+		items: itemsUnfiltered.map((item, index) => ({ data: item, index })),
 		searchString: undefined,
 		scrollPosition: 0,
 		mode: "default"
@@ -238,12 +282,9 @@ function createListState<T>({
 	const state = createStore({
 		context: defaultState,
 		on: {
-			setItems: (
-				context,
-				{ items: newItems }: { items: readonly ListItem<T>[] }
-			) => ({
+			setItems: (context, { items: newItems }: { items: readonly T[] }) => ({
 				...context,
-				items: newItems,
+				items: newItems.map((item, index) => ({ data: item, index })),
 				index: 0
 			}),
 
@@ -270,12 +311,12 @@ function createListState<T>({
 					return {
 						...context,
 						index: 0,
-						items: itemsUnfiltered,
+						items: defaultState.items,
 						searchString
 					}
 				}
 
-				const items = new Fuse(itemsUnfiltered, {
+				const items = new Fuse(defaultState.items, {
 					keys: searchKeys.map((key) => ({
 						...key,
 						getFn: (item: ListItem<T>) => key.getFunction(item.data)

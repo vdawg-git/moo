@@ -1,5 +1,5 @@
 import { Result } from "typescript-result"
-import { List, type ListItem, useList } from "#/components/list"
+import { List, useList } from "#/components/list"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { TrackItem } from "#/components/tracklist"
@@ -13,7 +13,11 @@ import { usePlaybackData } from "#/state/useSelectors"
 import type { BaseTrack } from "#/database/types"
 import type { AppState } from "#/state/types"
 
-type ListItemQueue = ListItem<{ type: "auto" | "manual"; track: BaseTrack }>
+type ListItemQueue = {
+	type: "auto" | "manual"
+	track: BaseTrack
+	itemIndex: number
+}
 
 export function QueuePage() {
 	const playbackState = usePlaybackData()
@@ -34,14 +38,9 @@ export function QueuePage() {
 					.map(
 						(track, index) =>
 							({
-								data: { type: "auto", track },
-								index: playbackState.index + index + 1,
-								onSelect: () => appState.send({ type: "playIndex", index }),
-								onFocus: ({ index: itemIndex }) =>
-									registerAutoQueueCommands(
-										itemIndex,
-										"auto_queue_" + index + track.id
-									)
+								type: "auto" as const,
+								track,
+								itemIndex: index
 							}) satisfies ListItemQueue
 					)
 
@@ -52,18 +51,9 @@ export function QueuePage() {
 					.map(
 						(track, index) =>
 							({
-								data: { type: "manual", track },
-								index,
-								onSelect: ({ index: itemIndex }) =>
-									appState.send({
-										type: "playFromManualQueue",
-										index: itemIndex
-									}),
-								onFocus: ({ index: itemIndex }) =>
-									registerManualQueueCommands(
-										itemIndex,
-										"manual_" + itemIndex + track.id
-									)
+								type: "manual",
+								track,
+								itemIndex: index
 							}) satisfies ListItemQueue
 					)
 
@@ -118,6 +108,20 @@ function QueueView({
 
 	const useListReturn = useList({
 		items,
+
+		onSelect: ({ data: { type, itemIndex: index } }) =>
+			type === "auto"
+				? appState.send({ type: "playIndex", index })
+				: appState.send({
+						type: "playFromManualQueue",
+						index
+					}),
+
+		onFocusItem: ({ data: { type, track, itemIndex: index } }) =>
+			type === "auto"
+				? registerAutoQueueCommands(index, "auto_queue_" + index + track.id)
+				: registerManualQueueCommands(index, "manual_" + index + track.id),
+
 		searchKeys: [
 			{ name: "Title", getFunction: ({ track }) => track.title ?? track.id }
 		]

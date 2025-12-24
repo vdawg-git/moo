@@ -1,9 +1,9 @@
 // Test setup file to mock dependencies
 
-import { vi } from "vitest"
+import { vi } from "bun:test"
 
 // Mock config to prevent file loading
-vi.mock("#/config/config", () => ({
+vi.module("#/config/config", () => ({
 	config: {
 		musicDirectories: [],
 		keybindings: {},
@@ -15,7 +15,7 @@ vi.mock("#/config/config", () => ({
 }))
 
 // Mock constants to prevent config loading
-vi.mock("#/constants", () => ({
+vi.module("#/constants", () => ({
 	IS_DEV: true,
 	APP_NAME: "moo_test",
 	CONFIG_DIRECTORY: "/tmp/test",
@@ -23,7 +23,7 @@ vi.mock("#/constants", () => ({
 }))
 
 // Mock logs
-vi.mock("#/logs", () => ({
+vi.module("#/logs", () => ({
 	logg: {
 		debug: console.log,
 		error: console.error,
@@ -34,7 +34,7 @@ vi.mock("#/logs", () => ({
 }))
 
 // Mock addErrorNotification to avoid circular dependency
-// vi.mock("./state", async (importOriginal) => {
+// vi.module("./state", async (importOriginal) => {
 // 	const original = await (importOriginal as any)()
 // 	return {
 // 		...(original as any),

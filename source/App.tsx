@@ -25,6 +25,7 @@ export const App = () => {
 				<Router />
 
 				<ModalManager />
+
 				<NextUpKeybinds />
 			</box>
 		</ThemeProvider>

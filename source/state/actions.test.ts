@@ -519,7 +519,8 @@ function createInitialState(options?: {
 		},
 		notifications: [],
 		modals: [],
-		focusedInputs: []
+		focusedInputs: [],
+		keybindingWhen: []
 	}
 }
 

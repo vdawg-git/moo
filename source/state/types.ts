@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { Except } from "type-fest"
+import type { KeybindCommandWhen } from "#/keybindManager/keybindsState"
 import type { AlbumId, ArtistId, PlaylistId, TrackId } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
 
@@ -40,6 +41,13 @@ export interface AppState {
 	modals: readonly AppModal[]
 
 	focusedInputs: readonly string[]
+	/**
+	 * By default it is `type: default`.
+	 * If for example the modal manager shows a component it should
+	 * become `type: modal` to prevent all the global keybindings to infer with
+	 * the keybinds within the modal component.
+	 */
+	keybindingWhen: readonly KeybindWhenRegistered[]
 }
 
 /**
@@ -113,3 +121,5 @@ export type ViewPage = {
 		? { route: Route; parameter?: undefined }
 		: { route: Route; parameter: ViewPages[Route] }
 }[keyof ViewPages]
+
+export type KeybindWhenRegistered = { type: KeybindCommandWhen; id: string }

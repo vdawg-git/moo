@@ -1,24 +1,33 @@
 import { useEffect, useState } from "react"
 import { isTruthy } from "remeda"
 import {
+	combineLatest,
 	distinctUntilChanged,
+	EMPTY,
 	filter,
 	map,
+	merge,
 	type Observable,
+	of,
 	scan,
 	shareReplay,
+	skip,
 	startWith,
+	switchMap,
+	take,
 	withLatestFrom
 } from "rxjs"
 import { match, P } from "ts-pattern"
 import { callAll } from "#/helpers"
 import { appState$ } from "#/state/state"
+import { getKeybindsWhen } from "#/state/stateUtils"
 import {
 	type KeybindCommand,
+	type KeybindCommandWhen,
 	type KeybindNextUp,
 	keybindsState
 } from "./keybindsState"
-import { type KeyTypeData, keys$ as keyEvents$ } from "./keysStream"
+import { type KeyPressEvent, keys$ as keyEvents$ } from "./keysStream"
 import type { KeyEvent } from "@opentui/core"
 import type { GeneralCommand } from "#/commands/appCommands"
 import type { KeyBinding, KeyInput } from "#/lib/keybinds"
@@ -38,18 +47,36 @@ const areKeybindingsDisabled$: Observable<boolean> = appState$.pipe(
 	shareReplay()
 )
 
+const keybindingWhen$: Observable<KeybindCommandWhen> = appState$.pipe(
+	map((state) => getKeybindsWhen(state.keybindingWhen)),
+	startWith("default" satisfies KeybindCommandWhen as KeybindCommandWhen),
+	distinctUntilChanged(),
+	shareReplay()
+)
+
+const pressed$: Observable<KeyPressEvent> = keyEvents$.pipe(
+	filter((event): event is KeyPressEvent => event.type === "keypress")
+)
+
 const keySequenceResult$: Observable<CallbacksOrSequence | undefined> =
-	keyEvents$.pipe(
+	pressed$.pipe(
 		withLatestFrom(areKeybindingsDisabled$),
 		filter(([_, isDisabled]) => !isDisabled),
-		map(([event]) => event),
-		filter(
-			(data): data is { type: "keypress" } & KeyTypeData =>
-				data.type === "keypress"
+		map(([keypress]) => openTuiInputToKeyInput(keypress.event)),
+		withLatestFrom(keybindingWhen$),
+		switchMap(([input, when]) => {
+			const sequenceReset$ = merge(
+				keybindingWhen$.pipe(distinctUntilChanged(), skip(1)),
+				areKeybindingsDisabled$.pipe(distinctUntilChanged(), skip(1))
+			).pipe(map(() => ({ input: undefined, when })))
+
+			return merge(of({ input, when }), sequenceReset$)
+		}),
+		distinctUntilChanged(),
+		scan(
+			reduceToCommandAndSequences,
+			undefined as CallbacksOrSequence | undefined
 		),
-		map((keypress) => keypress.event),
-		map(openTuiInputToKeyInput),
-		scan(reduceInputs, undefined),
 		distinctUntilChanged()
 	)
 
@@ -86,57 +113,77 @@ export function useGetNextKeySequence(): SequencePart | undefined {
 	return nextUpCommands
 }
 
-function reduceInputs(
-	previousCommandOrSequenceMaybe: CallbacksOrSequence | undefined,
-	input: KeyInput
+function reduceToCommandAndSequences(
+	previous: CallbacksOrSequence | undefined,
+	{
+		input,
+		when
+	}: {
+		when: KeybindCommandWhen
+		input: KeyInput | undefined
+	}
 ): CallbacksOrSequence | undefined {
-	return match(previousCommandOrSequenceMaybe)
-		.returnType<CallbacksOrSequence | undefined>()
+	if (
+		// Input gets set to undefined if it is disabled
+		input === undefined
+	) {
+		return undefined
+	}
 
-		.with(P.union(undefined, { type: "callbacks" }), () => {
-			const callbacks = keybindsState
-				.getCommandsForKeys([input])
-				.map(({ callback }) => callback)
+	return (
+		match(previous)
+			.returnType<CallbacksOrSequence | undefined>()
 
-			return callbacks.length > 0
-				? { type: "callbacks", callbacks }
-				: ({
-						type: "sequence",
-						sequence: {
-							pressed: [input],
-							nextUp: keybindsState.getNextUp([input])
-						}
-					} satisfies CallbacksOrSequence)
-		})
-
-		.with(
-			{ type: "sequence" },
-			({ sequence: { pressed: previousPressed } }) => {
-				const pressed = [...previousPressed, input]
+			// If "callbacks" are returned, those will be called.
+			// The next scan will receive those, but that just means that
+			// the reducer should start from scratch again as the previous sequence completed
+			.with(P.union(undefined, { type: "callbacks" }), () => {
 				const callbacks = keybindsState
-					.getCommandsForKeys(pressed)
-					.map(({ callback }) => callback)
+					.getCommandsForKeys([input])
+					.flatMap(({ callback, when: thisWhen }) =>
+						thisWhen === when ? callback : []
+					)
 
-				if (callbacks.length > 0) {
-					return { type: "callbacks", callbacks } as const
+				return callbacks.length > 0
+					? { type: "callbacks", callbacks }
+					: ({
+							type: "sequence",
+							sequence: {
+								pressed: [input],
+								nextUp: keybindsState.getNextUp([input])
+							}
+						} satisfies CallbacksOrSequence)
+			})
+
+			.with(
+				{ type: "sequence" },
+				({ sequence: { pressed: previousPressed } }) => {
+					const pressed = [...previousPressed, input]
+					const callbacks = keybindsState
+						.getCommandsForKeys(pressed)
+						.map(({ callback }) => callback)
+
+					if (callbacks.length > 0) {
+						return { type: "callbacks", callbacks } as const
+					}
+
+					const nextUp = keybindsState.getNextUp(pressed)
+
+					if (nextUp.length > 0) {
+						return {
+							type: "sequence",
+							sequence: {
+								pressed,
+								nextUp: keybindsState.getNextUp(pressed)
+							}
+						} as const satisfies CallbacksOrSequence
+					}
+
+					return undefined
 				}
-
-				const nextUp = keybindsState.getNextUp(pressed)
-
-				if (nextUp.length > 0) {
-					return {
-						type: "sequence",
-						sequence: {
-							pressed,
-							nextUp: keybindsState.getNextUp(pressed)
-						}
-					} as const satisfies CallbacksOrSequence
-				}
-
-				return undefined
-			}
-		)
-		.exhaustive()
+			)
+			.exhaustive()
+	)
 }
 
 const isLatinLetterRegex = /[a-z]/
@@ -157,17 +204,30 @@ function openTuiInputToKeyInput(event: KeyEvent): KeyInput {
 	return { key, modifiers }
 }
 
+export type GeneralCommandArgument = Omit<GeneralCommand, "when">
+
 /** Returns the unregister function */
-export function registerKeybinds(toRegister: readonly GeneralCommand[]) {
+export function registerKeybinds(
+	toRegister: readonly GeneralCommandArgument[],
+	options?: { when: KeybindCommandWhen }
+) {
 	toRegister.forEach(({ keybindings, label, callback, id }) =>
 		keybindings.forEach((sequence) => {
-			keybindsState.addSequence(sequence, { callback, id, label })
+			keybindsState.addSequence(sequence, {
+				callback,
+				id,
+				label,
+				when: options?.when ?? "default"
+			})
 		})
 	)
 
 	return () => unregisterKeybinds(toRegister)
 }
-export function unregisterKeybinds(toUnregister: readonly GeneralCommand[]) {
+
+export function unregisterKeybinds(
+	toUnregister: readonly GeneralCommandArgument[]
+) {
 	toUnregister.forEach(({ keybindings, id }) =>
 		// a command can have multiple keybindings
 		keybindings.forEach((sequence) =>
