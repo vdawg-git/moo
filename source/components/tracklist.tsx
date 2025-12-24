@@ -1,4 +1,5 @@
 import path from "node:path"
+import { TextAttributes } from "@opentui/core"
 import { useMemo, useRef } from "react"
 import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
@@ -105,21 +106,32 @@ export function TrackItem({
 			? colors.bg
 			: hasPlaybackIndex
 				? colors.green
-				: color
+				: (color ?? colors.fg)
 
 	const titleDisplay = track.title ?? path.basename(track.id)
+	const artistDisplay = track.artist ?? track.albumartist ?? ""
 	const icon = state === "playing" ? appConfig.icons.playingIndicator : ""
 
 	return (
 		<box width="100%" backgroundColor={bgColor} height={1} flexDirection="row">
-			<text fg={textColor}>
-				{icon}
-				{"  "}
-			</text>
+			<box width={2}>
+				<text fg={textColor}>
+					{icon}
+					{"  "}
+				</text>
+			</box>
 
-			<text fg={textColor} wrapMode="none">
-				{titleDisplay}
-			</text>
+			<box width={"50%"} paddingRight={3} overflow="hidden">
+				<text fg={textColor} wrapMode="none" overflow="hidden">
+					{titleDisplay}
+				</text>
+			</box>
+
+			<box overflow="hidden" width={"50%"}>
+				<text fg={textColor} attributes={TextAttributes.DIM} wrapMode="none">
+					{artistDisplay}
+				</text>
+			</box>
 		</box>
 	)
 }

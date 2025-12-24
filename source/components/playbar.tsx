@@ -18,6 +18,8 @@ export function Playbar() {
 			paddingLeft={1}
 			paddingRight={1}
 			flexDirection="row"
+			zIndex={5}
+			backgroundColor={colors.bg}
 		>
 			<box flexGrow={1} alignItems="flex-start" justifyContent="flex-start">
 				{currentTrack ? (
@@ -36,6 +38,7 @@ function MediaControl() {
 	const { playState, shuffleMap } = usePlaybackData()
 	const hasPlayback = playState !== "stopped"
 	const isShuffling = !!shuffleMap
+	const colors = useColors()
 
 	return (
 		<box flexDirection="column" height={2}>
@@ -45,6 +48,7 @@ function MediaControl() {
 					onMouseUp={() => appState.send({ type: "previousTrack" })}
 					paddingLeft={1}
 					paddingRight={1}
+					fg={colors.fg}
 				>
 					{appConfig.icons.previous}
 				</text>
@@ -54,6 +58,7 @@ function MediaControl() {
 					onMouseUp={() => appState.send({ type: "togglePlayback" })}
 					paddingLeft={1}
 					paddingRight={1}
+					fg={colors.fg}
 				>
 					{playState === "playing"
 						? appConfig.icons.pause
@@ -65,6 +70,7 @@ function MediaControl() {
 					onMouseUp={() => appState.send({ type: "nextTrack" })}
 					paddingLeft={1}
 					paddingRight={1}
+					fg={colors.fg}
 				>
 					{appConfig.icons.next}
 				</text>
@@ -73,6 +79,7 @@ function MediaControl() {
 			<text
 				attributes={isShuffling ? undefined : TextAttributes.DIM}
 				onMouseUp={() => appState.send({ type: "toggleShuffle" })}
+				fg={colors.fg}
 			>
 				{isShuffling ? appConfig.icons.shuffle : appConfig.icons.linear}
 			</text>

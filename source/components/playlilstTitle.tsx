@@ -19,7 +19,13 @@ export function PlaylistTitle({
 	const colors = useColors()
 
 	return (
-		<box justifyContent="space-between" flexDirection="row" height={1}>
+		<box
+			justifyContent="space-between"
+			flexDirection="row"
+			height={1}
+			backgroundColor={colors.bg}
+			zIndex={5}
+		>
 			<text fg={color ?? colors.magenta} attributes={TextAttributes.BOLD}>
 				{icon} {title}{" "}
 			</text>
