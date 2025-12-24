@@ -14,7 +14,7 @@ export function Playbar() {
 			border
 			borderStyle={"rounded"}
 			height={4}
-			borderColor={colors.fg}
+			borderColor={colors.yellow}
 			paddingLeft={1}
 			paddingRight={1}
 			flexDirection="row"
@@ -25,7 +25,7 @@ export function Playbar() {
 				{currentTrack ? (
 					<TrackDisplay track={currentTrack} />
 				) : (
-					<text fg={colors.brightBlack}>{"^^\n(oo)"}</text>
+					<text fg={colors.brightBlack}>{"૮₍⎚¯⎚₎ა\n (O_O)"}</text>
 				)}
 			</box>
 
@@ -89,14 +89,17 @@ function MediaControl() {
 
 function TrackDisplay({ track }: { track: BaseTrack }) {
 	const artist = track.artist ?? track.albumartist
+	const colors = useColors()
 
 	return (
 		<box paddingLeft={1} flexDirection="column">
 			<box>
-				<text>{track.title ?? track.id}</text>
+				<text fg={colors.yellow}>{track.title ?? track.id}</text>
 			</box>
 			<box>
-				<text attributes={TextAttributes.DIM}>{artist ?? "Unknown"}</text>
+				<text fg={colors.fg} attributes={TextAttributes.DIM}>
+					{artist ?? "Unknown"}
+				</text>
 			</box>
 		</box>
 	)

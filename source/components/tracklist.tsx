@@ -101,12 +101,11 @@ export function TrackItem({
 			: focused
 				? colors.blue
 				: undefined
-	const textColor: AppColor | undefined =
-		bgColor && hasPlaybackIndex
-			? colors.bg
-			: hasPlaybackIndex
-				? colors.green
-				: (color ?? colors.fg)
+	const textColor: AppColor | undefined = bgColor
+		? colors.bg
+		: hasPlaybackIndex
+			? colors.green
+			: (color ?? colors.fg)
 
 	const titleDisplay = track.title ?? path.basename(track.id)
 	const artistDisplay = track.artist ?? track.albumartist ?? ""
@@ -114,7 +113,7 @@ export function TrackItem({
 
 	return (
 		<box width="100%" backgroundColor={bgColor} height={1} flexDirection="row">
-			<box width={2}>
+			<box width={2} overflow="hidden">
 				<text fg={textColor}>
 					{icon}
 					{"  "}
@@ -128,7 +127,11 @@ export function TrackItem({
 			</box>
 
 			<box overflow="hidden" width={"50%"}>
-				<text fg={textColor} attributes={TextAttributes.DIM} wrapMode="none">
+				<text
+					fg={textColor}
+					attributes={focused ? undefined : TextAttributes.DIM}
+					wrapMode="none"
+				>
 					{artistDisplay}
 				</text>
 			</box>

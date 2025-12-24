@@ -27,7 +27,8 @@ export function PlaylistTitle({
 			zIndex={5}
 		>
 			<text fg={color ?? colors.magenta} attributes={TextAttributes.BOLD}>
-				{icon} {title}{" "}
+				{icon + " "}
+				{title}{" "}
 			</text>
 			<text fg={"gray"}>{tracksAmount ? `${tracksAmount} titles` : ""}</text>
 		</box>

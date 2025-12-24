@@ -124,7 +124,11 @@ function QueueView({
 	})
 
 	if (isEmpty) {
-		return <text>Queue is empty. Start playing a playlist</text>
+		return (
+			<text fg={colors.yellow} margin={1}>
+				Queue is empty. Start playing a playlist
+			</text>
+		)
 	}
 
 	return (

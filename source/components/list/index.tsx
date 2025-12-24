@@ -61,7 +61,19 @@ export function List<T>({
 				</box>
 			)}
 
-			<scrollbox {...scrollboxProps} ref={scrollboxRef}>
+			<scrollbox
+				scrollbarOptions={{
+					arrowOptions: {
+						// dunno why this is not working
+						foregroundColor: colors.red,
+						backgroundColor: colors.yellow,
+						attributes: TextAttributes.DIM
+					},
+					trackOptions: { backgroundColor: colors.bg }
+				}}
+				{...scrollboxProps}
+				ref={scrollboxRef}
+			>
 				{items.map((item, indexDisplayed) => {
 					// The item index is different here as the items could be filtered.
 					// The item.index is the original one.
