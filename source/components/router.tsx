@@ -18,7 +18,7 @@ const routes: Routes = {
 	artist: ({ id }) => <ArtistPage id={id} />
 }
 
-export function Navigator() {
+export function Router() {
 	const viewData = useSelector(
 		appState,
 		({ context: { view } }) => view.history[view.historyIndex]
