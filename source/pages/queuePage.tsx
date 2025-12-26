@@ -1,3 +1,4 @@
+import { match } from "ts-pattern"
 import { Result } from "typescript-result"
 import { List, useList } from "#/components/list"
 import { Playbar } from "#/components/playbar"
@@ -10,6 +11,7 @@ import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { keybinding } from "#/lib/keybinds"
 import { appState } from "#/state/state"
 import { usePlaybackData } from "#/state/useSelectors"
+import type { ComponentProps } from "react"
 import type { BaseTrack } from "#/database/types"
 import type { AppState } from "#/state/types"
 
@@ -79,6 +81,7 @@ export function QueuePage() {
 									playbackState.isPlayingFromManualQueue
 								}
 								playState={playbackState.playState}
+								playIndex={playbackState.index}
 							/>
 						),
 						(error) => <text fg={colors.red}>Error: {String(error)}</text>
@@ -95,12 +98,14 @@ type QueueViewProps = {
 	items: readonly ListItemQueue[]
 	isPlayingFromManualQueue: boolean
 	playState: AppState["playback"]["playState"]
+	playIndex: number
 }
 
 function QueueView({
 	isPlayingFromManualQueue,
 	items,
-	playState
+	playState,
+	playIndex
 }: QueueViewProps) {
 	const colors = useColors()
 
@@ -139,32 +144,35 @@ function QueueView({
 		<List
 			flexDirection="column"
 			register={useListReturn}
-			render={({ type, track }, { indexItem, focused }) => (
-				<TrackItem
-					track={track}
-					focused={focused}
-					state={
-						type === "manual"
-							? isPlayingFromManualQueue && indexItem === 0
-								? playState === "playing"
-									? "playing"
-									: playState === "paused"
-										? "paused"
-										: undefined
-								: undefined
-							: isPlayingFromManualQueue
-								? undefined
-								: indexItem === 0
-									? playState === "playing"
-										? "playing"
-										: playState === "paused"
-											? "paused"
-											: undefined
-									: undefined
-					}
-					color={colors.green}
-				/>
-			)}
+			render={({ type, track }, { indexItem, focused }) => {
+				const state = match({
+					type,
+					isPlayingFromManualQueue,
+					playState,
+					indexItem,
+					playIndex
+				})
+					.returnType<ComponentProps<typeof TrackItem>["state"]>()
+					.with(
+						{ type: "manual", isPlayingFromManualQueue: true, indexItem: 0 },
+						() => "playing"
+					)
+					.with(
+						{ type: "auto" },
+						({ indexItem, playIndex }) => indexItem === playIndex,
+						() => "playing"
+					)
+					.otherwise(() => undefined)
+
+				return (
+					<TrackItem
+						track={track}
+						focused={focused}
+						state={state}
+						color={type === "manual" ? colors.magenta : undefined}
+					/>
+				)
+			}}
 		/>
 	)
 }
