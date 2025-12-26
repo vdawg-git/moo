@@ -15,12 +15,12 @@ import { getCurrentTrackIdFromState } from "./stateUtils"
 
 const playback$ = appState$.pipe(
 	map((state) => state.playback),
-	shareReplay()
+	shareReplay(1)
 )
 export const loop$ = playback$.pipe(
 	map((state) => state.loopState),
 	distinctUntilChanged(),
-	shareReplay()
+	shareReplay(1)
 )
 
 export const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
@@ -50,5 +50,5 @@ export const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
 export const playState$ = playback$.pipe(
 	map((playback) => playback.playState),
 	distinctUntilChanged(),
-	shareReplay()
+	shareReplay(1)
 )

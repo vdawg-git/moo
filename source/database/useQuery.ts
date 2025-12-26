@@ -111,7 +111,7 @@ export function observeQuery<T>(
 						isFetched: true as const
 					}
 		),
-		shareReplay({ refCount: true })
+		shareReplay({ refCount: true, bufferSize: 1 })
 	)
 }
 

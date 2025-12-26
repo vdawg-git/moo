@@ -204,4 +204,4 @@ export const appState$: Observable<AppState> = new Observable<AppState>(
 
 		return () => subscription.unsubscribe()
 	}
-).pipe(shareReplay())
+).pipe(shareReplay({ refCount: false, bufferSize: 1 }))

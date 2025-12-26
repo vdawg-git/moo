@@ -90,7 +90,7 @@ function createGetRunnerItems(): {
 		distinctUntilChanged(),
 		startWith(""),
 		map(rawInputToPrefixed),
-		shareReplay({ refCount: true })
+		shareReplay({ refCount: true, bufferSize: 1 })
 	)
 
 	// We get all possible results for each mode, not filtering anything yet,

@@ -32,7 +32,7 @@ export const themeStream$ = from(lazyRendererPalette()).pipe(
 		)
 	),
 	distinctUntilChanged(stringifyCompare) as typeof identity,
-	shareReplay()
+	shareReplay(1)
 )
 
 const colors = {
@@ -144,7 +144,7 @@ function createThemeConfigStream(): Observable<ConfigTheme> {
 				.catch(() => appThemeSchema.parseAsync({}))
 		),
 		startWith(appThemeSchema.parse({})),
-		shareReplay()
+		shareReplay(1)
 	)
 }
 
