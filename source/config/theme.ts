@@ -157,7 +157,9 @@ function getAppColors(
 	const baseAppColors = { ...ui, ...palette }
 
 	return mapValues(baseAppColors, (value) =>
-		parseColor(variables[value] ?? value)
+		parseColor(
+			variables[value] ?? (palette as Record<string, string>)[value] ?? value
+		)
 	)
 }
 
