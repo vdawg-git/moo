@@ -47,7 +47,7 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 					titleAlignment={"left"}
 					backgroundColor={colors.bg}
 					borderStyle={"rounded"}
-					borderColor={"gray"}
+					borderColor={colors.blue}
 					minHeight={5}
 					minWidth={5}
 				>

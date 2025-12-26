@@ -1,3 +1,4 @@
+import { TextAttributes } from "@opentui/core"
 import { useColors } from "#/hooks/useColors"
 import {
 	type SequencePart,
@@ -38,7 +39,9 @@ export function NextUpKeybinds() {
 					<box flexDirection="column">
 						{toDisplay.map(({ toPress, id }) => (
 							<box key={id}>
-								<text fg={colors.cyan}>{toPress} </text>
+								<text fg={colors.cyan} attributes={TextAttributes.BOLD}>
+									{toPress}{" "}
+								</text>
 							</box>
 						))}
 					</box>
@@ -46,7 +49,7 @@ export function NextUpKeybinds() {
 					<box flexDirection="column">
 						{toDisplay.map(({ label, id }) => (
 							<box key={id}>
-								<text>{label} </text>
+								<text fg={colors.fg}>{label} </text>
 							</box>
 						))}
 					</box>

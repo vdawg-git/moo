@@ -50,8 +50,12 @@ export function Tracklist({
 		]
 	})
 
+	const colors = useColors()
+
 	return tracks.length === 0 ? (
-		<text>No tracks here :(</text>
+		<box padding={1}>
+			<text fg={colors.yellow}>No tracks here :(</text>
+		</box>
 	) : (
 		<List
 			register={listReturn}
@@ -103,19 +107,28 @@ export function TrackItem({
 
 	const titleDisplay = track.title ?? path.basename(track.id)
 	const artistDisplay = track.artist ?? track.albumartist ?? ""
-	const icon = state === "playing" ? appConfig.icons.playingIndicator : ""
+	const icon =
+		state === "playing"
+			? appConfig.icons.playingIndicator
+			: state === "paused"
+				? appConfig.icons.pause
+				: ""
 
 	return (
 		<box width="100%" backgroundColor={bgColor} height={1} flexDirection="row">
-			<box width={2} overflow="hidden">
-				<text fg={textColor}>
-					{icon}
-					{"  "}
+			<box width={3} overflow="hidden">
+				<text width={3} fg={textColor}>
+					{icon}{" "}
 				</text>
 			</box>
 
 			<box width={"50%"} paddingRight={3} overflow="hidden">
-				<text fg={textColor} wrapMode="none" overflow="hidden">
+				<text
+					fg={textColor}
+					wrapMode="none"
+					overflow="hidden"
+					attributes={hasPlaybackIndex ? TextAttributes.BOLD : undefined}
+				>
 					{titleDisplay}
 				</text>
 			</box>

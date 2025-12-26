@@ -20,7 +20,9 @@ export function KeybindsModal(): ReactNode {
 
 					<box flexDirection="column">
 						{keybindings.map((binding) => (
-							<text key={binding.join("")}>{displayKeybinding(binding)}</text>
+							<text fg={colors.fg} key={binding.join("")}>
+								{displayKeybinding(binding)}
+							</text>
 						))}
 					</box>
 				</box>

@@ -17,6 +17,7 @@ export function PlaylistTitle({
 	icon = appConfig.icons.playlist
 }: PlaylistTitleProps) {
 	const colors = useColors()
+	const isEmpty = tracksAmount === 0
 
 	return (
 		<box
@@ -27,10 +28,12 @@ export function PlaylistTitle({
 			zIndex={5}
 		>
 			<text fg={color ?? colors.magenta} attributes={TextAttributes.BOLD}>
-				{icon + " "}
+				{icon + "  "}
 				{title}{" "}
 			</text>
-			<text fg={"gray"}>{tracksAmount ? `${tracksAmount} titles` : ""}</text>
+			<text
+				fg={isEmpty ? colors.yellow : colors.black}
+			>{`${tracksAmount} titles`}</text>
 		</box>
 	)
 }
