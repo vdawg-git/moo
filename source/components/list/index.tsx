@@ -63,13 +63,15 @@ export function List<T>({
 
 			<scrollbox
 				scrollbarOptions={{
+					trackOptions: {
+						backgroundColor: colors.bg,
+						foregroundColor: colors.black
+					},
 					arrowOptions: {
-						// dunno why this is not working
 						foregroundColor: colors.red,
 						backgroundColor: colors.yellow,
 						attributes: TextAttributes.DIM
-					},
-					trackOptions: { backgroundColor: colors.bg }
+					}
 				}}
 				{...scrollboxProps}
 				ref={scrollboxRef}
