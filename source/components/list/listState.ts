@@ -34,7 +34,7 @@ export type UseListArgument<T> = {
 	onFocusItem?: (item: ListItem<T>) => void | (() => void)
 
 	/** Required to make the list searchable. Should have at least one item */
-	searchKeys: {
+	searchKeys?: {
 		name: string
 		/** The function to get the search data from the list item */
 		getFunction: (data: T) => string
@@ -204,7 +204,7 @@ export function useList<T>({
 				label: "List: Search"
 			}
 		],
-		{ enabled: mode === "default" }
+		{ enabled: mode === "default" && !!searchKeys }
 	)
 	useKeybindings(
 		() => [
@@ -216,7 +216,7 @@ export function useList<T>({
 				label: "List: Exit search"
 			}
 		],
-		{ enabled: mode === "searchInput" }
+		{ enabled: mode === "searchInput" && !!searchKeys }
 	)
 
 	useEffect(() => {
@@ -256,13 +256,13 @@ type ListMode = "default" | "searchInput"
 function createListState<T>({
 	items: itemsUnfiltered,
 	scrollboxRef,
-	searchKeys,
+	searchKeys = [],
 	searchThreshold
 }: {
 	items: readonly T[]
 	scrollboxRef: RefObject<ScrollBoxRenderable | null>
 	/** Required to make the list searchable. Should have at least one item */
-	searchKeys: {
+	searchKeys?: {
 		name: string
 		/** The function to get the search data from the list item */
 		getFunction: (data: T) => string
