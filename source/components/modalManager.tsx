@@ -17,7 +17,9 @@ export function ModalManager() {
 }
 
 function ModalWrapper({ Content, id, title }: AppModal) {
+	const colors = useColors()
 	const [displayTitle, setTitle] = useState(title)
+	const [color, setColor] = useState(colors.blue)
 
 	const hideModal = useCallback(() => {
 		appState.send({ type: "closeModal", id })
@@ -28,8 +30,6 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 			hideModal()
 		}
 	})
-
-	const colors = useColors()
 
 	return (
 		<KeybindingWhenProvider when="modal">
@@ -47,11 +47,15 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 					titleAlignment={"left"}
 					backgroundColor={colors.bg}
 					borderStyle={"rounded"}
-					borderColor={colors.blue}
+					borderColor={color}
 					minHeight={5}
 					minWidth={5}
 				>
-					<Content onCloseModal={hideModal} onChangeTitle={setTitle} />
+					<Content
+						onCloseModal={hideModal}
+						onChangeTitle={setTitle}
+						onChangeColor={(colorName) => setColor(colors[colorName])}
+					/>
 				</box>
 			</box>
 		</KeybindingWhenProvider>

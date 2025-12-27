@@ -66,13 +66,14 @@ const keySequenceResult$: Observable<CallbacksOrSequence | undefined> =
 		withLatestFrom(keybindingWhen$),
 		switchMap(([input, when]) => {
 			const sequenceReset$ = merge(
-				keybindingWhen$.pipe(distinctUntilChanged(), skip(1)),
-				areKeybindingsDisabled$.pipe(distinctUntilChanged(), skip(1))
+				// TODO figure out why this is not working properly.
+				// If we use any number smaller than 3 sequenced keybinds stop working after opening and closing the runner
+				keybindingWhen$.pipe(skip(5), distinctUntilChanged()),
+				areKeybindingsDisabled$.pipe(skip(5), distinctUntilChanged())
 			).pipe(map(() => ({ input: undefined, when })))
 
-			return merge(of({ input, when }), sequenceReset$)
+			return sequenceReset$.pipe(startWith({ input, when }))
 		}),
-		distinctUntilChanged(),
 		scan(
 			reduceToCommandAndSequences,
 			undefined as CallbacksOrSequence | undefined

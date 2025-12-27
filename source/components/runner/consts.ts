@@ -1,4 +1,5 @@
 import { appConfig } from "#/config/config"
+import { logg } from "#/logs"
 import type { AppColorName } from "#/config/theme"
 
 export type SearchModeType =
@@ -48,5 +49,12 @@ export const searchModesList: readonly SearchMode[] = [
 ]
 
 export const searchModes = Object.freeze(
-	Object.groupBy(searchModesList, (list) => list.type)
-) as unknown as Readonly<Record<SearchModeType, SearchMode>>
+	searchModesList.reduce(
+		(accumulator, current) => {
+			accumulator[current.type] ??= current
+
+			return accumulator
+		},
+		{} as Record<SearchModeType, SearchMode>
+	)
+)

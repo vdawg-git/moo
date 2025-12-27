@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { Except } from "type-fest"
+import type { AppColorName } from "#/config/theme"
 import type { KeybindCommandWhen } from "#/keybindManager/keybindsState"
 import type { AlbumId, ArtistId, PlaylistId, TrackId } from "../database/types"
 import type { LoopState, PlayingState } from "../types/types"
@@ -71,6 +72,7 @@ export type AppModalContentProps = {
 	/** Removes the current modal */
 	onCloseModal: () => void
 	onChangeTitle: (title: string) => void
+	onChangeColor: (color: AppColorName) => void
 }
 
 /** A notification in Moo */

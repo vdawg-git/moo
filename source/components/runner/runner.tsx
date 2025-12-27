@@ -1,5 +1,5 @@
 import { useKeyboard } from "@opentui/react"
-import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
+import { type RefObject, useEffect, useRef, useState } from "react"
 import { pickCommands } from "#/commands/commandFunctions"
 import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
@@ -9,21 +9,23 @@ import {
 } from "#/keybindManager/keybindManager"
 import { appState } from "#/state/state"
 import { Input } from "../Input"
-import { List, useList } from "../list"
+import { Select } from "../select"
 import { useRunnerItems } from "./useRunnerItems"
 import type { InputRenderable, KeyEvent, RGBA } from "@opentui/core"
 import type React from "react"
-import type { AppColor } from "#/config/theme"
+import type { AppColor, AppColorName } from "#/config/theme"
 import type { AppModalContentProps } from "#/state/types"
 
 const runnerId = "_runner"
 
 export function openRunner(initialSearch?: string) {
+	const id = runnerId + (initialSearch ?? "")
+
 	appState.send({
 		type: "addModal",
 		modal: {
 			Content: (modal) => Runner({ modal, initialValue: initialSearch }),
-			id: runnerId,
+			id,
 			title: "Commands"
 		}
 	})
@@ -58,14 +60,10 @@ function Runner({ modal, initialValue }: RunnerProps) {
 	const activeItem = items[selectedIndex]
 	const inputRef = useRef<InputRenderable>(null)
 
-	const onClose = useCallback(() => {
-		modal.onCloseModal()
-	}, [modal.onCloseModal])
-
 	const onSubmit = () => {
 		if (!activeItem) return
+		modal.onCloseModal()
 		activeItem.onSelect()
-		onClose()
 	}
 
 	const onInput = (newText: string) => {
@@ -83,14 +81,15 @@ function Runner({ modal, initialValue }: RunnerProps) {
 			return
 		}
 
-		if (name === "up" && selectedIndex === 0) {
+		if (focused === "list" && name === "up" && selectedIndex === 0) {
 			setFocused("input")
 			setSelectedIndex(0)
 			return
 		}
 
-		if (name === "up") {
+		if (focused === "input" && name === "up") {
 			setFocused("list")
+			setSelectedIndex(items.length - 1)
 			return
 		}
 		if (name === "return") {
@@ -113,9 +112,11 @@ function Runner({ modal, initialValue }: RunnerProps) {
 	useEffect(() => {
 		if (!mode) {
 			modal.onChangeTitle("Go to..")
+			modal.onChangeColor("blue")
 			return
 		}
 		modal.onChangeTitle(mode.icon + " " + mode.type)
+		modal.onChangeColor(mode.color)
 
 		// TODO the command still shows, even though it is removed from the keybindingsState
 		// but maybe there is another registration with different keybindings in my config
@@ -132,11 +133,10 @@ function Runner({ modal, initialValue }: RunnerProps) {
 				registerKeybinds(toUnregister, { when: "default" })
 			}
 		}
-	}, [mode, modal.onChangeTitle])
+	}, [mode, modal.onChangeTitle, modal.onChangeColor])
 
 	return (
 		<box flexDirection="column" minWidth={"50%"} width={"50%"} maxWidth={50}>
-			<text>{selectedIndex}</text>
 			<RunnerInput
 				value={input}
 				focused={focused === "input"}
@@ -144,6 +144,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 				onSubmit={onSubmit}
 				onGetFocus={() => setFocused("input")}
 				ref={inputRef}
+				color={mode?.color ?? "blue"}
 			/>
 
 			<RunnerList
@@ -167,23 +168,25 @@ type RunnerInputProps = {
 	 * but just not visually */
 	focused: boolean
 	ref: RefObject<InputRenderable | null>
+	color: AppColorName
 }
 
 function RunnerInput({
 	focused,
 	value,
 	onInput,
-	onKeyDown,
 	onSubmit,
 	onGetFocus,
-	ref
+	ref,
+	color: colorName
 }: RunnerInputProps): React.ReactNode {
 	const colors = useColors()
+	const color = colors[colorName]
 
 	return (
 		<box
 			border={["bottom"]}
-			borderColor={focused ? colors.blue : colors.brightBlack}
+			borderColor={focused ? color : colors.brightBlack}
 			paddingLeft={1}
 			paddingRight={1}
 			height={2}
@@ -197,9 +200,10 @@ function RunnerInput({
 				value={value}
 				placeholder="Search.."
 				onInput={onInput}
-				onKeyDown={onKeyDown}
 				focusedTextColor={colors.blue}
 				textColor={colors.brightBlack}
+				placeholderColor={colors.black}
+				focusedBackgroundColor={colors.bg}
 				onSubmit={onSubmit}
 				cursorStyle={{
 					blinking: focused,
@@ -225,27 +229,35 @@ export function RunnerList({
 	onIndexChange,
 	focused
 }: RunnerListProps) {
-	const list = useList({
-		name: "runner",
-		index: selectedIndex,
-		items,
-		onSelect: ({ index }) => onSelect(index),
-		onFocusItem: ({ index }) => onIndexChange(index),
-		focused,
-		searchKeys: [{ name: "label", getFunction: (item) => item.label }]
-	})
+	// const list = useList({
+	// 	name: "runner",
+	// 	index: selectedIndex,
+	// 	items,
+	// 	onSelect: ({ index }) => onSelect(index),
+	// 	onFocusItem: ({ index }) => onIndexChange(index),
+	// 	focused
+	// })
+	const colors = useColors()
 
 	return (
-		<box minHeight={16}>
-			<List
-				register={list}
-				render={(item, { focused: itemFocused }) => (
-					<RunnerListItem
-						listFocused={focused}
-						focused={itemFocused}
-						item={item}
-					/>
-				)}
+		<box minHeight={15} height={15} maxHeight={15}>
+			<Select
+				options={items.map((item) => ({
+					name: item.label,
+					description: item.label
+				}))}
+				onChange={(index) => onIndexChange(index)}
+				selectedIndex={selectedIndex}
+				onSelect={(index) => onSelect(index)}
+				height={15}
+				showDescription={false}
+				focused={focused}
+				backgroundColor={colors.bg}
+				textColor={colors.fg}
+				focusedTextColor={colors.fg}
+				focusedBackgroundColor={colors.bg}
+				selectedTextColor={focused ? colors.bg : colors.blue}
+				selectedBackgroundColor={focused ? colors.blue : colors.bg}
 			/>
 		</box>
 	)

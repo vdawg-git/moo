@@ -87,7 +87,6 @@ export function useList<T>({
 		stateRef.current.state,
 		({ context }) => context.index
 	)
-	logg.silly("wuts this index", { index })
 	const searchString = useSelector(
 		stateRef.current.state,
 		({ context }) => context.searchString
@@ -120,7 +119,6 @@ export function useList<T>({
 	}, [focused, onFocusItem])
 
 	useEffect(() => {
-		logg.silly("set new list items")
 		stateRef.current.state.trigger.setItems({
 			items: itemsUnfiltered
 		})

@@ -103,7 +103,7 @@ export const appThemeSchema = z.object({
 		.object({
 			artists: z
 				.string()
-				.default(colors.blue)
+				.default(colors.yellow)
 				.describe("The color to signify that this is an artist"),
 			albums: z
 				.string()
@@ -115,14 +115,14 @@ export const appThemeSchema = z.object({
 				.describe("The color to signify that this is a playlist"),
 			commands: z
 				.string()
-				.default(colors.yellow)
+				.default(colors.green)
 				.describe("The color to signify that this is a command")
 		})
 		.default({
+			artists: colors.yellow as string,
 			albums: colors.cyan as string,
-			artists: colors.blue as string,
-			commands: colors.yellow as string,
-			playlists: colors.magenta as string
+			playlists: colors.magenta as string,
+			commands: colors.green as string
 		})
 		.describe(
 			"Set the colors for different parts of the app. You can reference colors defined in `palette` here by name."

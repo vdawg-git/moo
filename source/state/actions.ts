@@ -262,6 +262,7 @@ const navigateForward = createAction((context) => {
 
 const addModal = createAction<{ modal: AppModal }>((context, { modal }) => {
 	if (context.modals.find(({ id }) => modal.id === id)) {
+		logg.warn("Modal id already added", { id: modal.id, title: modal.title })
 		return
 	}
 
