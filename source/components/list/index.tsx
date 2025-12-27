@@ -21,7 +21,9 @@ export function List<T>({
 	...scrollboxProps
 }: ListArgument<T>): ReactNode {
 	if (!register) {
-		throw new Error(`List received no proper register prop. It is ${register}`)
+		throw new Error(
+			`List received no proper register prop. It is ${String(register)}`
+		)
 	}
 
 	const {

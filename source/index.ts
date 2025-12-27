@@ -13,4 +13,4 @@ process.on("uncaughtException", (error) => {
 
 const { startApp } = await import("./start.tsx")
 
-startApp()
+await startApp()

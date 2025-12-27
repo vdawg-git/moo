@@ -97,7 +97,7 @@ function createInitalState(): AppState {
 
 export function addErrorNotification(
 	message: string,
-	error?: Error | unknown,
+	error?: unknown,
 	/** Tag to be used for the logs */
 	tag?: string
 ) {

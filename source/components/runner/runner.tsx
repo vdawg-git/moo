@@ -279,6 +279,7 @@ const runnerListItemIconByType: Record<RunnerItem["type"], string> = {
 	playlist: appConfig.icons.playlist
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: We will use this again later as the select input is not very styleable.
 function RunnerListItem({
 	item,
 	focused,

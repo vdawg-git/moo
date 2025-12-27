@@ -1,5 +1,4 @@
 import { appConfig } from "#/config/config"
-import { logg } from "#/logs"
 import type { AppColorName } from "#/config/theme"
 
 export type SearchModeType =

@@ -150,7 +150,7 @@ export abstract class Track {
 	// and a simpler interface
 
 	play() {
-		Result.fromAsync(this.player.play(this.id)).onFailure((error) =>
+		return Result.fromAsync(this.player.play(this.id)).onFailure((error) =>
 			addErrorNotification(
 				`Failed to play track ${this.title ?? this.id}`,
 				error,
@@ -159,7 +159,7 @@ export abstract class Track {
 		)
 	}
 	pause() {
-		Result.fromAsync(this.player.pause(this.id)) //
+		return Result.fromAsync(this.player.pause(this.id)) //
 			.onFailure((error) =>
 				addErrorNotification(
 					`Failed to pause track ${this.title ?? this.id}`,
@@ -168,7 +168,7 @@ export abstract class Track {
 			)
 	}
 	clear() {
-		Result.fromAsync(this.player.clear()).onFailure((error) =>
+		return Result.fromAsync(this.player.clear()).onFailure((error) =>
 			addErrorNotification(
 				`Failed to clear old track ${this.title ?? this.id}`,
 				error,
@@ -179,7 +179,7 @@ export abstract class Track {
 
 	/** Duration in seconds to seek. Can be negative */
 	seek(duration: number) {
-		Result.fromAsync(this.player.seek(duration)).onFailure((error) =>
+		return Result.fromAsync(this.player.seek(duration)).onFailure((error) =>
 			addErrorNotification(
 				`Failed to seek track ${this.id}`,
 				error,
@@ -203,7 +203,7 @@ export abstract class Track {
 	/** Track album artists */
 	readonly albumartist?: string
 	/** Album title */
-	readonly album?: string
+	readonly album?: ICommonTagsResult["album"] & {}
 	/** Release date. A timestamp */
 	readonly releasedate?: Date
 	readonly comment?: string

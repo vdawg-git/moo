@@ -3,7 +3,7 @@
 import { vi } from "bun:test"
 
 // Mock config to prevent file loading
-vi.module("#/config/config", () => ({
+await vi.module("#/config/config", () => ({
 	config: {
 		musicDirectories: [],
 		keybindings: {},
@@ -15,7 +15,7 @@ vi.module("#/config/config", () => ({
 }))
 
 // Mock constants to prevent config loading
-vi.module("#/constants", () => ({
+await vi.module("#/constants", () => ({
 	IS_DEV: true,
 	APP_NAME: "moo_test",
 	CONFIG_DIRECTORY: "/tmp/test",
@@ -23,7 +23,7 @@ vi.module("#/constants", () => ({
 }))
 
 // Mock logs
-vi.module("#/logs", () => ({
+await vi.module("#/logs", () => ({
 	logg: {
 		debug: console.log,
 		error: console.error,

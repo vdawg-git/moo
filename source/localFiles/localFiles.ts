@@ -315,7 +315,10 @@ async function parseMusicFile(
 				producer: tags.producer,
 				keywords: tags.keywords
 			} satisfies Partial<Record<keyof TrackData, unknown>>,
-			(value) => value?.join(", ")
+			(values) =>
+				values
+					?.map((value) => (typeof value === "string" ? value : value.text))
+					.join(", ")
 		)
 
 		return {

@@ -20,7 +20,7 @@ export async function startApp() {
 		watchAndUpdateDatabase(appConfig.musicDirectories, database)
 	}
 
-	Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
+	await Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
 		.map(() => updateSmartPlaylists())
 		.onFailure((error) => {
 			logg.error("Failed to update db at startup", { error })
