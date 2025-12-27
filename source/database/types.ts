@@ -109,6 +109,7 @@ export type BaseTrack = Pick<
 	| "picture"
 	| "genre"
 	| "albumartist"
+	| "mood"
 >
 
 /**

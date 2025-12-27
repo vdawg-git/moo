@@ -49,11 +49,18 @@ export const appConfigSchema = z
 		/** All keybindings. Default ones and those overriden by the user. */
 		keybindings: keybindingsSchema,
 
-		tagSeperator: z
-			.string()
-			.default("|")
+		quickEdit: z
+			.object({
+				tagSeperator: z
+					.string()
+					.default("|")
+					.describe(
+						"The tag used to join a list into a single tag. For example multiple genres for a track are seperated with a '|' by default"
+					),
+				defaultTagType: z.enum(["genre", "mood"]).default("mood")
+			})
 			.describe(
-				"The tag used to join a list into a single tag. For example multiple genres for a track are seperated with a '|' by default"
+				"Configuration for the 'Quick Edit' feature, which allows you to change the genre/moods of a song on the fly to improve your smart-playlists."
 			)
 
 		// quickEditTags: z

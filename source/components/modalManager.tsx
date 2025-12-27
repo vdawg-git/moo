@@ -1,4 +1,4 @@
-import { useKeyboard } from "@opentui/react"
+import { useKeyboard, useTerminalDimensions } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
 import { useCallback, useState } from "react"
 import { useColors } from "#/hooks/useColors"
@@ -20,6 +20,9 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 	const colors = useColors()
 	const [displayTitle, setTitle] = useState(title)
 	const [color, setColor] = useState(colors.blue)
+	const { width: widthScreen } = useTerminalDimensions()
+	const widthMax = widthScreen - 4
+	const minWidth = Math.max(displayTitle.length + 1, 12)
 
 	const hideModal = useCallback(() => {
 		appState.send({ type: "closeModal", id })
@@ -49,7 +52,8 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 					borderStyle={"rounded"}
 					borderColor={color}
 					minHeight={5}
-					minWidth={5}
+					maxWidth={widthMax}
+					minWidth={minWidth}
 				>
 					<Content
 						onCloseModal={hideModal}

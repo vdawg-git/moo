@@ -10,6 +10,7 @@ import {
 import { keybinding } from "#/lib/keybinds"
 import { appState } from "#/state/state"
 import { List, useList } from "./list"
+import { QuickEditModal } from "./quickEditModal"
 import type { AppColor } from "#/config/theme"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack, TrackId } from "../database/types"
@@ -44,7 +45,7 @@ export function Tracklist({
 	const listReturn = useList({
 		items: tracks,
 		onSelect: ({ index }) => onPlayRef.current?.(index),
-		onFocusItem: ({ data: track }) => registerQueueCommands(track.id),
+		onFocusItem: ({ data: track }) => registerTrackCommands(track),
 		searchKeys: [
 			{ name: "title", getFunction: (item) => item.title ?? item.id }
 		]
@@ -150,27 +151,43 @@ export function TrackItem({
  * Returns the unregister function,
  * which should be called when unmounting
  * */
-function registerQueueCommands(trackId: TrackId): () => void {
+function registerTrackCommands(track: BaseTrack): () => void {
+	const { id, title } = track
+
 	const commands: GeneralCommandArgument[] = [
 		{
 			label: "Play next",
-			id: "play_next" + trackId,
+			id: "play_next" + id,
 			callback: () =>
 				appState.send({
 					type: "addToManualQueueFirst",
-					trackId: trackId
+					trackId: id
 				}),
 			keybindings: keybinding("q f")
 		},
 		{
 			label: "Play last",
-			id: "play_last" + trackId,
+			id: "play_last" + id,
 			callback: () =>
 				appState.send({
 					type: "addToManualQueueFirst",
-					trackId: trackId
+					trackId: id
 				}),
 			keybindings: keybinding("q l")
+		},
+		{
+			label: "Quick tag",
+			id: "quick_tag" + id,
+			keybindings: keybinding("t e"),
+			callback: () =>
+				appState.send({
+					type: "addModal",
+					modal: {
+						id: "quick_tag" + id,
+						title: "Quick Edit",
+						Content: (modal) => <QuickEditModal track={track} modal={modal} />
+					}
+				})
 		}
 	]
 

@@ -11,7 +11,8 @@ export const selectorBaseTrack = {
 	title: tableTracks.title,
 	picture: tableTracks.picture,
 	genre: tableTracks.genre,
-	albumartist: tableTracks.albumartist
+	albumartist: tableTracks.albumartist,
+	mood: tableTracks.mood
 } satisfies Record<keyof BaseTrack, SQLiteColumn>
 
 export const selectorBaseTrackForQuery = R.mapValues(
