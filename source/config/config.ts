@@ -62,18 +62,9 @@ export const appConfigSchema = z
 			.describe(
 				"Configuration for the 'Quick Edit' feature, which allows you to change the genre/moods of a song on the fly to improve your smart-playlists."
 			)
-
-		// quickEditTags: z
-		// 	.string()
-		// 	.refine(
-		// 		(input) => trackColumnNames.includes(input),
-		// 		`Invalid quickEditTag. Must be one the supported tag types.\n${trackColumnNames.join("\n")}`
-		// 	)
-		// 	.array()
-		// 	.optional()
-		// 	.describe("The tags to show when doing a quick tag edit on a track.")
 	})
 	.strict()
+	.readonly()
 
 type Config = Readonly<z.infer<typeof appConfigSchema>>
 
@@ -83,7 +74,8 @@ const defaultConfig: z.input<typeof appConfigSchema> = {
 	watchDirectories: true,
 	version: "0.1",
 	icons: {},
-	keybindings: []
+	keybindings: [],
+	quickEdit: {}
 }
 
 const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")
