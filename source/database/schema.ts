@@ -14,16 +14,17 @@ export type TrackFileMeta = Pick<
 
 // Currently based on https://orm.drizzle.team/docs/drizzle-kit-migrate
 // and https://bun.sh/docs/bundler/executables#embed-assets-files
-// there doesn't seem to an easy way to handle migrations automatically.
+// there doesn't seem to be an easy way to handle migrations automatically.
 // But as the database currently only acts as a cache, we can safely recreate it if the version doesnt match
 //! Increase this if you change the schema in a breaking way.
-export const DATABASE_VERSION = 1
-export const versionTable = sqliteTable("version", {
+export const DATABASE_VERSION = 2
+export const metaTable = sqliteTable("meta", {
 	version: integer()
 		.notNull()
 		.unique()
 		.primaryKey()
-		.$default(() => DATABASE_VERSION)
+		.$default(() => DATABASE_VERSION),
+	tagSeperator: text("tag_seperator").notNull()
 })
 
 export const tableTracks = sqliteTable("tracks", {
@@ -54,7 +55,7 @@ export const tableTracks = sqliteTable("tracks", {
 	/** Album title */
 	album: text().references(() => tableAlbums.id, { onDelete: "cascade" }),
 	comment: text(),
-	genre: text(),
+	genre: text({ mode: "json" }).$type<readonly string[]>(),
 	/** Filepath to the artwork */
 	picture: text().$type<FilePath>(),
 	/** Track composer */
@@ -108,7 +109,7 @@ export const tableTracks = sqliteTable("tracks", {
 	rating: integer({ mode: "number" }),
 	bpm: integer(),
 	/** Keywords to reflect the mood of the audio, e.g. 'Romantic' or 'Sad' */
-	mood: text(),
+	mood: text({ mode: "json" }).$type<readonly string[]>(),
 	/** Release format, e.g. 'CD' */
 	media: text(),
 	/** Release catalog number(s) */

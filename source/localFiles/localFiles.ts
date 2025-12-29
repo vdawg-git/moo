@@ -16,6 +16,7 @@ import {
 	share
 } from "rxjs"
 import { Result } from "typescript-result"
+import { appConfig } from "#/config/config"
 import { DATA_DIRECTORY } from "#/constants"
 import { createWatcher } from "#/filesystem"
 import { enumarateError, logg } from "#/logs"
@@ -363,7 +364,11 @@ async function parseMusicFile(
 			container,
 
 			mtime,
-			size
+			size,
+
+			// The quick edit tags
+			genre: joinedTags.genre?.split(appConfig.quickEdit.tagSeperator),
+			mood: tags.mood?.split(appConfig.quickEdit.tagSeperator)
 		} satisfies TrackData
 	})
 }

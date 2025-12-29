@@ -70,9 +70,9 @@ export type AppModal = Readonly<{
 }>
 export type AppModalContentProps = {
 	/** Removes the current modal */
-	onCloseModal: () => void
-	onChangeTitle: (title: string) => void
-	onChangeColor: (color: AppColorName) => void
+	closeModal: () => void
+	changeTitle: (title: string) => void
+	changeColor: (color: AppColorName) => void
 }
 
 /** A notification in Moo */

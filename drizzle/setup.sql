@@ -1,13 +1,10 @@
-CREATE TABLE `albums` (
-	`title` text NOT NULL,
-	`artist` text,
-	`sort` text,
-	`id` text NOT NULL,
-	PRIMARY KEY(`title`, `artist`),
-	FOREIGN KEY (`artist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE no action
+CREATE TABLE `meta` (
+	`version` integer PRIMARY KEY NOT NULL,
+	`tag_seperator` text NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `albums_id_unique` ON `albums` (`id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `meta_version_unique` ON `meta` (`version`);
+--> statement-breakpoint
 CREATE TABLE `artists` (
 	`name` text PRIMARY KEY NOT NULL,
 	`sort` text
@@ -22,19 +19,21 @@ CREATE TABLE `movements` (
 	`title` text PRIMARY KEY NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `playlistTracks` (
-	`playlistId` text NOT NULL,
-	`trackId` text NOT NULL,
-	`position` integer NOT NULL,
-	PRIMARY KEY(`playlistId`, `trackId`, `position`),
-	FOREIGN KEY (`playlistId`) REFERENCES `playlists`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`trackId`) REFERENCES `tracks`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
 CREATE TABLE `playlists` (
 	`id` text PRIMARY KEY NOT NULL,
 	`displayName` text
 );
+
+--> statement-breakpoint
+CREATE TABLE `albums` (
+	`title` text NOT NULL,
+	`artist` text,
+	`sort` text,
+	`id` text PRIMARY KEY NOT NULL,
+	PRIMARY KEY(`title`, `artist`),
+	FOREIGN KEY (`artist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade
+);
+
 --> statement-breakpoint
 CREATE TABLE `tracks` (
 	`id` text PRIMARY KEY NOT NULL,
@@ -115,15 +114,9 @@ CREATE TABLE `tracks` (
 	`albumGain` integer,
 	`codecProfile` text,
 	`container` text,
-	`size` integer,
-	`mtime` integer,
+	`size` integer NOT NULL,
+	`mtime` integer NOT NULL,
 	FOREIGN KEY (`artist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`albumartist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`album`) REFERENCES `albums`(`id`) ON UPDATE no action ON DELETE cascade
 );
---> statement-breakpoint
-CREATE TABLE `version` (
-	`version` integer PRIMARY KEY NOT NULL
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `version_version_unique` ON `version` (`version`);

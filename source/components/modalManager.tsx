@@ -56,9 +56,9 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 					minWidth={minWidth}
 				>
 					<Content
-						onCloseModal={hideModal}
-						onChangeTitle={setTitle}
-						onChangeColor={(colorName) => setColor(colors[colorName])}
+						closeModal={hideModal}
+						changeTitle={setTitle}
+						changeColor={(colorName) => setColor(colors[colorName])}
 					/>
 				</box>
 			</box>

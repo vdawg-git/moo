@@ -1,8 +1,10 @@
+import { rm } from "node:fs/promises"
 import { eq, inArray, notInArray, or } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/bun-sqlite"
 import * as R from "remeda"
 import { Subject } from "rxjs"
 import { Result } from "typescript-result"
+import { appConfig } from "#/config/config.js"
 import { DATA_DIRECTORY, databasePath, IS_DEV } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
 import { enumarateError, logg } from "#/logs.js"
@@ -16,14 +18,14 @@ import { sortTracks } from "./naturalSorting.js"
 import * as schema from "./schema.js"
 import {
 	DATABASE_VERSION,
+	metaTable,
 	type TrackFileMeta,
 	tableAlbums,
 	tableArtists,
 	tableComposers,
 	tableMovements,
 	tablePlaylists,
-	tableTracks,
-	versionTable
+	tableTracks
 } from "./schema.js"
 import {
 	selectorBaseTrack,
@@ -51,9 +53,7 @@ async function connectDatabase(): Promise<AppDatabase> {
 		dataDir: DATA_DIRECTORY
 	})
 
-	const db = drizzle(databasePath, { logger: databaseLogger, schema })
-
-	const _waitForInit = await initDatabase(db)
+	const db = await initDatabase()
 
 	const changed$ = new Subject<string>()
 
@@ -349,39 +349,56 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
  * Can throw and shoudn't be handled,
  * as the database setup is needed for everything
  */
-async function initDatabase(db: DrizzleDatabase): Promise<void> {
+async function initDatabase(): Promise<DrizzleDatabase> {
+	const db = drizzle(databasePath, { logger: databaseLogger, schema })
+
 	const shouldRecreate = await db
 		.select()
-		.from(versionTable)
+		.from(metaTable)
 		.limit(1)
-		.then((data) => {
-			const isSame = data[0]?.version !== DATABASE_VERSION
-			return !isSame
+		.then(([data]) => {
+			if (!data) return true
+
+			const isSameVersion = data.version === DATABASE_VERSION
+			const isSameTagsSeperator =
+				data.tagSeperator === appConfig.quickEdit.tagSeperator
+
+			return !isSameVersion || !isSameTagsSeperator
 		})
 		.catch((error) => {
 			logg.error("error checking database for init", enumarateError(error))
 			return true
 		})
 
-	if (!shouldRecreate) return
+	if (!shouldRecreate) return db
 
 	logg.info("running database init..")
 
-	const setupCalls = (setupSqlRaw as string).split("--> statement-breakpoint")
+	await rm(databasePath)
+	logg.info("removed old database")
 
-	return db.transaction(async (tx) => {
+	const db2 = drizzle(databasePath, { logger: databaseLogger, schema })
+
+	const setupCalls = (setupSqlRaw as string)
+		.split("--> statement-breakpoint")
+		.map((string) => string.trim())
+
+	logg.info("running database migration")
+
+	await db2.transaction(async (tx) => {
 		// reset db
 		db.run("PRAGMA foreign_keys = OFF;")
-		const tables = db.all<{ name: string }>(
-			"SELECT name FROM sqlite_master WHERE type='table';"
-		)
-		for (const { name } of tables) {
-			db.run(`DROP TABLE IF EXISTS ${name};`)
+		for (const setupCommand of setupCalls) {
+			tx.run(setupCommand)
 		}
 
-		tx.insert(versionTable).values({ version: DATABASE_VERSION })
-		setupCalls.forEach((setup) => tx.run(setup))
+		tx.insert(metaTable).values({
+			version: DATABASE_VERSION,
+			tagSeperator: appConfig.quickEdit.tagSeperator
+		})
 
 		db.run("PRAGMA foreign_keys = ON;")
 	})
+
+	return db2
 }

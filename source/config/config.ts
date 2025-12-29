@@ -21,6 +21,9 @@ const zFilePath: z.Schema<FilePath> = z.string() as any
 export const schemaUrl =
 	"https://raw.githubusercontent.com/vdawg-git/moo/refs/heads/master/other/schemas/mooConfig.json"
 
+export const schemaTagType = z.enum(["genre", "mood"])
+export type TagType = z.infer<typeof schemaTagType>
+
 export const appConfigSchema = z
 	.object({
 		$schema: z.string().optional().default(schemaUrl),
@@ -57,7 +60,7 @@ export const appConfigSchema = z
 					.describe(
 						"The tag used to join a list into a single tag. For example multiple genres for a track are seperated with a '|' by default"
 					),
-				defaultTagType: z.enum(["genre", "mood"]).default("mood")
+				defaultTagType: schemaTagType.default("mood")
 			})
 			.describe(
 				"Configuration for the 'Quick Edit' feature, which allows you to change the genre/moods of a song on the fly to improve your smart-playlists."

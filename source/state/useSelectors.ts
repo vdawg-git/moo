@@ -1,6 +1,6 @@
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
-import { useObservable } from "#/hooks/hooks"
+import { useObservable } from "#/hooks/useObservable"
 import { currentTrack$ } from "./derivedState"
 import { appState } from "./state"
 import type { BaseTrack } from "#/database/types"

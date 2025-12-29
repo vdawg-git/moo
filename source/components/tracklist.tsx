@@ -10,10 +10,10 @@ import {
 import { keybinding } from "#/lib/keybinds"
 import { appState } from "#/state/state"
 import { List, useList } from "./list"
-import { QuickEditModal } from "./quickEditModal"
+import { QuickEditModal } from "./quickEdit/quickEditModal"
 import type { AppColor } from "#/config/theme"
 import type { PlayingState } from "#/types/types"
-import type { BaseTrack, TrackId } from "../database/types"
+import type { BaseTrack } from "../database/types"
 
 type PlaylistProps = {
 	tracks: readonly BaseTrack[]

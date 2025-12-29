@@ -82,6 +82,17 @@ export type AppDatabase = Readonly<{
 	>
 
 	/**
+	 * Gets all moods sorted by how likely they would apply to the current track.
+	 * Excludes the moods the track already has
+	 */
+	getCoOccurenceMoods: (trackId: TrackId) => AsyncResult<string[], Error>
+	/**
+	 * Gets all genres sorted by how likely they would apply to the current track.
+	 * Excludes the genres the track already has.
+	 */
+	getCoOccurenceGenres: (trackId: TrackId) => AsyncResult<string[], Error>
+
+	/**
 	 * Upserts tracks.
 	 *
 	 * This is used to update and the tracks from the music directories.
@@ -208,7 +219,7 @@ export abstract class Track {
 	/** Release date. A timestamp */
 	readonly releasedate?: Date
 	readonly comment?: string
-	readonly genre?: string
+	readonly genre?: readonly string[]
 	/** Filename of the cover image, like `<HASH>.jpg` */
 	readonly picture?: FilePath
 	/** Track composer */
@@ -257,7 +268,7 @@ export abstract class Track {
 	readonly rating?: number
 	readonly bpm?: number
 	/** Keywords to reflect the mood of the audio, e.g. 'Romantic' or 'Sad' */
-	readonly mood?: string
+	readonly mood?: readonly string[]
 	/** Release format, e.g. 'CD' */
 	readonly media?: string
 	/** Release catalog number(s) */

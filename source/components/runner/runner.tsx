@@ -62,7 +62,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 
 	const onSubmit = () => {
 		if (!activeItem) return
-		modal.onCloseModal()
+		modal.closeModal()
 		activeItem.onSelect()
 	}
 
@@ -111,12 +111,12 @@ function Runner({ modal, initialValue }: RunnerProps) {
 
 	useEffect(() => {
 		if (!mode) {
-			modal.onChangeTitle("Go to..")
-			modal.onChangeColor("blue")
+			modal.changeTitle("Go to..")
+			modal.changeColor("blue")
 			return
 		}
-		modal.onChangeTitle(mode.icon + " " + mode.type)
-		modal.onChangeColor(mode.color)
+		modal.changeTitle(mode.icon + " " + mode.type)
+		modal.changeColor(mode.color)
 
 		// TODO the command still shows, even though it is removed from the keybindingsState
 		// but maybe there is another registration with different keybindings in my config
@@ -133,7 +133,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 				registerKeybinds(toUnregister, { when: "default" })
 			}
 		}
-	}, [mode, modal.onChangeTitle, modal.onChangeColor])
+	}, [mode, modal.changeTitle, modal.changeColor])
 
 	return (
 		<box flexDirection="column" minWidth={"50%"} width={"50%"} maxWidth={50}>
