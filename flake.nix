@@ -61,7 +61,7 @@
         pname = name;
         version = "0.10.0";
         src = ./.;
-        buildInputs = with pkgs; [bun];
+        buildInputs = with pkgs; [bun ffmpeg];
 
         installPhase = ''
           mkdir -p $out/bin
