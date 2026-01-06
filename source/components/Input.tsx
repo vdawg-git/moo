@@ -1,5 +1,6 @@
 import { useSelector } from "@xstate/store/react"
 import { type ReactNode, useEffect, useId } from "react"
+import { useColors } from "#/hooks/useColors"
 import { appState } from "#/state/state"
 import type { InputProps } from "@opentui/react"
 
@@ -21,6 +22,16 @@ export function Input(props: AppInputProps): ReactNode {
 	}, [focused, id])
 
 	const isFocused = focused && currentlyFocused === id
+	const colors = useColors()
 
-	return <input {...props} focused={isFocused} />
+	return (
+		<input
+			placeholderColor={colors.black}
+			textColor={colors.brightBlack}
+			focusedTextColor={colors.fg}
+			cursorColor={colors.fg}
+			{...props}
+			focused={isFocused}
+		/>
+	)
 }
