@@ -17,7 +17,7 @@
 		"lint": "biome check",
 		"postinstall": "./scripts/nixBun.sh",
 		"format": "biome format --write",
-		"db:generate": "drizzle-kit generate",
+		"db:generate": "rm -rf ./drizzle/* && drizzle-kit generate && rm -r ./drizzle/meta && cd ./drizzle && mv * setup.sql",
 		"drizzleStudio": "DEV=true bunx drizzle-kit studio"
 	},
 	"dependencies": {
