@@ -10,5 +10,13 @@
 	},
 	"[json]": {
 		"editor.defaultFormatter": "biomejs.biome"
-	}
+	},
+	"sqltools.connections": [
+		{
+			"previewLimit": 50,
+			"driver": "SQLite",
+			"name": "moo-dev",
+			"database": "${workspaceFolder:moo}/db.db"
+		}
+	]
 }
