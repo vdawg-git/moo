@@ -6,6 +6,7 @@ import {
 	useId,
 	useRef
 } from "react"
+import { logg } from "#/logs"
 import { appState } from "#/state/state"
 import { type GeneralCommandArgument, registerKeybinds } from "./keybindManager"
 import type { KeybindCommandWhen } from "./keybindsState"
@@ -17,6 +18,8 @@ export type UseKeybindingsOptions = {
 
 const KeybindingWhenContext = createContext<KeybindCommandWhen>("default")
 
+// TODO passing an id is kinda useless. We can use just use `useId`+label
+// The labels need to be unique though in the provided array
 export function useKeybindings(
 	getCommands: () => readonly GeneralCommandArgument[],
 	options?: UseKeybindingsOptions
@@ -28,7 +31,7 @@ export function useKeybindings(
 	)
 	commandsRef.current = getCommands
 
-	const keybindingsWhen = useKeybindingWhen()
+	const keybindingsWhen = useKeybindingContext()
 
 	useEffect(() => {
 		if (!isEnabled) return
@@ -57,6 +60,6 @@ export function KeybindingWhenProvider({
 }
 
 /** Just reads out the context of the nearest {@linkcode KeybindingWhenContext} */
-export function useKeybindingWhen(): KeybindCommandWhen {
+function useKeybindingContext(): KeybindCommandWhen {
 	return useContext(KeybindingWhenContext)
 }
