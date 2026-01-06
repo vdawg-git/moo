@@ -10,7 +10,6 @@ import {
 import { keybinding } from "#/lib/keybinds"
 import { appState } from "#/state/state"
 import { List, useList } from "./list"
-import { QuickEditModal } from "./quickEdit/quickEditModal"
 import type { AppColor } from "#/config/theme"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack } from "../database/types"
@@ -152,7 +151,7 @@ export function TrackItem({
  * which should be called when unmounting
  * */
 function registerTrackCommands(track: BaseTrack): () => void {
-	const { id, title } = track
+	const { id } = track
 
 	const commands: GeneralCommandArgument[] = [
 		{
@@ -181,12 +180,8 @@ function registerTrackCommands(track: BaseTrack): () => void {
 			keybindings: keybinding("t e"),
 			callback: () =>
 				appState.send({
-					type: "addModal",
-					modal: {
-						id: "quick_tag" + id,
-						title: "Quick Edit",
-						Content: (modal) => <QuickEditModal track={track} modal={modal} />
-					}
+					type: "navigateTo",
+					goTo: { route: "quickEdit", parameter: { id } }
 				})
 		}
 	]

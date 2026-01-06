@@ -11,48 +11,58 @@ import { createAtom, createStore } from "@xstate/store"
 import { useAtom } from "@xstate/store/react"
 import { create } from "mutative"
 import { useRef } from "react"
-import { Result } from "typescript-result"
 import { appConfig, type TagType } from "#/config/config"
-import { useQuery } from "#/database/useQuery"
 import type { BaseTrack } from "#/database/types"
 
-type SuggestionsStore = Record<TagType, readonly string[]>
+export type SuggestionsRecord = Record<TagType, readonly string[]>
+
+type QuickEditState =
+	| { type: "loading" }
+	| { type: "ready"; store: QuickEditStateStore }
+	| { type: "error"; error: unknown }
 
 type QuickEditStateStore = {
 	input: string
-	tagsApplied: SuggestionsStore
-	tagsSuggested: SuggestionsStore
+	tagsApplied: SuggestionsRecord
+	tagsSuggested: SuggestionsRecord
 	indexSuggestion: number
 	tagType: TagType
 }
 
-export function useQuickEditState(track: BaseTrack) {
-	const queryMoods = useQuery(["moods", track.id], async () =>
-		Result.ok(["mood 1", "mood 2", "mood 3"])
-	)
-	const queryGenres = useQuery(["genre", track.id], async () =>
-		Result.ok(["genre 1", "genre 2", "genre 3"])
-	)
-
+export function useQuickEditState(
+	track: BaseTrack,
+	suggestions: SuggestionsRecord
+) {
 	const stateRef = useRef<ReturnType<typeof createQuickEditState>>(null)
 	if (!stateRef.current) {
 		stateRef.current = createQuickEditState({
-			suggestionsMood: queryMoods.data?.getOrDefault([]) ?? [],
-			suggestionsGenre: queryGenres.data?.getOrDefault([]) ?? [],
-			track
+			appliedMood: track.mood ?? [],
+			appliedGenre: track.genre ?? [],
+			suggestions
 		})
 	}
 	const state = stateRef.current
 
-	const suggestions = useAtom(state.suggestionsAtom)
+	const suggestionsFiltered = useAtom(state.suggestionsAtom)
 	const tagsActive = useAtom(state.tagsActiveAtom)
+
+	// 	useEffect(()=> {
+	// 		// database.getCoOccurenceGenres
+	// 		//
+
+	// Promise.all		(
+	// 	[
+	// 		Promise.resolve(["mood 1", "mood 2", "mood 3"]),
+	// 		Promise.resolve( ["genre 1", "genre 2", "genre 3"])
+	// 	]
+	// 		).then(([moods, genres])=> stateRef.current?.state.trigger.setActiveTags())
+
+	// 	}, [track])
 
 	return {
 		state: stateRef.current.state,
-		suggestions,
-		tagsActive,
-		queryMoods,
-		queryGenres
+		suggestions: suggestionsFiltered,
+		tagsActive
 	}
 }
 
@@ -66,25 +76,22 @@ const initalState: QuickEditStateStore = {
 
 // And manual work, but probably the easiest.
 function createQuickEditState({
-	track,
-	suggestionsGenre,
-	suggestionsMood
+	appliedGenre,
+	appliedMood,
+	suggestions
 }: {
-	track: BaseTrack
-	suggestionsGenre: readonly string[]
-	suggestionsMood: readonly string[]
+	appliedGenre: readonly string[]
+	appliedMood: readonly string[]
+	suggestions: SuggestionsRecord
 }) {
 	const state = createStore({
 		context: {
 			...initalState,
 			...{
-				tagsSuggested: {
-					genre: suggestionsGenre,
-					mood: suggestionsMood
-				},
+				tagsSuggested: suggestions,
 				tagsApplied: {
-					genre: track.genre ?? [],
-					mood: track.mood ?? []
+					genre: appliedGenre,
+					mood: appliedMood
 				}
 			}
 		} satisfies QuickEditStateStore,
@@ -100,6 +107,13 @@ function createQuickEditState({
 				...context,
 				input
 			}),
+
+			addTagFromInput: (context, { input }: { input: string }) =>
+				create(context, (draft) => {
+					draft.tagsApplied[draft.tagType].push(input)
+					draft.indexSuggestion = 0
+					draft.input = ""
+				}),
 
 			setSuggestions: (
 				context,
@@ -124,10 +138,13 @@ function createQuickEditState({
 	const suggestionsAtom = createAtom((read) => {
 		const { context } = read(state)
 		const type = context.tagType
+		const applied = context.tagsApplied[type]
 		const input = context.input.toLowerCase()
 		const suggestionsAll = context.tagsSuggested[type]
-		const filtered = suggestionsAll.filter((suggestion) =>
-			suggestion.toLowerCase().includes(input)
+		const filtered = suggestionsAll.filter(
+			(suggestion) =>
+				suggestion.toLowerCase().includes(input) &&
+				!applied.includes(suggestion)
 		)
 
 		return filtered

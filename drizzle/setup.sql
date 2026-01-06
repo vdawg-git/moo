@@ -1,10 +1,21 @@
 CREATE TABLE `meta` (
 	`version` integer PRIMARY KEY NOT NULL,
-	`tag_seperator` text NOT NULL
+	`tag_separator` text NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `meta_version_unique` ON `meta` (`version`);
+CREATE UNIQUE INDEX `meta_version_unique` ON `meta` (`version`);--> statement-breakpoint
+CREATE TABLE `albums` (
+	`title` text NOT NULL,
+	`artist` text,
+	`sort` text,
+	`id` text GENERATED ALWAYS AS (
+					"title" || '|' || coalesce("artist", 'NULL')
+				) STORED NOT NULL,
+	PRIMARY KEY(`title`, `artist`),
+	FOREIGN KEY (`artist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade
+);
 --> statement-breakpoint
+CREATE UNIQUE INDEX `albums_id_unique` ON `albums` (`id`);--> statement-breakpoint
 CREATE TABLE `artists` (
 	`name` text PRIMARY KEY NOT NULL,
 	`sort` text
@@ -23,22 +34,11 @@ CREATE TABLE `playlists` (
 	`id` text PRIMARY KEY NOT NULL,
 	`displayName` text
 );
-
---> statement-breakpoint
-CREATE TABLE `albums` (
-	`title` text NOT NULL,
-	`artist` text,
-	`sort` text,
-	`id` text PRIMARY KEY NOT NULL,
-	PRIMARY KEY(`title`, `artist`),
-	FOREIGN KEY (`artist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade
-);
-
 --> statement-breakpoint
 CREATE TABLE `tracks` (
 	`id` text PRIMARY KEY NOT NULL,
 	`sourceProvider` text NOT NULL,
-	`duration` integer NOT NULL,
+	`duration` numeric NOT NULL,
 	`title` text,
 	`trackIndex` integer,
 	`trackIndexOf` integer,
@@ -48,6 +48,11 @@ CREATE TABLE `tracks` (
 	`artist` text,
 	`albumartist` text,
 	`album` text,
+	`albumId` text GENERATED ALWAYS AS (CASE
+							WHEN "album" IS NOT NULL 
+							THEN "album" || '|' || coalesce("albumartist","artist",'NULL')
+							ELSE NULL
+						END) STORED,
 	`comment` text,
 	`genre` text,
 	`picture` text,
@@ -99,7 +104,7 @@ CREATE TABLE `tracks` (
 	`movementIndex` integer,
 	`movementIndexOf` integer,
 	`podcastId` text,
-	`bitrate` integer,
+	`bitrate` numeric,
 	`codec` text,
 	`audioMD5` text,
 	`lossless` integer,
@@ -118,5 +123,5 @@ CREATE TABLE `tracks` (
 	`mtime` integer NOT NULL,
 	FOREIGN KEY (`artist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`albumartist`) REFERENCES `artists`(`name`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`album`) REFERENCES `albums`(`id`) ON UPDATE no action ON DELETE cascade
+	FOREIGN KEY (`albumId`) REFERENCES `albums`(`id`) ON UPDATE no action ON DELETE cascade
 );

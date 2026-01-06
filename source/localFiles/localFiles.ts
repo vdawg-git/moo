@@ -15,12 +15,14 @@ import {
 	type Observable,
 	share
 } from "rxjs"
-import { Result } from "typescript-result"
+import { type AsyncResult, Result } from "typescript-result"
 import { appConfig } from "#/config/config"
 import { DATA_DIRECTORY } from "#/constants"
+import { database } from "#/database/database"
 import { createWatcher } from "#/filesystem"
 import { enumarateError, logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
+import { writeTags } from "./ffmpeg"
 import { supportedFormats } from "./formats"
 import type { TrackFileMeta } from "#/database/schema"
 import type { AppDatabase, TrackData, TrackId } from "#/database/types"
@@ -39,6 +41,7 @@ export async function updateDatabase(
 							`Errors when updating tracks: ${errors.map((error) => String(error)).join("")}`
 						)
 
+					// Delete tracks which are not on the FS anymore
 					return database.deleteTracksInverted(
 						filePaths as unknown as TrackId[]
 					)
@@ -222,7 +225,7 @@ export function watchAndUpdateDatabase(
  *
  * Also saves the cover art to the data directory. Errors for that just get ignored.
  */
-async function parseMusicFile(
+export async function parseMusicFile(
 	filePath: FilePath
 ): Promise<Result<TrackData, Error>> {
 	return Result.fromAsyncCatching(
@@ -367,8 +370,14 @@ async function parseMusicFile(
 			size,
 
 			// The quick edit tags
-			genre: joinedTags.genre?.split(appConfig.quickEdit.tagSeperator),
-			mood: tags.mood?.split(appConfig.quickEdit.tagSeperator)
+			genre: joinedTags.genre
+				?.split(appConfig.quickEdit.tagSeperator)
+				.map((genre) => genre.trim().toLowerCase())
+				.filter(R.isNonNullish),
+			mood: tags.mood
+				?.split(appConfig.quickEdit.tagSeperator)
+				.map((mood) => mood.trim().toLowerCase())
+				.filter(R.isNonNullish)
 		} satisfies TrackData
 	})
 }
@@ -413,4 +422,23 @@ async function isSameAsInDatabase(
 			logg.error("failed to stat", { error: enumarateError(error) })
 		})
 		.getOrDefault(false)
+}
+
+/**
+ * Updates the local file's tags and then updates the database too.
+ * Queries will get invaldiated through the database change.
+ */
+export async function updateFileTags({
+	id,
+	genre,
+	mood
+}: {
+	id: TrackId
+	mood?: readonly string[]
+	genre?: readonly string[]
+}): Promise<void> {
+	await writeTags({ id, genre, mood })
+	const track = (await parseMusicFile(id as unknown as FilePath)).getOrThrow()
+
+	await database.upsertTracks([track])
 }

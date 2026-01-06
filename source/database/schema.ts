@@ -1,5 +1,11 @@
-import { relations } from "drizzle-orm"
-import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { relations, type SQL, sql } from "drizzle-orm"
+import {
+	integer,
+	numeric,
+	primaryKey,
+	sqliteTable,
+	text
+} from "drizzle-orm/sqlite-core"
 import type { ILyricsTag } from "music-metadata"
 import type { FilePath } from "#/types/types"
 import type { AlbumId, ArtistId, PlaylistId, TrackId } from "./types"
@@ -24,7 +30,7 @@ export const metaTable = sqliteTable("meta", {
 		.unique()
 		.primaryKey()
 		.$default(() => DATABASE_VERSION),
-	tagSeperator: text("tag_seperator").notNull()
+	tagSeperator: text("tag_separator").notNull()
 })
 
 export const tableTracks = sqliteTable("tracks", {
@@ -34,7 +40,7 @@ export const tableTracks = sqliteTable("tracks", {
 	sourceProvider: text().notNull(),
 
 	/** In milliseconds */
-	duration: integer().notNull(),
+	duration: numeric({ mode: "number" }).notNull(),
 
 	title: text(),
 	/** Track number in the album. See {@link trackNumberTotal} for the total number of tracks */
@@ -52,8 +58,24 @@ export const tableTracks = sqliteTable("tracks", {
 	albumartist: text().references(() => tableArtists.name, {
 		onDelete: "cascade"
 	}),
-	/** Album title */
-	album: text().references(() => tableAlbums.id, { onDelete: "cascade" }),
+	/**
+	 * The album title. This does not reference an album directly,
+	 * for that use `albumId`.
+	 */
+	album: text(),
+	/** Album id reference */
+	albumId: text()
+		.references(() => tableAlbums.id, { onDelete: "cascade" })
+		.generatedAlwaysAs(
+			(): SQL =>
+				sql`CASE
+							WHEN ${tableTracks.album} IS NOT NULL 
+							THEN ${tableTracks.album} || '|' || coalesce(${tableTracks.albumartist},${tableTracks.artist},'NULL')
+							ELSE NULL
+						END`,
+			{ mode: "stored" }
+		)
+		.$type<AlbumId>(),
 	comment: text(),
 	genre: text({ mode: "json" }).$type<readonly string[]>(),
 	/** Filepath to the artwork */
@@ -144,7 +166,7 @@ export const tableTracks = sqliteTable("tracks", {
 	podcastId: text(),
 
 	// extra
-	bitrate: integer(),
+	bitrate: numeric({ mode: "number" }),
 	codec: text(),
 	audioMD5: text(),
 	lossless: integer({ mode: "boolean" }),
@@ -167,8 +189,8 @@ export const tableTracks = sqliteTable("tracks", {
 
 export const relationsTrack = relations(tableTracks, ({ one }) => ({
 	album: one(tableAlbums, {
-		fields: [tableTracks.album, tableTracks.artist],
-		references: [tableAlbums.title, tableAlbums.artist]
+		fields: [tableTracks.albumId],
+		references: [tableAlbums.id]
 	}),
 	artist: one(tableArtists, {
 		relationName: "artist",
@@ -202,10 +224,22 @@ export const tableAlbums = sqliteTable(
 			onDelete: "cascade"
 		}),
 		sort: text("sort"),
-		id: text().primaryKey().$type<AlbumId>()
+		id: text("id")
+			.generatedAlwaysAs(
+				(): SQL => sql`
+					${tableAlbums.title} || '|' || coalesce(${tableAlbums.artist}, 'NULL')
+				`,
+				{ mode: "stored" }
+			)
+			.unique()
+			.notNull()
+			.$type<AlbumId>()
 	},
-	(table) => [primaryKey({ name: "id", columns: [table.title, table.artist] })]
+	(table) => [
+		primaryKey({ name: "title_artist", columns: [table.title, table.artist] })
+	]
 )
+
 export type AlbumSimple = typeof tableAlbums.$inferSelect
 
 export const relationsAlbum = relations(tableAlbums, ({ one, many }) => ({
@@ -219,13 +253,13 @@ export const relationsAlbum = relations(tableAlbums, ({ one, many }) => ({
 export const tableMovements = sqliteTable("movements", {
 	title: text().primaryKey()
 })
-export type MovementSimple = typeof tableAlbums.$inferSelect
+export type MovementSimple = typeof tableMovements.$inferSelect
 
 export const tableComposers = sqliteTable("composers", {
 	name: text().primaryKey(),
 	sort: text()
 })
-export type ComposerSimple = typeof tableAlbums.$inferSelect
+export type ComposerSimple = typeof tableComposers.$inferSelect
 
 /**
  * Currently we only support smart-playlists. Might change, but prob not.
@@ -236,3 +270,15 @@ export const tablePlaylists = sqliteTable("playlists", {
 	displayName: text()
 })
 export type PlaylistSimple = typeof tablePlaylists.$inferSelect
+
+export function generateAlbumId({
+	album,
+	albumartist,
+	artist
+}: {
+	albumartist?: string
+	album: string
+	artist?: string
+}): AlbumId {
+	return `${album}|${albumartist ?? artist ?? "NULL"}` as AlbumId
+}

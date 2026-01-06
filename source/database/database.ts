@@ -13,6 +13,7 @@ import { getSmartPlaylistTracks } from "#/smartPlaylists/toSql.js"
 // @ts-expect-error
 import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
 import { createLocalPlayer } from "../player/player.js"
+import { getCoOccurenceTags } from "./coOccurence.js"
 import { databaseLogger } from "./logger.js"
 import { sortTracks } from "./naturalSorting.js"
 import * as schema from "./schema.js"
@@ -66,7 +67,13 @@ async function connectDatabase(): Promise<AppDatabase> {
 					.select({ ...selectorBaseTrack })
 					.from(tableTracks)
 					.where(eq(tableTracks.id, id))
-					.then(([track]) => track && nullsToUndefined(track))
+					.limit(1)
+					.then(([track]) => {
+						if (!track) {
+							throw new Error(`Track not found. ID: ${id}`)
+						}
+						return nullsToUndefined(track)
+					})
 			),
 
 		getTracks: async (ids = []) =>
@@ -218,6 +225,9 @@ async function connectDatabase(): Promise<AppDatabase> {
 				})
 			),
 
+		getCoOccurenceTags: (trackId) =>
+			Result.fromAsyncCatching(getCoOccurenceTags(trackId, db)),
+
 		changed$
 	} satisfies AppDatabase
 }
@@ -268,8 +278,7 @@ const addTracks: (database: DrizzleDatabase) => AppDatabase["upsertTracks"] = (
 					? {
 							title: track.album,
 							artist,
-							sort: track.albumsort,
-							id: (track.album + (artist ?? "")) as AlbumId
+							sort: track.albumsort
 						}
 					: []
 			}
@@ -292,7 +301,7 @@ const addTracks: (database: DrizzleDatabase) => AppDatabase["upsertTracks"] = (
 					}
 
 					if (albums.length > 0) {
-						await upsert(tableAlbums, albums, "id", tx)
+						await upsert(tableAlbums, albums, ["artist", "title"], tx)
 					}
 
 					if (composer.length > 0) {
@@ -357,13 +366,16 @@ async function initDatabase(): Promise<DrizzleDatabase> {
 		.from(metaTable)
 		.limit(1)
 		.then(([data]) => {
-			if (!data) return true
+			if (!data) {
+				logg.debug("Did not find meta-table entry. Recreating database next..")
+				return true
+			}
 
 			const isSameVersion = data.version === DATABASE_VERSION
 			const isSameTagsSeperator =
 				data.tagSeperator === appConfig.quickEdit.tagSeperator
 
-			return !isSameVersion || !isSameTagsSeperator
+			return !(isSameVersion && isSameTagsSeperator)
 		})
 		.catch((error) => {
 			logg.error("error checking database for init", enumarateError(error))
@@ -372,10 +384,10 @@ async function initDatabase(): Promise<DrizzleDatabase> {
 
 	if (!shouldRecreate) return db
 
-	logg.info("running database init..")
+	logg.info("Database changed or doesnt exists. Running database init..")
 
 	await rm(databasePath)
-	logg.info("removed old database")
+	logg.info("Removed old database")
 
 	const db2 = drizzle(databasePath, { logger: databaseLogger, schema })
 
@@ -392,7 +404,7 @@ async function initDatabase(): Promise<DrizzleDatabase> {
 			tx.run(setupCommand)
 		}
 
-		tx.insert(metaTable).values({
+		await tx.insert(metaTable).values({
 			version: DATABASE_VERSION,
 			tagSeperator: appConfig.quickEdit.tagSeperator
 		})

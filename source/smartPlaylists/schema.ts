@@ -2,7 +2,7 @@ import parser from "any-date-parser"
 import { getTableColumns } from "drizzle-orm"
 import * as R from "remeda"
 import { pipe } from "remeda"
-import { match } from "ts-pattern"
+import { match, P } from "ts-pattern"
 import { z } from "zod"
 import { type TrackColumnKey, tableTracks } from "#/database/schema"
 import { stripIndent } from "#/helpers"
@@ -112,23 +112,41 @@ export type DateSchema = z.infer<typeof dateSchema>
 /** The schema to validate all fields like 'artist', 'title' etc */
 const trackColumnSchema = pipe(
 	R.entries(columns),
-	R.filter(([column]) => column !== "id"),
+	R.filter(([columnName]) => columnName !== "id"),
 	R.map(([columnName, { columnType }]) => [columnName, columnType] as const),
 	R.map(([columnName, columnType]) =>
 		match(columnType)
-			.with("SQLiteBoolean", () => [columnName, booleanSchema] as const)
-			.with("SQLiteInteger", () => [columnName, numberSchema] as const)
-			.with("SQLiteText", () => [columnName, stringSchema] as const)
-			.with("SQLiteTimestamp", () => [columnName, dateSchema] as const)
-			.with("SQLiteTextJson", () => undefined)
+			.with(
+				"SQLiteBoolean",
+				() => ({ columnName, schema: booleanSchema, isArray: false }) as const
+			)
+			.with(
+				P.union("SQLiteInteger", "SQLiteNumericNumber"),
+				() => ({ columnName, schema: numberSchema, isArray: false }) as const
+			)
+			.with(
+				// TODO startsWith wont work with our naive implementation.
+				// We need to match this for every item in the array
+				P.union("SQLiteText", "SQLiteTextJson"),
+				() => ({
+					columnName,
+					schema: stringSchema,
+					isArray: columnType === "SQLiteTextJson"
+				})
+			)
+			.with(
+				"SQLiteTimestamp",
+				() => ({ columnName, schema: dateSchema, isArray: false }) as const
+			)
 			.exhaustive()
 	),
 	R.filter(R.isNonNullish),
-	R.map(([column, schema]) =>
-		z.object({ [column]: schema }).transform((parsed) => {
+	R.map(({ columnName, schema, isArray }) =>
+		z.object({ [columnName]: schema }).transform((parsed) => {
 			const [trackColumn, rules] = Object.entries(parsed)[0]!
 			return {
 				_type: "column" as const,
+				columnType: isArray ? ("list" as const) : ("single" as const),
 				column: trackColumn as TrackColumnKey,
 				rules
 			}

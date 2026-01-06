@@ -23,7 +23,7 @@ export type DrizzleDatabase = BunSQLiteDatabase<typeof schema>
 
 /** The interface for the moo SQLite database */
 export type AppDatabase = Readonly<{
-	getTrack: (id: TrackId) => Promise<Result<BaseTrack | undefined, Error>>
+	getTrack: (id: TrackId) => Promise<Result<BaseTrack, Error>>
 	getTracks: (
 		ids?: readonly TrackId[]
 	) => Promise<Result<readonly BaseTrack[], Error>>
@@ -82,20 +82,17 @@ export type AppDatabase = Readonly<{
 	>
 
 	/**
-	 * Gets all moods sorted by how likely they would apply to the current track.
-	 * Excludes the moods the track already has
+	 * Gets all moods and genres sorted by how likely they would apply to the current track.
+	 * Excludes the moods/genres the track already has.
 	 */
-	getCoOccurenceMoods: (trackId: TrackId) => AsyncResult<string[], Error>
-	/**
-	 * Gets all genres sorted by how likely they would apply to the current track.
-	 * Excludes the genres the track already has.
-	 */
-	getCoOccurenceGenres: (trackId: TrackId) => AsyncResult<string[], Error>
+	getCoOccurenceTags: (
+		trackId: TrackId
+	) => AsyncResult<CoOccurenceReturn, Error>
 
 	/**
 	 * Upserts tracks.
 	 *
-	 * This is used to update and the tracks from the music directories.
+	 * This is used to update the tracks from the music directories.
 	 *
 	 * Calling this will trigger {@linkcode changed$}.
 	 * */
@@ -366,3 +363,8 @@ export type ArtistId = string & { __brand: "ArtistId" }
  * Currently we only have smart playlists though.
  */
 export type PlaylistId = string & { __brand: "PlaylistId" }
+
+export type CoOccurenceReturn = {
+	genre: { name: string; score: number }[]
+	moods: { name: string; score: number }[]
+}

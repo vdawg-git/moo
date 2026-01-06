@@ -4,6 +4,7 @@ import { All } from "#/pages/allPage"
 import { ArtistPage } from "#/pages/artistPage"
 import { PlaylistPage } from "#/pages/playlistPage"
 import { QueuePage } from "#/pages/queuePage"
+import { QuickEditPage } from "#/pages/quickEdit/quickEditPage"
 import { appState } from "#/state/state"
 import type { ReactNode } from "react"
 import type { ViewPage, ViewPages } from "#/state/types"
@@ -15,7 +16,8 @@ const routes: Routes = {
 	search: () => <text>Search is not implemented yet</text>,
 	queue: () => <QueuePage />,
 	album: ({ id }) => <AlbumPage id={id} />,
-	artist: ({ id }) => <ArtistPage id={id} />
+	artist: ({ id }) => <ArtistPage id={id} />,
+	quickEdit: ({ id }) => <QuickEditPage id={id} key={id} />
 }
 
 export function Router() {

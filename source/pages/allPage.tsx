@@ -5,11 +5,12 @@ import { Tracklist } from "#/components/tracklist"
 import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
+import { createQueryKey } from "#/queryKey"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 
 export function All() {
-	const response = useQuery("all", database.getTracks)
+	const response = useQuery(createQueryKey.all(), database.getTracks)
 	const playback = usePlaybackData()
 	const playingIndex = usePlayingIndex({ type: "all" })
 	const playState = useSelector(

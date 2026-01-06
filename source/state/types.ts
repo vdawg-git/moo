@@ -116,6 +116,7 @@ export interface ViewPages {
 	search: undefined
 	/** The queue page which shows the next up songs */
 	queue: undefined
+	quickEdit: { id: TrackId }
 }
 
 export type ViewPage = {
