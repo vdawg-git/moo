@@ -4,6 +4,9 @@ scratch*
 *.code-workspace
 /result
 
+# SQL Tools
+*.session.sql
+
 
 
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
