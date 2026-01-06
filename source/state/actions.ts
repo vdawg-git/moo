@@ -253,6 +253,21 @@ const navigateBack = createAction((context) => {
 	context.view.historyIndex -= 1
 })
 
+const goBackOrHome = createAction((context) => {
+	const index = context.view.historyIndex
+	const current = context.view.history[index]
+
+	if (index <= 0 && current?.route !== "home") {
+		context.view.history.push({ route: "home" })
+		context.view.historyIndex = index + 1
+		return
+	}
+
+	if (index <= 0) return
+
+	context.view.historyIndex--
+})
+
 const navigateForward = createAction((context) => {
 	if (context.view.historyIndex + 1 >= context.view.history.length) return
 	context.view.historyIndex += 1
@@ -304,28 +319,29 @@ function createErrorNotification(message: string): AppNotification {
 // Lets export the actions like that to avoid polluting LSP imports.
 // Hopefully one day Typescript improves that..
 export const appStateActionsInternal = {
+	addFocusedInput,
 	addModal,
 	addNotification,
 	addToManualQueueFirst,
 	addToManualQueueLast,
 	clearNotifications,
 	closeModal,
+	goBackOrHome,
 	navigateBack,
 	navigateForward,
 	navigateTo,
 	nextTrack,
+	playFromManualQueue,
+	playIndex,
 	playNewPlayback,
 	previousTrack,
+	registerKeybindingWhen,
+	removeFocusedInput,
+	removeFromManualQueue,
+	removeFromQueue,
 	setPlayProgress,
 	stopPlayback,
 	togglePlayback,
 	toggleShuffle,
-	playFromManualQueue,
-	playIndex,
-	removeFromManualQueue,
-	removeFromQueue,
-	addFocusedInput,
-	removeFocusedInput,
-	registerKeybindingWhen,
 	unregisterKeybindWhen
 }

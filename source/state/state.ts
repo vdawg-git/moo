@@ -53,6 +53,7 @@ export const appState = createStore({
 		navigateTo: a.navigateTo,
 		navigateBack: a.navigateBack,
 		navigateForward: a.navigateForward,
+		goBackOrHome: a.goBackOrHome,
 
 		////////////////////////
 		// Modals
