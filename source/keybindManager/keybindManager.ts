@@ -40,14 +40,14 @@ const areKeybindingsDisabled$: Observable<boolean> = appState$.pipe(
 	map((state) => state.focusedInputs.length > 0),
 	startWith(false),
 	distinctUntilChanged(),
-	shareReplay({ refCount: true, bufferSize: 1 })
+	shareReplay({ refCount: false, bufferSize: 1 })
 )
 
 const keybindingWhen$: Observable<KeybindCommandWhen> = appState$.pipe(
 	map((state) => getKeybindsWhen(state.keybindingWhen)),
 	startWith("default" satisfies KeybindCommandWhen as KeybindCommandWhen),
 	distinctUntilChanged(),
-	shareReplay({ refCount: true, bufferSize: 1 })
+	shareReplay({ refCount: false, bufferSize: 1 })
 )
 
 const pressed$: Observable<KeyPressEvent> = keyEvents$.pipe(
