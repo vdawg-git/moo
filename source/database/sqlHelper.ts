@@ -17,7 +17,7 @@ export async function upsert<
 	table: T,
 	values: V,
 	/** First key should be the primary key, then other unique keys */
-	primaryKey: E,
+	primaryKey: E | readonly E[],
 	database:
 		| DrizzleDatabase
 		| SQLiteTransaction<
@@ -32,15 +32,21 @@ export async function upsert<
 		.values(values)
 		.onConflictDoUpdate({
 			//@ts-expect-error
-			target: table[primaryKey],
+			target: Array.isArray(primaryKey)
+				? primaryKey.map((key) => table[key])
+				: table[primaryKey],
 			set: conflictUpdateAll(table)
 		})
 }
 
-/** Updates all columns except primary ones */
+/** Updates all columns except primary and generated ones */
 function conflictUpdateAll<T extends SQLiteTable>(table: T) {
 	const columns = Object.entries(getTableColumns(table))
-	const updateColumns = columns.filter(([_, { primary }]) => !primary)
+
+	const updateColumns = columns.filter(
+		([_, { primary, generated, generatedIdentity }]) =>
+			!primary && !generated && !generatedIdentity
+	)
 
 	return updateColumns.reduce((acc, [columnName, column]) => {
 		//@ts-expect-error
