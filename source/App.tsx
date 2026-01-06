@@ -21,7 +21,12 @@ export const App = () => {
 
 	return (
 		<ThemeProvider>
-			<box flexDirection="column" height={"100%"} overflow="scroll">
+			<box
+				flexDirection="column"
+				height={"100%"}
+				width={"100%"}
+				overflow="scroll"
+			>
 				<Router />
 
 				<ModalManager />
