@@ -9,6 +9,7 @@ import { type QueryResult, useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
 import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { keybinding } from "#/lib/keybinds"
+import { createQueryKey } from "#/queryKey"
 import { appState } from "#/state/state"
 import { usePlaybackData } from "#/state/useSelectors"
 import type { ComponentProps } from "react"
@@ -30,7 +31,7 @@ export function QueuePage() {
 	const totalTracks = queue?.tracks.length ?? 0 + manuallyAddedIds.length
 
 	const response: QueryResult<readonly ListItemQueue[]> = useQuery(
-		["tracks", ...new Set(ids)],
+		createQueryKey.tracks(Array.from(new Set(ids))),
 		() =>
 			Result.fromAsyncCatching(database.getTracks(ids)).map((tracks) => {
 				const autoTracks = autoTrackIds
