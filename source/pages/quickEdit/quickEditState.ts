@@ -16,11 +16,6 @@ import type { BaseTrack } from "#/database/types"
 
 export type SuggestionsRecord = Record<TagType, readonly string[]>
 
-type QuickEditState =
-	| { type: "loading" }
-	| { type: "ready"; store: QuickEditStateStore }
-	| { type: "error"; error: unknown }
-
 type QuickEditStateStore = {
 	input: string
 	tagsApplied: SuggestionsRecord

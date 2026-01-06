@@ -15,7 +15,7 @@ import {
 	type Observable,
 	share
 } from "rxjs"
-import { type AsyncResult, Result } from "typescript-result"
+import { Result } from "typescript-result"
 import { appConfig } from "#/config/config"
 import { DATA_DIRECTORY } from "#/constants"
 import { database } from "#/database/database"

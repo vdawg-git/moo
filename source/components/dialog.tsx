@@ -1,6 +1,6 @@
 import { type BoxProps, useKeyboard } from "@opentui/react"
-import { type ReactNode } from "react"
 import { useColors } from "#/hooks/useColors"
+import type { ReactNode } from "react"
 
 export type DialogProps = { open: boolean; onClose?: () => void } & BoxProps
 

@@ -6,7 +6,6 @@ import {
 	useId,
 	useRef
 } from "react"
-import { logg } from "#/logs"
 import { appState } from "#/state/state"
 import { type GeneralCommandArgument, registerKeybinds } from "./keybindManager"
 import type { KeybindCommandWhen } from "./keybindsState"
