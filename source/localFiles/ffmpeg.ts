@@ -17,7 +17,7 @@ export async function writeTags({
 	mood?: readonly string[]
 }): Promise<void> {
 	if (!genre && !mood) {
-		throw new Error("No genre passed")
+		throw new Error("writeTags: No tags passed")
 	}
 
 	const genreMeta = genre && toMetadataFlag("genre", genre)
