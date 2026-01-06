@@ -350,7 +350,7 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
  * as the database setup is needed for everything
  */
 async function initDatabase(): Promise<DrizzleDatabase> {
-	const db = drizzle(databasePath, { logger: databaseLogger, schema })
+	const db = drizzle(databasePath, { schema })
 
 	const shouldRecreate = await db
 		.select()
