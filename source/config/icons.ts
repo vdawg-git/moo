@@ -48,6 +48,11 @@ export const iconsSchema = z
 		arrow: z
 			.string()
 			.default("")
-			.describe("Generic arrow icon used for example for navigation")
+			.describe("Generic arrow icon used for example for navigation"),
+
+		edit: z
+			.string()
+			.default("")
+			.describe("Edit icon. Used fo example for quick-edit.")
 	})
 	.describe("Change the icons used in the app.")
