@@ -180,8 +180,8 @@ function QuickEditEditor({
 							onChange={(value) => state.trigger.setInput({ input: value })}
 							onSubmit={(input) => state.trigger.addTagFromInput({ input })}
 							focused={focusedDisplay === "input"}
-							onFocus={() => setFocus(3)}
-							title={`[2] Search for ${tagType}`}
+							onGetFocus={() => setFocus(3)}
+							title={`┤2├ Search for ${tagType} `}
 							placeholder={`Search ${tagType}..`}
 							onGoNext={goNext}
 							onGoPrevious={goPrevious}
@@ -203,7 +203,7 @@ function QuickEditEditor({
 					</box>
 
 					<AppliedSuggestions
-						title={`[4] Applied ${tagType}`}
+						title={`┤4├ Applied ${tagType} `}
 						items={tagsActive}
 						focused={focusedDisplay === "applied"}
 						onChange={(tags) => {
@@ -240,17 +240,15 @@ function TagsInput({
 	onChange,
 	onSubmit,
 	input,
-	onFocus,
+	onGetFocus,
 	placeholder,
-	title,
-	onGoNext,
-	onGoPrevious
+	title
 }: {
 	input: string
 	focused: boolean
 	onChange: (input: string) => void
 	onSubmit: (input: string) => void
-	onFocus: () => void
+	onGetFocus: () => void
 	onGoNext: () => void
 	onGoPrevious: () => void
 	placeholder: string
@@ -271,16 +269,8 @@ function TagsInput({
 			<Input
 				value={input}
 				focused={hasFocus}
-				onMouseDown={onFocus}
+				onMouseDown={onGetFocus}
 				onInput={onChange}
-				onKeyDown={(key) => {
-					if (key.name === "down") {
-						onGoNext()
-					}
-					if (key.name === "up") {
-						onGoPrevious()
-					}
-				}}
 				placeholder={placeholder}
 				width={"100%"}
 				onSubmit={onSubmit}
@@ -317,7 +307,7 @@ function TagTabs({
 
 	return (
 		<box
-			title="[1] Tag"
+			title="┤1├ Tag "
 			border
 			borderStyle="rounded"
 			borderColor={focused ? colors.blue : colors.brightBlack}
@@ -360,7 +350,7 @@ function Suggestions({
 
 	return (
 		<box
-			title="[3] Suggestions"
+			title="┤3├ Suggestions "
 			width={"100%"}
 			height={"100%"}
 			border
