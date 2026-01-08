@@ -125,7 +125,7 @@ const nextTrack = createAction((context) => {
 		if (loop === "loop_queue") {
 			context.playback.index = 0
 		} else {
-			context.playback.playState === "stopped"
+			context.playback.playState = "stopped"
 		}
 		return
 	}
@@ -145,7 +145,7 @@ const previousTrack = createAction((context) => {
 		if (loop === "loop_queue") {
 			context.playback.index = context.playback.queue.tracks.length - 1
 		} else {
-			context.playback.playState === "stopped"
+			context.playback.playState = "stopped"
 		}
 		return
 	}

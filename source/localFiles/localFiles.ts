@@ -36,10 +36,11 @@ export async function updateDatabase(
 		async (filePaths) => {
 			return Result.fromAsync(batchTrackUpdates(filePaths, database))
 				.map(({ errors }) => {
-					errors.length &&
+					if (errors.length) {
 						addErrorNotification(
 							`Errors when updating tracks: ${errors.map((error) => String(error)).join("")}`
 						)
+					}
 
 					// Delete tracks which are not on the FS anymore
 					return database.deleteTracksInverted(
@@ -47,19 +48,21 @@ export async function updateDatabase(
 					)
 				})
 				.onFailure((failure) => {
-					Array.isArray(failure)
-						? failure.forEach((error) =>
-								addErrorNotification(
-									"Error updating",
-									error,
-									"Error while  updateDatabase"
-								)
+					if (Array.isArray(failure)) {
+						failure.forEach((error) =>
+							addErrorNotification(
+								"Error updating",
+								error,
+								"Error while  updateDatabase"
 							)
-						: addErrorNotification(
-								"Error updating tracks",
-								failure,
-								"Error while updateDatabase single"
-							)
+						)
+					} else {
+						addErrorNotification(
+							"Error updating tracks",
+							failure,
+							"Error while updateDatabase single"
+						)
+					}
 				})
 		}
 	)
