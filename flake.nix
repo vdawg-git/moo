@@ -1,9 +1,9 @@
 {
   description = "Moo Flake";
   inputs = {
-    nixpkgs.url = "github:NixOs/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOs/nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
-    bun2nix.url = "github:baileyluTCD/bun2nix?tag=1.5.1";
+    bun2nix.url = "github:baileyluTCD/bun2nix?tag=2.0.6";
     bun2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
