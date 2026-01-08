@@ -372,11 +372,11 @@ export async function parseMusicFile(
 			// The quick edit tags
 			genre: joinedTags.genre
 				?.split(appConfig.quickEdit.tagSeperator)
-				.map((genre) => genre.trim().toLowerCase())
+				.map((genre) => genre.trim())
 				.filter(R.isNonNullish),
 			mood: tags.mood
 				?.split(appConfig.quickEdit.tagSeperator)
-				.map((mood) => mood.trim().toLowerCase())
+				.map((mood) => mood.trim())
 				.filter(R.isNonNullish)
 		} satisfies TrackData
 	})

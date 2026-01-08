@@ -19,25 +19,25 @@ genre_score AS (
   SELECT g.value as genre,
     SUM(
       CASE
-        WHEN r.album = t.album THEN 10
+        WHEN LOWER(r.album) = LOWER(t.album) THEN 10
         ELSE 0
       END + CASE
-        WHEN r.artist = t.artist
-        OR t.albumartist = r.albumartist
-        OR t.albumartist = r.artist THEN 5
+        WHEN LOWER(r.artist) = LOWER(t.artist)
+        OR LOWER(t.albumartist) = LOWER(r.albumartist)
+        OR LOWER(t.albumartist) = LOWER(r.artist) THEN 5
         ELSE 0
       END + (
         SELECT COUNT(*)
         FROM json_each(t.genre) tg
-        WHERE tg.value IN (
-            SELECT rg.value
+        WHERE LOWER(tg.value) IN (
+            SELECT LOWER(rg.value) as value
             FROM json_each(r.genre) rg
           )
       ) * 2 + (
         SELECT COUNT(*)
         FROM json_each(t.mood) tm
-        WHERE tm.value IN (
-            SELECT rm.value
+        WHERE LOWER(tm.value) IN (
+            SELECT LOWER(rm.value) as value
             FROM json_each(r.mood) rm
           )
       )
@@ -52,25 +52,25 @@ mood_score AS (
   SELECT m.value as mood,
     SUM(
       CASE
-        WHEN t.album = r.album THEN 10
+        WHEN LOWER(t.album) = LOWER(r.album) THEN 10
         ELSE 0
       END + CASE
-        WHEN t.artist = r.artist
-        OR t.albumartist = r.albumartist
-        OR t.albumartist = r.artist THEN 5
+        WHEN LOWER(t.artist) = LOWER(r.artist)
+        OR LOWER(t.albumartist) = LOWER(r.albumartist)
+        OR LOWER(t.albumartist) = LOWER(r.artist) THEN 5
         ELSE 0
       END + (
         SELECT COUNT(*)
         FROM json_each(t.genre) tg
-        WHERE tg.value IN (
-            SELECT rg.value
+        WHERE LOWER(tg.value) IN (
+            SELECT LOWER(rg.value) as value
             FROM json_each(r.genre) rg
           )
       ) + (
         SELECT COUNT(*)
         FROM json_each(t.mood) tm
-        WHERE tm.value IN (
-            SELECT rm.value
+        WHERE LOWER(tm.value) IN (
+            SELECT LOWER(rm.value) as value
             FROM json_each(r.mood) rm
           )
       )
