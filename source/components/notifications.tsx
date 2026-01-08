@@ -31,13 +31,14 @@ export function NotificationModal() {
 	return (
 		<box flexDirection="column">
 			{notifications.map(({ type, message, id }) => (
-				<box key={id}>
+				<box key={id} flexDirection="row" gap={1}>
 					<NotificationIcon type={type} colors={colors} />
 					{typeof message === "object" ? (
 						message
 					) : (
 						<text
 							attributes={type === "error" ? TextAttributes.BOLD : undefined}
+							fg={type === "error" ? colors.red : colors.fg}
 						>
 							{message}
 						</text>
@@ -48,6 +49,7 @@ export function NotificationModal() {
 			<box
 				paddingTop={1}
 				onMouse={() => appState.send({ type: "clearNotifications" })}
+				flexDirection="row"
 			>
 				<BracketButton>x</BracketButton>
 				<text fg={colors.blue}>Clear notifications</text>
