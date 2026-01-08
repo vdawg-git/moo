@@ -82,12 +82,10 @@ function createQuickEditState({
 	const state = createStore({
 		context: {
 			...initalState,
-			...{
-				tagsSuggested: suggestions,
-				tagsApplied: {
-					genre: appliedGenre,
-					mood: appliedMood
-				}
+			tagsSuggested: suggestions,
+			tagsApplied: {
+				genre: appliedGenre,
+				mood: appliedMood
 			}
 		} satisfies QuickEditStateStore,
 		on: {

@@ -7,7 +7,6 @@ import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/keybindManager"
-import { logg } from "#/logs"
 import { appState } from "#/state/state"
 import { Input } from "../Input"
 import { Select } from "../select"
@@ -285,7 +284,7 @@ const runnerListItemIconByType: Record<RunnerItem["type"], string> = {
 	playlist: appConfig.icons.playlist
 }
 
-// biome-ignore lint/correctness/noUnusedVariables: We will use this again later as the select input is not very styleable.
+// oxlint-disable eslint(no-unused-vars)
 function RunnerListItem({
 	item,
 	focused,
