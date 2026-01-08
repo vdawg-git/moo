@@ -7,6 +7,7 @@ import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/keybindManager"
+import { logg } from "#/logs"
 import { appState } from "#/state/state"
 import { Input } from "../Input"
 import { Select } from "../select"
@@ -99,11 +100,16 @@ function Runner({ modal, initialValue }: RunnerProps) {
 
 		if (focused === "list" && event.name.length === 1) {
 			const newInput = (input ?? "") + event.name
-			setInput(newInput)
-			if (inputRef.current) {
-				inputRef.current.cursorPosition === 999
-			}
 			setFocused("input")
+			setInput(newInput)
+
+			// The input gets set in the new render.
+			// But the cursor position gets set outside of the React lifecyle, so we delay a bit
+			setTimeout(() => {
+				if (inputRef.current) {
+					inputRef.current.cursorPosition = newInput.length
+				}
+			}, 5)
 
 			return
 		}
