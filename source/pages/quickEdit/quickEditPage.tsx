@@ -147,8 +147,14 @@ function QuickEditEditor({
 	return (
 		<>
 			<box height={"100%"} width={"100%"}>
-				<box flexDirection="row" width={"100%"} justifyContent="space-between">
-					<text fg={colors.blue} height={1}>
+				<box
+					flexDirection="row"
+					width={"100%"}
+					justifyContent="space-between"
+					border={["bottom"]}
+					borderColor={colors.yellow}
+				>
+					<text fg={colors.yellow} height={1}>
 						{appConfig.icons.edit}
 						{"  "}
 						{title}
@@ -352,10 +358,12 @@ function Suggestions({
 		<box
 			title="┤3├ Suggestions "
 			width={"100%"}
-			height={"100%"}
+			flexGrow={0}
+			flexShrink={100}
 			border
 			borderStyle="rounded"
 			borderColor={hasFocus ? colors.blue : colors.brightBlack}
+			overflow="scroll"
 		>
 			{suggestions.length > 0 ? (
 				<Select
@@ -372,7 +380,7 @@ function Suggestions({
 					textColor={colors.brightBlack}
 					selectedIndex={index}
 					showDescription={false}
-					height={suggestions.length + 1}
+					height={"100%"}
 					selectedTextColor={colors.yellow}
 					selectedBackgroundColor={colors.bg}
 				/>
@@ -436,12 +444,11 @@ function AppliedSuggestions({
 						>
 							<text
 								fg={hasFocus && isFocused ? colors.blue : colors.fg}
-								attributes={hasFocus ? TextAttributes.NONE : TextAttributes.DIM}
 								width={"auto"}
 							>
-								<b>(</b>
+								<b attributes={TextAttributes.DIM}>(</b>
 								{item}
-								<b>)</b>
+								<b attributes={TextAttributes.DIM}>)</b>
 							</text>
 						</box>
 					)
@@ -483,12 +490,16 @@ function CloseDialogContent({
 		}
 	})
 
+	const colors = useColors()
+
 	return (
 		<box>
-			<text>Exit?</text>
-			<text>[Enter] Save and exit</text>
-			<text>[X] Exit without saving</text>
-			<text>[ESC] Cancel</text>
+			<text fg={colors.fg} attributes={TextAttributes.BOLD} marginBottom={1}>
+				Go back?
+			</text>
+			<text fg={colors.blue}>Save and go [Enter]</text>
+			<text fg={colors.yellow}>Go without saving [X]</text>
+			<text fg={colors.fg}>Cancel [ESC]</text>
 		</box>
 	)
 }
