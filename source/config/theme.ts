@@ -1,13 +1,11 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
-import { parseColor, type RGBA, type TerminalColors } from "@opentui/core"
+import { parseColor } from "@opentui/core"
 import { mapValues } from "remeda"
 import {
 	distinctUntilChanged,
 	from,
-	type identity,
 	map,
-	type Observable,
 	shareReplay,
 	startWith,
 	switchMap
@@ -16,6 +14,8 @@ import z from "zod"
 import { CONFIG_DIRECTORY } from "#/constants"
 import { createWatcher } from "#/filesystem"
 import { stringifyCompare } from "#/lib/functions"
+import type { RGBA, TerminalColors } from "@opentui/core"
+import type { identity, Observable } from "rxjs"
 
 const themePath = path.join(CONFIG_DIRECTORY, "theme.json5")
 

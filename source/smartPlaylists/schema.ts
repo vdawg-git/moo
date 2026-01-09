@@ -4,8 +4,9 @@ import * as R from "remeda"
 import { pipe } from "remeda"
 import { match, P } from "ts-pattern"
 import { z } from "zod"
-import { type TrackColumnKey, tableTracks } from "#/database/schema"
+import { tableTracks } from "#/database/schema"
 import { stripIndent } from "#/helpers"
+import type { TrackColumnKey } from "#/database/schema"
 
 const allDateFormatsLink =
 	"https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats"
@@ -82,11 +83,11 @@ const durationSchema = z
 		const { days, weeks, years, minutes, hours } = input
 
 		const offsetMinutes =
-			(minutes ?? 0) +
-			(hours ?? 0) * 60 +
-			(days ?? 0) * 60 * 24 +
-			(weeks ?? 0) * 60 * 24 * 7 +
-			(years ?? 0) * 60 * 24 * 7 * 364
+			(minutes ?? 0)
+			+ (hours ?? 0) * 60
+			+ (days ?? 0) * 60 * 24
+			+ (weeks ?? 0) * 60 * 24 * 7
+			+ (years ?? 0) * 60 * 24 * 7 * 364
 
 		const offsetMillicseconds = offsetMinutes * 60 * 1000
 

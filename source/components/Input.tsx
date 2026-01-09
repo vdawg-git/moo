@@ -1,8 +1,9 @@
 import { useSelector } from "@xstate/store/react"
-import { type ReactNode, useEffect, useId } from "react"
+import { useEffect, useId } from "react"
 import { useColors } from "#/hooks/useColors"
 import { appState } from "#/state/state"
 import type { InputProps } from "@opentui/react"
+import type { ReactNode } from "react"
 
 export type AppInputProps = InputProps
 

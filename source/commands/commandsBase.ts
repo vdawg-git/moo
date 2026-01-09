@@ -1,4 +1,5 @@
-import { type KeyBinding, keybinding } from "#/lib/keybinds"
+import { keybinding } from "#/lib/keybinds"
+import type { KeyBinding } from "#/lib/keybinds"
 
 /**
  * Used for the keybindings config schema generation

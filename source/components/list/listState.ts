@@ -1,11 +1,12 @@
 import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store/react"
 import Fuse from "fuse.js"
-import { type RefObject, useEffect, useId, useRef } from "react"
+import { useEffect, useId, useRef } from "react"
 import { useKeybindings } from "#/keybindManager/useKeybindings"
 import { keybinding } from "#/lib/keybinds"
 import { logg } from "#/logs"
 import type { ScrollBoxRenderable } from "@opentui/core"
+import type { RefObject } from "react"
 import type { ListItem } from "./listTypes"
 
 export type UseListReturn<T> = {

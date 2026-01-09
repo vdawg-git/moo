@@ -15,24 +15,24 @@
 
 ## Features
 
-* Create smart playlists with a simple config (including autocompletion!)
-  + Easy to back up. It's just simple `.yml` files
-  + Updates automatically when your library changes
-* Easy to use
-  + Nice flexible runner a la VS Code.
-  + No need to remember every shortcut. Just type the first letters of what you want
-* Simple Json5 config with out-of-the-box LSP support via JSON schema :)
-* Customize it to your liking.
-  + (Chorded) keybindings, icons and more
-  + Custom layouts/colors will get added in the future
+- Create smart playlists with a simple config (including autocompletion!)
+  - Easy to back up. It's just simple `.yml` files
+  - Updates automatically when your library changes
+- Easy to use
+  - Nice flexible runner a la VS Code.
+  - No need to remember every shortcut. Just type the first letters of what you want
+- Simple Json5 config with out-of-the-box LSP support via JSON schema :)
+- Customize it to your liking.
+  - (Chorded) keybindings, icons and more
+  - Custom layouts/colors will get added in the future
 
 ## How to use
 
-* Use <kbd>; </kbd> to switch to other playlists.
-* Use <kbd>:</kbd> to open the commandd runner.
-* <kbd>Enter</kbd> to play the selected track.
-* <kbd>Space</kbd> to toggle pause.
-* Default keybindings use Vim mode.
+- Use <kbd>; </kbd> to switch to other playlists.
+- Use <kbd>:</kbd> to open the commandd runner.
+- <kbd>Enter</kbd> to play the selected track.
+- <kbd>Space</kbd> to toggle pause.
+- Default keybindings use Vim mode.
 
 ## Config
 
@@ -66,7 +66,7 @@ rules:
           - artist:
               starts_not_with: "Grass"
           - genre:
-              includes: ['idk smth']
+              includes: ["idk smth"]
 ```
 
 ## Install
@@ -75,22 +75,21 @@ You can use the provided flake or just clone the repo and run `bun prod`.
 
 ### Requirements
 
-* [mpv](https://mpv.io/)
-* [Bun](https://bun.sh/)
-* Terminal with Nerdfonts support like [Kitty](https://github.com/kovidgoyal/kitty) or [Ghostty](https://ghostty.org/) or use a [patched font](https://github.com/ryanoasis/nerd-fonts).
+- [mpv](https://mpv.io/)
+- [Bun](https://bun.sh/)
+- Terminal with Nerdfonts support like [Kitty](https://github.com/kovidgoyal/kitty) or [Ghostty](https://ghostty.org/) or use a [patched font](https://github.com/ryanoasis/nerd-fonts).
 
 You can also change all Nerdfont icons to regular letters in the config though.
 
-
-
-
 ## Credits
+
 - [OpenTui](https://github.com/sst/opentui/): TUI library which powers the app. It's awesome.
 - [Tuir](https://github.com/max5961/tuir): React TUI library which powered the app. Now unmaintained.
 - [Kew](https://github.com/ravachol/kew): Design inspiration
 - [Musikcube](https://github.com/clangen/musikcube): Design inspiration
 
 ## What's with the name?
-Three letters are awesome for cli apps. 
+
+Three letters are awesome for cli apps.
 
 Also "Music" -> "Moosic" -> "Moo - Sick (terminal music player)"

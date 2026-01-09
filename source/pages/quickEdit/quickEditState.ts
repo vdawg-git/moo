@@ -11,7 +11,8 @@ import { createAtom, createStore } from "@xstate/store"
 import { useAtom } from "@xstate/store/react"
 import { create } from "mutative"
 import { useRef } from "react"
-import { appConfig, type TagType } from "#/config/config"
+import { appConfig } from "#/config/config"
+import type { TagType } from "#/config/config"
 import type { BaseTrack } from "#/database/types"
 
 export type SuggestionsRecord = Record<TagType, readonly string[]>
@@ -136,8 +137,8 @@ function createQuickEditState({
 		const suggestionsAll = context.tagsSuggested[type]
 		const filtered = suggestionsAll.filter(
 			(suggestion) =>
-				suggestion.toLowerCase().includes(input) &&
-				!applied.includes(suggestion)
+				suggestion.toLowerCase().includes(input)
+				&& !applied.includes(suggestion)
 		)
 
 		return filtered

@@ -12,7 +12,6 @@ import {
 	filter,
 	map,
 	merge,
-	type Observable,
 	share
 } from "rxjs"
 import { Result } from "typescript-result"
@@ -27,6 +26,7 @@ import { supportedFormats } from "./formats"
 import type { TrackFileMeta } from "#/database/schema"
 import type { AppDatabase, TrackData, TrackId } from "#/database/types"
 import type { FilePath } from "#/types/types"
+import type { Observable } from "rxjs"
 
 export async function updateDatabase(
 	musicDirectories: readonly FilePath[],
@@ -197,8 +197,8 @@ export function watchAndUpdateDatabase(
 					const databaseMetadata = filesMetadata[file as unknown as TrackId]
 
 					const shouldSkip =
-						!!databaseMetadata &&
-						(await isSameAsInDatabase(file, databaseMetadata))
+						!!databaseMetadata
+						&& (await isSameAsInDatabase(file, databaseMetadata))
 
 					if (shouldSkip) {
 						continue
@@ -248,8 +248,8 @@ export async function parseMusicFile(
 			(tags.releasedate && parseDate.fromString(tags.releasedate)) || undefined
 
 		const coverData =
-			picture &&
-			R.pipe(selectCover(picture), (maybePicture) => {
+			picture
+			&& R.pipe(selectCover(picture), (maybePicture) => {
 				if (!maybePicture) return undefined
 				const name = `${Bun.hash(maybePicture.data)}.${maybePicture.format.split("/").at(-1)}`
 				const filePath = path.join(
@@ -266,8 +266,8 @@ export async function parseMusicFile(
 			})
 
 		const shouldWriteCover =
-			!!coverData &&
-			(await Bun.file(coverData.filePath)
+			!!coverData
+			&& (await Bun.file(coverData.filePath)
 				.exists()
 				.then((is) => !is)
 				.catch(() => false))

@@ -9,9 +9,9 @@ import {
 	parsePlaylistsAll,
 	playlistsChanged$
 } from "./parsing"
-import type { Subscription } from "rxjs"
 import type { PlaylistId } from "#/database/types"
 import type { FilePath } from "#/types/types"
+import type { Subscription } from "rxjs"
 
 export async function updateSmartPlaylists(): Promise<void> {
 	const playlistsParsed = await Result.fromAsync(parsePlaylistsAll())

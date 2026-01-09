@@ -5,7 +5,6 @@ import {
 	filter,
 	map,
 	merge,
-	type Observable,
 	scan,
 	shareReplay,
 	skip,
@@ -17,16 +16,18 @@ import { match, P } from "ts-pattern"
 import { callAll } from "#/helpers"
 import { appState$ } from "#/state/state"
 import { getKeybindsWhen } from "#/state/stateUtils"
-import {
-	type KeybindCommand,
-	type KeybindCommandWhen,
-	type KeybindNextUp,
-	keybindsState
-} from "./keybindsState"
-import { type KeyPressEvent, keys$ as keyEvents$ } from "./keysStream"
+import { keybindsState } from "./keybindsState"
+import { keys$ as keyEvents$ } from "./keysStream"
 import type { KeyEvent } from "@opentui/core"
 import type { GeneralCommand } from "#/commands/appCommands"
 import type { KeyBinding, KeyInput } from "#/lib/keybinds"
+import type { Observable } from "rxjs"
+import type {
+	KeybindCommand,
+	KeybindCommandWhen,
+	KeybindNextUp
+} from "./keybindsState"
+import type { KeyPressEvent } from "./keysStream"
 
 type CallbacksOrSequence =
 	| { type: "callbacks"; callbacks: readonly KeybindCommand["callback"][] }

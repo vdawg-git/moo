@@ -55,8 +55,8 @@ export function sortTracks<
 			(t) => t.artistsort ?? t.artist?.replace(prefixRegex, ""),
 			(t) => t.albumartistsort,
 			(t) =>
-				t.albumsort?.replace(prefixRegex, "") ??
-				t.album?.replace(prefixRegex, "")
+				t.albumsort?.replace(prefixRegex, "")
+				?? t.album?.replace(prefixRegex, "")
 		],
 		["asc", "asc", "asc", "asc"]
 	)

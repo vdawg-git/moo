@@ -1,22 +1,17 @@
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
-import {
-	debounceTime,
-	filter,
-	groupBy,
-	map,
-	mergeMap,
-	type Observable,
-	share
-} from "rxjs"
-import { type AsyncResult, Result } from "typescript-result"
+import { debounceTime, filter, groupBy, map, mergeMap, share } from "rxjs"
+import { Result } from "typescript-result"
 import * as yaml from "yaml"
 import { fromError } from "zod-validation-error"
 import { playlistExtension, playlistsDirectory } from "#/constants"
 import { createWatcher } from "#/filesystem"
-import { type PlaylistBlueprint, playlistBlueprintSchema } from "./schema"
+import { playlistBlueprintSchema } from "./schema"
 import type { PlaylistId } from "#/database/types"
 import type { FilePath } from "#/types/types"
+import type { Observable } from "rxjs"
+import type { AsyncResult } from "typescript-result"
+import type { PlaylistBlueprint } from "./schema"
 
 /**
  * A time fast engough to feel instant,

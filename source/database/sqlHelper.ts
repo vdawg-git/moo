@@ -1,4 +1,5 @@
-import { getTableColumns, type SQL, sql } from "drizzle-orm"
+import { getTableColumns, sql } from "drizzle-orm"
+import type { SQL } from "drizzle-orm"
 import type { SQLiteTable, SQLiteTransaction } from "drizzle-orm/sqlite-core"
 import type { DrizzleDatabase } from "./types"
 

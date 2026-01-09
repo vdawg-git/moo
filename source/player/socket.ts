@@ -1,5 +1,6 @@
-import { type Observable, Subject } from "rxjs"
+import { Subject } from "rxjs"
 import type { Socket } from "bun"
+import type { Observable } from "rxjs"
 
 export type SocketEvents<T> =
 	| { type: "data"; data: T }

@@ -7,7 +7,6 @@ import {
 	from,
 	map,
 	merge,
-	type Observable,
 	of,
 	shareReplay,
 	startWith,
@@ -16,6 +15,7 @@ import {
 } from "rxjs"
 import { Result } from "typescript-result"
 import { database } from "./database"
+import type { Observable } from "rxjs"
 import type { JsonValue } from "type-fest"
 
 // This is in theory a memory leak, but in practice it still is

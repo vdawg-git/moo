@@ -1,4 +1,4 @@
-import { relations, type SQL, sql } from "drizzle-orm"
+import { relations, sql } from "drizzle-orm"
 import {
 	integer,
 	numeric,
@@ -6,8 +6,9 @@ import {
 	sqliteTable,
 	text
 } from "drizzle-orm/sqlite-core"
-import type { ILyricsTag } from "music-metadata"
 import type { FilePath } from "#/types/types"
+import type { SQL } from "drizzle-orm"
+import type { ILyricsTag } from "music-metadata"
 import type { AlbumId, ArtistId, PlaylistId, TrackId } from "./types"
 
 export type TrackColumnKey = keyof (typeof tableTracks)["_"]["columns"]

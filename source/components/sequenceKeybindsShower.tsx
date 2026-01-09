@@ -1,9 +1,7 @@
 import { TextAttributes } from "@opentui/core"
 import { useColors } from "#/hooks/useColors"
-import {
-	type SequencePart,
-	useGetNextKeySequence
-} from "#/keybindManager/keybindManager"
+import { useGetNextKeySequence } from "#/keybindManager/keybindManager"
+import type { SequencePart } from "#/keybindManager/keybindManager"
 
 type NextUpKeybind = { label: string; toPress: string; id: string }
 
@@ -17,8 +15,8 @@ export function NextUpKeybinds() {
 	const colors = useColors()
 
 	return (
-		toDisplay &&
-		toDisplay.length > 0 && (
+		toDisplay
+		&& toDisplay.length > 0 && (
 			<box
 				position="absolute"
 				justifyContent="flex-end"

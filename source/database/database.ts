@@ -20,7 +20,6 @@ import * as schema from "./schema.js"
 import {
 	DATABASE_VERSION,
 	metaTable,
-	type TrackFileMeta,
 	tableAlbums,
 	tableArtists,
 	tableComposers,
@@ -34,14 +33,15 @@ import {
 	selectorTrackSort
 } from "./selectors.js"
 import { upsert } from "./sqlHelper.js"
-import {
-	type AlbumId,
-	type AppDatabase,
-	type ArtistId,
-	type DrizzleDatabase,
-	type Playlist,
-	Track,
-	type TrackId
+import { Track } from "./types.js"
+import type { TrackFileMeta } from "./schema.js"
+import type {
+	AlbumId,
+	AppDatabase,
+	ArtistId,
+	DrizzleDatabase,
+	Playlist,
+	TrackId
 } from "./types.js"
 
 export const database = await connectDatabase()

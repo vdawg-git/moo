@@ -1,4 +1,5 @@
-import { type CliRenderer, createCliRenderer } from "@opentui/core"
+import { createCliRenderer } from "@opentui/core"
+import type { CliRenderer } from "@opentui/core"
 
 /**
  * Do not import this outside of TUI code.

@@ -1,12 +1,14 @@
 import { mkdir, readdir } from "node:fs/promises"
 import path from "node:path"
-import { type ChokidarOptions, watch } from "chokidar"
+import { watch } from "chokidar"
 import { distinctUntilChanged, Observable, share } from "rxjs"
-import { type AsyncResult, Result } from "typescript-result"
+import { Result } from "typescript-result"
 import { DATA_DIRECTORY, playlistsDirectory } from "./constants"
 import { examplePlaylist } from "./smartPlaylists/examplePlaylist"
 import type { Stats } from "node:fs"
+import type { ChokidarOptions } from "chokidar"
 import type { EventName } from "chokidar/handler.js"
+import type { AsyncResult } from "typescript-result"
 import type { FilePath } from "./types/types"
 
 const defaultWatchOptions: ChokidarOptions = {

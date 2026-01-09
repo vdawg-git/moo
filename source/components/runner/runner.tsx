@@ -1,5 +1,5 @@
 import { useKeyboard } from "@opentui/react"
-import { type RefObject, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { pickCommands } from "#/commands/commandFunctions"
 import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
@@ -12,9 +12,10 @@ import { Input } from "../Input"
 import { Select } from "../select"
 import { useRunnerItems } from "./useRunnerItems"
 import type { InputRenderable, KeyEvent, RGBA } from "@opentui/core"
-import type React from "react"
 import type { AppColor, AppColorName } from "#/config/theme"
 import type { AppModalContentProps } from "#/state/types"
+import type { RefObject } from "react"
+import type React from "react"
 
 const runnerId = "_runner"
 
@@ -138,7 +139,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 				registerKeybinds(toUnregister, { when: "default" })
 			}
 		}
-	}, [mode,  modal])
+	}, [mode, modal])
 
 	return (
 		<box flexDirection="column" minWidth={"50%"} width={"50%"} maxWidth={50}>

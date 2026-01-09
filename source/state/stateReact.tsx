@@ -14,8 +14,8 @@ export function manageNotifications() {
 		.pipe(
 			filter(
 				(state) =>
-					state.notifications.length > 0 &&
-					state.modals.every((modal) => modal.id !== notificationModalId)
+					state.notifications.length > 0
+					&& state.modals.every((modal) => modal.id !== notificationModalId)
 			),
 			map((state) => state.notifications.map(({ id }) => id)),
 			distinctUntilChanged(deepEquals)

@@ -9,17 +9,14 @@ import {
 	not,
 	notLike,
 	or,
-	type SQL,
 	sql
 } from "drizzle-orm"
 import * as R from "remeda"
 import { match, P } from "ts-pattern"
-import { type AsyncResult, Result } from "typescript-result"
+import { Result } from "typescript-result"
 import { selectorBaseTrack } from "#/database/selectors"
 import { nullsToUndefined } from "#/helpers"
-import { type TrackColumn, tableTracks } from "../database/schema"
-import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
-import type { Simplify } from "type-fest"
+import { tableTracks } from "../database/schema"
 import type { BaseTrack, DrizzleDatabase } from "#/database/types"
 import type {
 	BooleanSchema,
@@ -30,6 +27,11 @@ import type {
 	StringSchema,
 	TrackColumnSchema
 } from "#/smartPlaylists/schema"
+import type { SQL } from "drizzle-orm"
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
+import type { Simplify } from "type-fest"
+import type { AsyncResult } from "typescript-result"
+import type { TrackColumn } from "../database/schema"
 
 export function getSmartPlaylistTracks(
 	database: DrizzleDatabase,
