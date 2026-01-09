@@ -9,6 +9,7 @@ import { createQueryKey } from "#/queryKey"
 import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import type { PlaylistId } from "#/database/types"
+import { LoadingText } from "#/components/loadingText"
 
 type PlaylistProps = {
 	id: PlaylistId
@@ -29,7 +30,7 @@ export function PlaylistPage({ id }: PlaylistProps) {
 				<PlaylistTitle title={displayName} tracksAmount={amount ?? 0} />
 
 				{response.isLoading ? (
-					<text>Loading...</text>
+					<LoadingText />
 				) : (
 					response.data.fold(
 						(playlist) => (

@@ -15,6 +15,7 @@ import { usePlaybackData } from "#/state/useSelectors"
 import type { ComponentProps } from "react"
 import type { BaseTrack } from "#/database/types"
 import type { AppState } from "#/state/types"
+import { LoadingText } from "#/components/loadingText"
 
 type ListItemQueue = {
 	type: "auto" | "manual"
@@ -72,7 +73,7 @@ export function QueuePage() {
 				<PlaylistTitle title={"Queue"} tracksAmount={totalTracks} />
 
 				{response.isLoading ? (
-					<text>Loading...</text>
+					<LoadingText />
 				) : (
 					response.data.fold(
 						(items) => (

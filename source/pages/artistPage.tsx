@@ -10,6 +10,7 @@ import { createQueryKey } from "#/queryKey"
 import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import type { ArtistId } from "#/database/types"
+import { LoadingText } from "#/components/loadingText"
 
 type ArtistPageProps = {
 	id: ArtistId
@@ -35,7 +36,7 @@ export function ArtistPage({ id }: ArtistPageProps) {
 				/>
 
 				{response.isLoading ? (
-					<text>Loading...</text>
+					<LoadingText />
 				) : (
 					response.data.fold(
 						(album) =>
