@@ -1,10 +1,9 @@
-<div align="center">
-
+<div align="center" style="text-align: center">
+ 
 ```
 ૮₍⎚¯⎚₎ა
  (O_O)
 ```
-
 <h1>Moo</h1>
 <b>Sick terminal music player </b>
 </br>
