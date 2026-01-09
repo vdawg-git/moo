@@ -30,7 +30,6 @@ export type UseListArgument<T> = {
 	 * The returned function function gets called when the item gets unselected again.
 	 */
 
-	// biome-ignore lint/suspicious/noConfusingVoidType: TS cries if we the provided function returns void and we specify undefinded
 	onFocusItem?: (item: ListItem<T>) => void | (() => void)
 
 	/** Required to make the list searchable. Should have at least one item */
@@ -103,8 +102,6 @@ export function useList<T>({
 	useEffect(() => {
 		if (!focused) return
 
-		// biome-ignore lint/complexity/noUselessUndefinedInitialization: TS cries
-		// biome-ignore lint/suspicious/noConfusingVoidType: But thats the type
 		let unfocusFunction: (() => void) | void = undefined
 		stateRef.current.state
 			.select(({ index, items }) => ({ index, items }))
