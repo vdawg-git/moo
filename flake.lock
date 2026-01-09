@@ -13,13 +13,13 @@
       "locked": {
         "lastModified": 1765198123,
         "narHash": "sha256-pkahE6wwIszQ8e107qa95wyNr4Qj94hEdL9fA/IE288=",
-        "owner": "baileyluTCD",
+        "owner": "nix-community",
         "repo": "bun2nix",
         "rev": "29d2c26c269b2bc7d8885c6a2fc90ec0fc86ec40",
         "type": "github"
       },
       "original": {
-        "owner": "baileyluTCD",
+        "owner": "nix-community",
         "repo": "bun2nix",
         "type": "github"
       }
@@ -77,16 +77,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1767799921,
-        "narHash": "sha256-r4GVX+FToWVE2My8VVZH4V0pTIpnu2ZE8/Z4uxGEMBE=",
+        "lastModified": 1767892417,
+        "narHash": "sha256-dhhvQY67aboBk8b0/u0XB6vwHdgbROZT3fJAjyNh5Ww=",
         "owner": "NixOs",
         "repo": "nixpkgs",
-        "rev": "d351d0653aeb7877273920cd3e823994e7579b0b",
+        "rev": "3497aa5c9457a9d88d71fa93a4a8368816fbeeba",
         "type": "github"
       },
       "original": {
         "owner": "NixOs",
-        "ref": "nixos-25.11",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }

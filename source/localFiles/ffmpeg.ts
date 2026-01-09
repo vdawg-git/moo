@@ -56,10 +56,3 @@ function toMetadataFlag(
 ): string[] {
 	return [`-metadata`, `${flag}=${data.join(appConfig.quickEdit.tagSeperator)}`]
 }
-
-await writeTags({
-	id: "/home/vdawg/z_bearbeiten/Raflum - Gui Zhao (2021) [FLAC] [16B-44.1kHz]/03. Raflum - A Night Far Away.flac" as TrackId,
-	mood: ["solemn", "chill"]
-})
-	.catch(console.error)
-	.then(console.log)
