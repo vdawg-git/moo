@@ -1,4 +1,5 @@
-import { displayKeybinding, type KeyBinding } from "#/lib/keybinds"
+import { displayKeybinding } from "#/lib/keybinds"
+import type { KeyBinding } from "#/lib/keybinds"
 import type { Except } from "type-fest"
 
 type TrieNode = {
@@ -114,9 +115,9 @@ class KeybindTrie {
 
 		// Prune empty nodes
 		while (
-			stack.length > 0 &&
-			node.commands.size === 0 &&
-			node.children.size === 0
+			stack.length > 0
+			&& node.commands.size === 0
+			&& node.children.size === 0
 		) {
 			const [parent, keyString] = stack.pop()!
 			parent.children.delete(keyString)

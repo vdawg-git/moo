@@ -2,7 +2,6 @@ import {
 	distinctUntilChanged,
 	filter,
 	map,
-	type Observable,
 	of,
 	shareReplay,
 	switchMap
@@ -12,6 +11,7 @@ import { observeQuery } from "#/database/useQuery"
 import { enumarateError, logg } from "#/logs"
 import { addErrorNotification, appState$ } from "./state"
 import { getCurrentTrackIdFromState } from "./stateUtils"
+import type { Observable } from "rxjs"
 
 const playback$ = appState$.pipe(
 	map((state) => state.playback),

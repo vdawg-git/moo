@@ -1,7 +1,8 @@
 import { useSelector } from "@xstate/store/react"
-import { type ReactNode, useEffect, useId } from "react"
+import { useEffect, useId } from "react"
 import { appState } from "#/state/state"
 import type { SelectProps } from "@opentui/react"
+import type { ReactNode } from "react"
 
 /** Just the select component wrapped to disable global keybinds while it is focused */
 export function Select(props: SelectProps): ReactNode {

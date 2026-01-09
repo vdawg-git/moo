@@ -1,4 +1,5 @@
 import { useCallback } from "react"
+import { LoadingText } from "#/components/loadingText"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
@@ -10,7 +11,6 @@ import { createQueryKey } from "#/queryKey"
 import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import type { AlbumId } from "#/database/types"
-import { LoadingText } from "#/components/loadingText"
 
 type AlbumPageProps = {
 	id: AlbumId

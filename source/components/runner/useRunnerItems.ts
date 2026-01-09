@@ -5,10 +5,9 @@ import {
 	distinctUntilChanged,
 	filter,
 	map,
-	type Observable,
-	Subject,
 	shareReplay,
 	startWith,
+	Subject,
 	switchMap
 } from "rxjs"
 import { match, P } from "ts-pattern"
@@ -19,13 +18,11 @@ import { observeQuery } from "#/database/useQuery"
 import { keybindsState } from "#/keybindManager/keybindsState"
 import { enumarateError, logg } from "#/logs"
 import { addErrorNotification, appState } from "#/state/state"
-import {
-	type SearchMode,
-	type SearchModeType,
-	searchModes,
-	searchModesList
-} from "./consts"
-import { openRunner, type RunnerItem } from "./runner"
+import { searchModes, searchModesList } from "./consts"
+import { openRunner } from "./runner"
+import type { Observable } from "rxjs"
+import type { SearchMode, SearchModeType } from "./consts"
+import type { RunnerItem } from "./runner"
 
 type ParsedInput = {
 	searchMode: SearchMode | undefined

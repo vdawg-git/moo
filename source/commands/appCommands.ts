@@ -1,6 +1,6 @@
 import { appConfig } from "#/config/config"
-import type { Except, OverrideProperties, Simplify } from "type-fest"
 import type { KeybindCommandWhen } from "#/keybindManager/keybindsState"
+import type { Except, OverrideProperties, Simplify } from "type-fest"
 import type {
 	AppCommandData as AppCommandBaseData,
 	AppCommandID

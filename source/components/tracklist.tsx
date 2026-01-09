@@ -3,14 +3,12 @@ import { TextAttributes } from "@opentui/core"
 import { useRef } from "react"
 import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
-import {
-	type GeneralCommandArgument,
-	registerKeybinds
-} from "#/keybindManager/keybindManager"
+import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { keybinding } from "#/lib/keybinds"
 import { appState } from "#/state/state"
 import { List, useList } from "./list"
 import type { AppColor } from "#/config/theme"
+import type { GeneralCommandArgument } from "#/keybindManager/keybindManager"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack } from "../database/types"
 

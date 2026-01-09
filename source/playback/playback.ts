@@ -4,10 +4,9 @@ import {
 	distinctUntilChanged,
 	EMPTY,
 	map,
-	type Observable,
 	pairwise,
-	Subject,
 	startWith,
+	Subject,
 	switchMap,
 	tap
 } from "rxjs"
@@ -24,6 +23,7 @@ import { currentTrack$, playState$ } from "#/state/derivedState"
 import { addErrorNotification, appState, appState$ } from "#/state/state"
 import { handleMpris } from "./mpris"
 import type { Track } from "#/database/types"
+import type { Observable } from "rxjs"
 
 const toPlay$: Observable<Track | undefined> = combineLatest([
 	currentTrack$,
@@ -114,9 +114,9 @@ function handlePlayer() {
 			// Do not clear if previous or current is undefined, because this could just
 			// mean that the playback got paused.
 			const hasSourceChanged =
-				previous &&
-				current &&
-				previous.sourceProvider !== current?.sourceProvider
+				previous
+				&& current
+				&& previous.sourceProvider !== current?.sourceProvider
 
 			if (hasSourceChanged) {
 				await previous?.clear()

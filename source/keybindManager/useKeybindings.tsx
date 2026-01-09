@@ -1,13 +1,8 @@
-import {
-	createContext,
-	type ReactNode,
-	useContext,
-	useEffect,
-	useId,
-	useRef
-} from "react"
+import { createContext, useContext, useEffect, useId, useRef } from "react"
 import { appState } from "#/state/state"
-import { type GeneralCommandArgument, registerKeybinds } from "./keybindManager"
+import { registerKeybinds } from "./keybindManager"
+import type { ReactNode } from "react"
+import type { GeneralCommandArgument } from "./keybindManager"
 import type { KeybindCommandWhen } from "./keybindsState"
 
 export type UseKeybindingsOptions = {

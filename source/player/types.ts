@@ -1,6 +1,6 @@
+import type { TrackId } from "#/database/types"
 import type { Observable } from "rxjs"
 import type { Result } from "typescript-result"
-import type { TrackId } from "#/database/types"
 
 /**
  * The methods a player needs to implement.

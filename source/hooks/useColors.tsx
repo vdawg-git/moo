@@ -1,7 +1,9 @@
 import { RGBA } from "@opentui/core"
-import { createContext, type ReactNode, useContext } from "react"
-import { type AppColors, themeStream$ } from "#/config/theme"
+import { createContext, useContext } from "react"
+import { themeStream$ } from "#/config/theme"
 import { useObservable } from "./useObservable"
+import type { AppColors } from "#/config/theme"
+import type { ReactNode } from "react"
 
 const defaultColor = RGBA.fromHex("#000")
 const defaultProxy = new Proxy({} as unknown as AppColors, {

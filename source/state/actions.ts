@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto"
 import { deepEquals } from "bun"
-import { type Draft, makeCreator } from "mutative"
+import { makeCreator } from "mutative"
 import { IS_DEV } from "#/constants"
 import { shuffleWithMap, unshuffleFromMap } from "#/helpers"
 import { logg } from "#/logs"
+import type { Draft } from "mutative"
 import type { TrackId } from "../database/types"
 import type {
 	AppModal,

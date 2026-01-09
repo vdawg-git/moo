@@ -6,8 +6,8 @@ import { PlaylistPage } from "#/pages/playlistPage"
 import { QueuePage } from "#/pages/queuePage"
 import { QuickEditPage } from "#/pages/quickEdit/quickEditPage"
 import { appState } from "#/state/state"
-import type { ReactNode } from "react"
 import type { ViewPage, ViewPages } from "#/state/types"
+import type { ReactNode } from "react"
 
 type Routes = { [K in keyof ViewPages]: (params: ViewPages[K]) => ReactNode }
 const routes: Routes = {
@@ -37,5 +37,5 @@ function renderRoute(view: ViewPage): ReactNode {
 	const Component = routes[view.route]
 
 	// @ts-expect-error
-	return <Component key={JSON.stringify(view)} {...view.parameter}  />
+	return <Component key={JSON.stringify(view)} {...view.parameter} />
 }

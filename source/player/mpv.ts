@@ -3,23 +3,18 @@ import { mkdir } from "node:fs/promises"
 import path from "node:path"
 import { deepEquals, sleep } from "bun"
 import { isNonNullish, isPromise } from "remeda"
-import {
-	concatMap,
-	distinctUntilChanged,
-	filter,
-	from,
-	type Observable,
-	of,
-	take
-} from "rxjs"
+import { concatMap, distinctUntilChanged, filter, from, of, take } from "rxjs"
 import { match, P } from "ts-pattern"
-import { type AsyncResult, Result } from "typescript-result"
+import { Result } from "typescript-result"
 import { z } from "zod"
 import { TEMP_DIRECTORY } from "#/constants"
 import { logg } from "#/logs"
 import { addErrorNotification } from "#/state/state"
-import { createSocketClient, type SocketWrapper } from "./socket"
+import { createSocketClient } from "./socket"
+import type { Observable } from "rxjs"
 import type { JsonValue } from "type-fest"
+import type { AsyncResult } from "typescript-result"
+import type { SocketWrapper } from "./socket"
 import type { Player, PlayerEvent } from "./types"
 
 const socketPath = path.join(TEMP_DIRECTORY, "mpv.sock")

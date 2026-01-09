@@ -1,4 +1,5 @@
 import { useSelector } from "@xstate/store/react"
+import { LoadingText } from "#/components/loadingText"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
@@ -8,7 +9,6 @@ import { useColors } from "#/hooks/useColors"
 import { createQueryKey } from "#/queryKey"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
-import { LoadingText } from "#/components/loadingText"
 
 export function All() {
 	const response = useQuery(createQueryKey.all(), database.getTracks)

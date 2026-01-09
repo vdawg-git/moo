@@ -1,7 +1,8 @@
-import { type ReactNode, useMemo } from "react"
+import { useMemo } from "react"
 import { appConfig } from "#/config/config"
 import { useColors } from "#/hooks/useColors"
 import { displayKeybinding } from "#/lib/keybinds"
+import type { ReactNode } from "react"
 
 export function KeybindsModal(): ReactNode {
 	const toDisplay = useMemo(getKeybinds, [])

@@ -4,5 +4,5 @@ import type { ReactNode } from "react"
 export function LoadingText({ children }: { children?: string }): ReactNode {
 	const colors = useColors()
 
-	return <text fg={colors.fg}>{children ?? "Loading..." }</text>
+	return <text fg={colors.fg}>{children ?? "Loading..."}</text>
 }

@@ -3,17 +3,14 @@ import json5 from "json5"
 import { Result } from "typescript-result"
 import untildify from "untildify"
 import { z } from "zod"
-import {
-	isValidationError,
-	toValidationError,
-	type ValidationError
-} from "zod-validation-error"
+import { isValidationError, toValidationError } from "zod-validation-error"
 import { CONFIG_DIRECTORY } from "#/constants"
 import { enumarateError, logg } from "#/logs"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
-import type { BunFile } from "bun"
 import type { FilePath } from "#/types/types"
+import type { BunFile } from "bun"
+import type { ValidationError } from "zod-validation-error"
 
 // const trackColumnNames = Object.keys(getTableColumns(tableTracks))
 
