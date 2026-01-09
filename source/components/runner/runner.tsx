@@ -138,7 +138,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 				registerKeybinds(toUnregister, { when: "default" })
 			}
 		}
-	}, [mode, modal.changeTitle, modal.changeColor])
+	}, [mode,  modal])
 
 	return (
 		<box flexDirection="column" minWidth={"50%"} width={"50%"} maxWidth={50}>
