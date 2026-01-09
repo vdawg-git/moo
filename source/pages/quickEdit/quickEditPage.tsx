@@ -485,11 +485,11 @@ function CloseDialogContent({
 }): ReactNode {
   useKeyboard(async (key) => {
     if (key.name === "return") {
-      onExit()
+      await onExit()
     }
 
     if (key.name === "x") {
-      onExitNoSave()
+      await onExitNoSave()
     }
   })
 
