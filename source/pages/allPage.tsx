@@ -8,6 +8,7 @@ import { useColors } from "#/hooks/useColors"
 import { createQueryKey } from "#/queryKey"
 import { appState, playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
+import { LoadingText } from "#/components/loadingText"
 
 export function All() {
 	const response = useQuery(createQueryKey.all(), database.getTracks)
@@ -26,7 +27,7 @@ export function All() {
 				<PlaylistTitle title={"All tracks"} tracksAmount={amount ?? 0} />
 
 				{response.isLoading ? (
-					<text>Loading...</text>
+					<LoadingText />
 				) : (
 					response.data.fold(
 						(tracks) => (
