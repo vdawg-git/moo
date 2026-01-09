@@ -37,5 +37,5 @@ function renderRoute(view: ViewPage): ReactNode {
 	const Component = routes[view.route]
 
 	// @ts-expect-error
-	return <Component {...view.parameter} key={JSON.stringify(view)} />
+	return <Component key={JSON.stringify(view)} {...view.parameter}  />
 }
