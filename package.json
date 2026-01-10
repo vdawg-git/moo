@@ -18,8 +18,7 @@
 		"lint:fix": "oxlint --type-aware --fix",
 		"db:generate": "rm -rf ./drizzle/* && drizzle-kit generate && rm -r ./drizzle/meta && cd ./drizzle && mv * setup.sql",
 		"drizzleStudio": "DEV=true bunx drizzle-kit studio",
-		"format": "prettier . --write",
-		"postinstall": "bunx bun2nix -o ./nix/bun.nix"
+		"format": "prettier . --write"
 	},
 	"dependencies": {
 		"@drizzle-team/brocli": "0.11.0",
@@ -58,7 +57,6 @@
 		"@types/bun": "1.2.23",
 		"@types/node": "24.6.2",
 		"@types/react": "19.1.1",
-		"bun2nix": "2.0.6",
 		"dotenv-cli": "8.0.0",
 		"drizzle-kit": "0.30.5",
 		"oxlint-tsgolint": "0.11.0",
