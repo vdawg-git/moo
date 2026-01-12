@@ -348,7 +348,6 @@ function createListState<T>({
 						? context.scrollPosition + 1
 						: context.scrollPosition
 
-				logg.silly("go next", { previous, newIndex })
 				return { ...context, index: newIndex, scrollPosition }
 			},
 

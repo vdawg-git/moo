@@ -110,8 +110,6 @@ const playIndex = createAction<{ index: number }>((state, { index }) => {
 })
 
 const nextTrack = createAction((context) => {
-	logg.silly("wut is going on")
-
 	if (!context.playback.queue) return
 
 	// TODO add manuallyAdded handling

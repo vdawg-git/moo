@@ -65,7 +65,6 @@ function Runner({ modal, initialValue }: RunnerProps) {
 	const onSubmit = () => {
 		if (!activeItem) return
 		modal.closeModal()
-		logg.silly("ran command")
 		activeItem.onSelect()
 	}
 
