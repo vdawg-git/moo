@@ -7,6 +7,7 @@ import {
 	registerKeybinds,
 	unregisterKeybinds
 } from "#/keybindManager/keybindManager"
+import { logg } from "#/logs"
 import { appState } from "#/state/state"
 import { Input } from "../Input"
 import { Select } from "../select"
@@ -64,6 +65,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 	const onSubmit = () => {
 		if (!activeItem) return
 		modal.closeModal()
+		logg.silly("ran command")
 		activeItem.onSelect()
 	}
 
@@ -91,10 +93,6 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		if (focused === "input" && name === "up") {
 			setFocused("list")
 			setSelectedIndex(items.length - 1)
-			return
-		}
-		if (name === "return") {
-			onSubmit()
 			return
 		}
 

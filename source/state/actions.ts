@@ -110,6 +110,8 @@ const playIndex = createAction<{ index: number }>((state, { index }) => {
 })
 
 const nextTrack = createAction((context) => {
+	logg.silly("wut is going on")
+
 	if (!context.playback.queue) return
 
 	// TODO add manuallyAdded handling
@@ -119,8 +121,7 @@ const nextTrack = createAction((context) => {
 	const loop = context.playback.loopState
 
 	const currentIndex = context.playback.index
-	const overLastTrack =
-		currentIndex + 1 === context.playback.queue.tracks.length
+	const overLastTrack = currentIndex + 1 >= context.playback.queue.tracks.length
 
 	if (overLastTrack) {
 		if (loop === "loop_queue") {
