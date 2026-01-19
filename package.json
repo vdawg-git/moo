@@ -4,6 +4,7 @@
 	"license": "MIT",
 	"type": "module",
 	"main": "source/index.ts",
+	"module": "source/index.ts",
 	"scripts": {
 		"dev": "DEV=true bun --watch .",
 		"debug": "DEV=true bun --inspect-wait=1111/a .",
@@ -11,7 +12,7 @@
 		"prod": "NODE_ENV=production bun .",
 		"build": "echo we need no build",
 		"writeSchemas": "bun run ./scripts/writeSchemas.ts",
-		"compile": "bun build --compile  ./source/index.ts --sourcemap ./source/index.ts --outfile ./dist/moo",
+		"compile": "bun build --compile  ./source/index.ts --no-compile-autoload-dotenv --sourcemap ./source/index.ts --outfile ./dist/moo",
 		"release": "dotenv -- release-it",
 		"types": "tsc",
 		"lint": "oxlint --type-aware",
@@ -51,7 +52,6 @@
 		"zod-validation-error": "4.0.2"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.2.5",
 		"@ianvs/prettier-plugin-sort-imports": "4.7.0",
 		"@prettier/plugin-oxc": "0.1.3",
 		"@types/bun": "1.2.23",
@@ -61,12 +61,13 @@
 		"drizzle-kit": "0.30.5",
 		"oxlint-tsgolint": "0.11.0",
 		"prettier": "3.7.4",
-		"release-it": "18.1.2",
+		"release-it": "19.2.3",
 		"type-fest": "5.0.1",
 		"typescript": "5.9.3"
 	},
 	"patchedDependencies": {
 		"@jellybrick/mpris-service@2.1.5": "patches/@jellybrick%2Fmpris-service@2.1.5.patch",
 		"@jellybrick/dbus-next@0.10.3": "patches/@jellybrick%2Fdbus-next@0.10.3.patch"
-	}
+	},
+	"private": true
 }

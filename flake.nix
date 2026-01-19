@@ -40,7 +40,7 @@
 
             src = pkgs.fetchurl {
               url = "https://github.com/vdawg/moo/releases/download/${version}/moo";
-              sha256 = "1lbdc1hl3ymh6qv68366kn5shx2cqryw4xakcn67769k3691x2y7";
+              sha256 = ".";
             };
 
             dontUnpack = true;
