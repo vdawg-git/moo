@@ -1,9 +1,10 @@
 <div align="center" style="text-align: center">
+
+![moo logo](https://github.com/user-attachments/assets/d7d30704-1966-469f-b7e1-e588c4a2928f)
+
+
  
-```
-૮₍⎚¯⎚₎ა
- (O_O)
-```
+
 <h1>Moo</h1>
 <b>Sick terminal music player </b>
 </br>
@@ -93,3 +94,8 @@ You can also change all Nerdfont icons to regular letters in the config though.
 Three letters are awesome for cli apps.
 
 Also "Music" -> "Moosic" -> "Moo - Sick (terminal music player)"
+
+```
+૮₍⎚¯⎚₎ა
+  (O_O)
+```
