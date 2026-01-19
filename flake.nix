@@ -19,63 +19,32 @@
       name = packageJson.name;
       version = packageJson.version;
 
-      desktopItem = pkgs.makeDesktopItem {
-        inherit name;
-        exec = "${name} %u";
-        desktopName = name;
-        comment = "Sick terminal music player";
-        terminal = true;
-        type = "Application";
-        categories = ["Audio"];
-        keywords = ["playlists" "music player" "music"];
-      };
-
-      # Only build for x86_64-linux since binary release is only for that architecture
-      mooPackage =
-        if system == "x86_64-linux"
-        then
-          pkgs.stdenv.mkDerivation {
-            pname = name;
-            inherit version;
-
-            src = pkgs.fetchurl {
-              url = "https://github.com/vdawg/moo/releases/download/${version}/moo";
-              sha256 = "0v0j4z88j98l28fh8w03dydiipvhjbfdry0vgnpp8azv6i53dyln";
-            };
-
-            dontUnpack = true;
-            dontBuild = true;
-            dontStrip = true; # Disable stripping to preserve embedded JS code
-
-            installPhase = ''
-              runHook preInstall
-
-              mkdir -p $out/bin
-              cp $src $out/bin/moo
-              chmod +x $out/bin/moo
-
-              # Install desktop file
-              mkdir -p $out/share/applications
-              cp ${desktopItem}/share/applications/* $out/share/applications/
-
-              runHook postInstall
-            '';
-
-            meta = with pkgs.lib; {
-              description = "Sick terminal music player";
-              homepage = "https://github.com/vdawg/moo";
-              license = licenses.mit;
-              platforms = ["x86_64-linux"];
-              maintainers = [];
-            };
-          }
-        else throw "moo binary is only available for x86_64-linux";
+      mooPackage = let
+        mooBin = builtins.fetchurl {
+          url = "https://github.com/vdawg-git/moo/releases/download/${version}/moo";
+          sha256 = "0v0j4z88j98l28fh8w03dydiipvhjbfdry0vgnpp8azv6i53dyln";
+        };
+      in
+        pkgs.runCommand "moo-${version}" {
+          meta = with pkgs.lib; {
+            description = "Sick terminal music player";
+            homepage = "https://github.com/vdawg-git/moo";
+            license = licenses.mit;
+            platforms = ["x86_64-linux"];
+          };
+        } ''
+          mkdir -p $out/bin
+          cp ${mooBin} $out/bin/moo
+          chmod +x $out/bin/moo
+        '';
     in {
-      devShell = with pkgs;
+      devShells.default = with pkgs;
         mkShell {
           buildInputs = [
             bun
             lnav
+            ffmpeg-headless
+            mpv
           ];
 
           shellHook = ''
