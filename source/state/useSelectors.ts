@@ -1,8 +1,7 @@
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
+import { useAppContext } from "#/appContext"
 import { useObservable } from "#/hooks/useObservable"
-import { currentTrack$ } from "./derivedState"
-import { appState } from "./state"
 import type { BaseTrack } from "#/database/types"
 import type { AppState, PlaybackSource } from "./types"
 
@@ -11,14 +10,23 @@ import type { AppState, PlaybackSource } from "./types"
 // You can also just use `useSelector` from XState directly, but those are nicer
 // /
 
+/** Convenience hook — returns appState store from context */
+export function useAppState() {
+	return useAppContext().appState
+}
+
 export function useCurrentTrack(): BaseTrack | undefined {
-	const currentTrack = useObservable(currentTrack$)
+	const { derived } = useAppContext()
+	const currentTrack = useObservable(derived.currentTrack$)
 
 	return currentTrack
 }
 
-export const usePlaybackData: () => AppState["playback"] = () =>
-	useSelector(appState, (snapshot) => snapshot.context.playback)
+export function usePlaybackData(): AppState["playback"] {
+	const appState = useAppState()
+
+	return useSelector(appState, (snapshot) => snapshot.context.playback)
+}
 
 /**
  * Returns the index of the currently playing track from the given source.
@@ -27,10 +35,10 @@ export const usePlaybackData: () => AppState["playback"] = () =>
  *
  * Returns undefined if the specified source is currently not playing.
  */
-export const usePlayingIndex: (source: PlaybackSource) => number | undefined = (
-	source
-) =>
-	useSelector(appState, ({ context: { playback } }) => {
+export function usePlayingIndex(source: PlaybackSource): number | undefined {
+	const appState = useAppState()
+
+	return useSelector(appState, ({ context: { playback } }) => {
 		const currentSource = playback.queue?.source
 		if (!currentSource) return undefined
 
@@ -38,3 +46,4 @@ export const usePlayingIndex: (source: PlaybackSource) => number | undefined = (
 
 		return isSourcePlaying ? playback.index : undefined
 	})
+}

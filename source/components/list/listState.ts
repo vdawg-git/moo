@@ -4,7 +4,7 @@ import Fuse from "fuse.js"
 import { useEffect, useId, useRef } from "react"
 import { useKeybindings } from "#/keybindManager/useKeybindings"
 import { keybinding } from "#/lib/keybinds"
-import { logg } from "#/logs"
+import { logger } from "#/logs"
 import type { ScrollBoxRenderable } from "@opentui/core"
 import type { RefObject } from "react"
 import type { ListItem } from "./listTypes"
@@ -100,21 +100,34 @@ export function useList<T>({
 		({ context }) => context.mode
 	)
 
+	const onFocusItemRef = useRef(onFocusItem)
+	onFocusItemRef.current = onFocusItem
+
 	useEffect(() => {
 		if (!focused) return
 
 		let unfocusFunction: (() => void) | void = undefined
-		stateRef.current.state
+
+		const subscription = stateRef.current.state
 			.select(({ index, items }) => ({ index, items }))
 			.subscribe(({ items, index }) => {
 				const item = items[index]
 
 				unfocusFunction?.()
-				unfocusFunction = item && onFocusItem?.(item)
+				unfocusFunction = item && onFocusItemRef.current?.(item)
 			})
 
-		return unfocusFunction
-	}, [focused, onFocusItem])
+		const { items, index: currentIndex } = stateRef.current.state.get().context
+		const currentItem = items[currentIndex]
+		if (currentItem) {
+			unfocusFunction = onFocusItemRef.current?.(currentItem)
+		}
+
+		return () => {
+			unfocusFunction?.()
+			subscription.unsubscribe()
+		}
+	}, [focused])
 
 	useEffect(() => {
 		stateRef.current.state.trigger.setItems({
@@ -178,7 +191,7 @@ export function useList<T>({
 					if (item) {
 						onSelect(item)
 					} else {
-						logg.warn("useList: Did not found matching onSelect item", {
+						logger.warn("useList: Did not found matching onSelect item", {
 							index: context.index
 						})
 					}

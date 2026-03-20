@@ -4,7 +4,7 @@ Moo is a terminal music player built with TypeScript, Bun, React 19, and OpenTUI
 
 ## Tech Stack
 
-Bun runtime, React 19 + OpenTUI (TUI rendering), Drizzle ORM + SQLite, XState store, RxJS, MPV (audio playback via IPC socket), MPRIS (media keys), ts-pattern, Remeda, Zod.
+Bun runtime, React 19 + OpenTUI (TUI rendering), Drizzle ORM + SQLite, XState store + mutative (immutable updates with mutable syntax), RxJS, MPV (audio playback via IPC socket), MPRIS (media keys), ts-pattern, Remeda, typescript-result, Zod.
 
 ## Commands
 
@@ -65,22 +65,30 @@ Bun runtime, React 19 + OpenTUI (TUI rendering), Drizzle ORM + SQLite, XState st
 - Prefer `pipe` + `O.maybe` (`source/lib/option.ts`) over manual null-check chains — chain optional lookups declaratively instead of nesting `if (x) { if (x.y) { ... } }`
 - If a function takes more than two arguments you should use an object as an argument and not positional arguments
 - Use named tuple elements in array types (e.g., `[red: number, green: number]` not `[number, number]`)
+- Use `Result<T, E>` from `typescript-result` for fallible operations — propagate errors as values, not exceptions
+- Don't use `enum` — use `as const` objects or discriminated unions
+- Use `#/` path alias for source imports (e.g., `#/database/database`)
 
 **RxJS / Observables**
 
-- Observables should be hot by default — use `.shareReplay(1)` for shared subscriptions
+- Suffix observable variables with `$` (e.g., `currentTrack$`, `playState$`)
+- Observables should be hot by default — `shareReplay({ refCount: false, bufferSize: 1 })` for global/always-hot streams, `shareReplay({ refCount: true, bufferSize: 1 })` for caches that should auto-cleanup
 - Keep RxJS streams declarative — avoid `state$.next()` side effects mid-pipeline, use derived state from the stream output (use tap(next()) as a last resort)
 
 **React**
 
-- Components are pure renderers — logic lives in Redux slices or hooks
+- Components are pure renderers — logic lives in the XState store, actions, or hooks
 - Functional components only, no class components
 - Custom hooks for reusable logic, keep components thin
 - No `useMemo`/`useCallback` — React 19 handles memoization
 - No `forwardRef` — React 19 passes `ref` as a regular prop
 - Props should be generic (callbacks, primitives) — avoid passing store types or domain models into leaf components
 - Extract non-trivial event handlers into named functions
-- Colocate feature code: slice + components + hooks in same feature folder
+- Colocate feature code: components + hooks in same feature folder
+
+**Testing**
+
+- Prefer `it()` over `test()` in test files
 
 ## Testability & Dependency Injection
 
@@ -93,15 +101,3 @@ Bun runtime, React 19 + OpenTUI (TUI rendering), Drizzle ORM + SQLite, XState st
 ## Core Principles
 
 Pure functions, immutability, composition over inheritance, single responsibility, explicit errors, type-driven design, make illegal states unrepresentable, dependency injection, optimize for deletion and debugging, push complexity to edges, readable code over clever code.
-
-## Don'ts
-
-- Don't use `any` — use `unknown` and narrow
-- Don't use `enum` — use `as const` objects or discriminated unions
-- Don't put business logic in components — use slices, thunks, or hooks
-- Don't use `switch` or `if-else` chains — use `ts-pattern` `match()` instead
-- Don't use `else` — early return, ternary, or `match()`
-- Don't use `let` — use `const` with declarative expressions
-- Don't use imperative loops for collection transforms — use declarative `.filter`/`.map`/`Object.fromEntries`
-- Don't use nested `if` chains for optional property access — use `pipe` + `O.maybe` to express the same thing declaratively
-- Dont put business logic into React Components. The Rendering Layer shouldn't be coupled to business logic.

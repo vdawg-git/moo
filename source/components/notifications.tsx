@@ -3,9 +3,9 @@ import { useKeyboard } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { match } from "ts-pattern"
-import { appConfig } from "#/config/config"
+import { useConfig } from "#/config/configContext"
 import { useColors } from "#/hooks/useColors"
-import { appState } from "#/state/state"
+import { useAppState } from "#/state/useSelectors"
 import { BracketButton } from "./button"
 import type { AppColors } from "#/config/theme"
 import type { AppNotification } from "#/state/types"
@@ -13,6 +13,7 @@ import type { AppNotification } from "#/state/types"
 export const notificationModalId = "_notificationModalaid_"
 
 export function NotificationModal() {
+	const appState = useAppState()
 	const notifications = useSelector(
 		appState,
 		(state) => state.context.notifications,
@@ -65,12 +66,14 @@ function NotificationIcon({
 	type: AppNotification["type"]
 	colors: AppColors
 }) {
+	// refactor useIcons is nicer
+	const config = useConfig()
 	return match(type)
-		.with("default", () => <text fg={colors.blue}>{appConfig.icons.info}</text>)
-		.with("error", () => <text fg={colors.red}>{appConfig.icons.error}</text>)
-		.with("warn", () => <text fg={colors.yellow}>{appConfig.icons.warn}</text>)
+		.with("default", () => <text fg={colors.blue}>{config.icons.info}</text>)
+		.with("error", () => <text fg={colors.red}>{config.icons.error}</text>)
+		.with("warn", () => <text fg={colors.yellow}>{config.icons.warn}</text>)
 		.with("success", () => (
-			<text fg={colors.green}>{appConfig.icons.success}</text>
+			<text fg={colors.green}>{config.icons.success}</text>
 		))
 		.exhaustive()
 }

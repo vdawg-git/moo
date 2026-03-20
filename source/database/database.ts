@@ -4,17 +4,14 @@ import { drizzle } from "drizzle-orm/bun-sqlite"
 import * as R from "remeda"
 import { Subject } from "rxjs"
 import { Result } from "typescript-result"
-import { appConfig } from "#/config/config.js"
-import { DATA_DIRECTORY, databasePath, IS_DEV } from "#/constants.js"
+import { DATA_DIRECTORY, IS_DEV } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
-import { enumarateError, logg } from "#/logs.js"
+import { logger } from "#/logs.js"
 import { getPlaylistBlueprintFromId } from "#/smartPlaylists/parsing.js"
 import { getSmartPlaylistTracks } from "#/smartPlaylists/toSql.js"
 // @ts-expect-error
 import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
-import { createLocalPlayer } from "../player/player.js"
 import { getCoOccurenceTags } from "./coOccurence.js"
-import { databaseLogger } from "./logger.js"
 import { sortTracks } from "./naturalSorting.js"
 import * as schema from "./schema.js"
 import {
@@ -33,7 +30,6 @@ import {
 	selectorTrackSort
 } from "./selectors.js"
 import { upsert } from "./sqlHelper.js"
-import { Track } from "./types.js"
 import type { TrackFileMeta } from "./schema.js"
 import type {
 	AlbumId,
@@ -44,18 +40,33 @@ import type {
 	TrackId
 } from "./types.js"
 
-export const database = await connectDatabase()
+export type CreateDatabaseDeps = {
+	readonly databasePath: string
+	readonly tagSeparator: string
+}
 
-async function connectDatabase(): Promise<AppDatabase> {
-	logg.info("database init", {
+export async function createDatabase({
+	databasePath,
+	tagSeparator
+}: CreateDatabaseDeps): Promise<AppDatabase> {
+	logger.info("database init", {
 		databasePath: databasePath,
 		dbVersion: DATABASE_VERSION,
 		isDev: IS_DEV,
 		dataDir: DATA_DIRECTORY
 	})
 
-	const db = await initDatabase()
+	const db = await initDatabase({ databasePath, tagSeparator })
 
+	return wrapDrizzleDatabase({ db })
+}
+
+/** Wraps a raw Drizzle instance with the AppDatabase interface */
+export function wrapDrizzleDatabase({
+	db
+}: {
+	readonly db: DrizzleDatabase
+}): AppDatabase {
 	const changed$ = new Subject<string>()
 
 	// A lot of the api is not needed yet,
@@ -124,11 +135,11 @@ async function connectDatabase(): Promise<AppDatabase> {
 
 				return getSmartPlaylistTracks(db, blueprint)
 					.onSuccess((tracks) => {
-						logg.debug("playlist get BEFORE sort", { tracks })
+						logger.debug("playlist get BEFORE sort", { tracks })
 					})
 					.map(sortTracks)
 					.onSuccess((tracks) => {
-						logg.debug("playlist get after sort", { tracks })
+						logger.debug("playlist get after sort", { tracks })
 					})
 					.map(
 						(tracks) =>
@@ -230,14 +241,6 @@ async function connectDatabase(): Promise<AppDatabase> {
 
 		changed$
 	} satisfies AppDatabase
-}
-
-const localPlayer = createLocalPlayer()
-
-export class LocalTrack extends Track {
-	constructor(properties: Partial<LocalTrack> & { id: string }) {
-		super(properties, localPlayer, "local")
-	}
 }
 
 const addTracks: (database: DrizzleDatabase) => AppDatabase["upsertTracks"] = (
@@ -358,7 +361,10 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
  * Can throw and shoudn't be handled,
  * as the database setup is needed for everything
  */
-async function initDatabase(): Promise<DrizzleDatabase> {
+async function initDatabase({
+	databasePath,
+	tagSeparator
+}: CreateDatabaseDeps): Promise<DrizzleDatabase> {
 	const db = drizzle(databasePath, { schema })
 
 	const shouldRecreate = await db
@@ -367,35 +373,43 @@ async function initDatabase(): Promise<DrizzleDatabase> {
 		.limit(1)
 		.then(([data]) => {
 			if (!data) {
-				logg.debug("Did not find meta-table entry. Recreating database next..")
+				logger.debug(
+					"Did not find meta-table entry. Recreating database next.."
+				)
 				return true
 			}
 
 			const isSameVersion = data.version === DATABASE_VERSION
-			const isSameTagsSeperator =
-				data.tagSeperator === appConfig.quickEdit.tagSeperator
+			const isSameTagsSeperator = data.tagSeperator === tagSeparator
 
 			return !(isSameVersion && isSameTagsSeperator)
 		})
 		.catch((error) => {
-			logg.error("error checking database for init", enumarateError(error))
+			logger.error("error checking database for init", error)
 			return true
 		})
 
 	if (!shouldRecreate) return db
 
-	logg.info("Database changed or doesnt exists. Running database init..")
+	logger.info("Database changed or doesnt exists. Running database init..")
 
 	await rm(databasePath)
-	logg.info("Removed old database")
+	logger.info("Removed old database")
 
-	const db2 = drizzle(databasePath, { logger: databaseLogger, schema })
+	const db2 = drizzle(databasePath, {
+		schema,
+		logger: {
+			logQuery(query, params) {
+				logger.debug("Database query", { query, params })
+			}
+		}
+	})
 
 	const setupCalls = (setupSqlRaw as string)
 		.split("--> statement-breakpoint")
 		.map((string) => string.trim())
 
-	logg.info("running database migration")
+	logger.info("running database migration")
 
 	await db2.transaction(async (tx) => {
 		// reset db
@@ -406,7 +420,7 @@ async function initDatabase(): Promise<DrizzleDatabase> {
 
 		await tx.insert(metaTable).values({
 			version: DATABASE_VERSION,
-			tagSeperator: appConfig.quickEdit.tagSeperator
+			tagSeperator: tagSeparator
 		})
 
 		db.run("PRAGMA foreign_keys = ON;")

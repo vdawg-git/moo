@@ -14,20 +14,18 @@ import {
 } from "rxjs"
 import { match, P } from "ts-pattern"
 import { callAll } from "#/helpers"
-import { appState$ } from "#/state/state"
 import { getKeybindsWhen } from "#/state/stateUtils"
-import { keybindsState } from "./keybindsState"
-import { keys$ as keyEvents$ } from "./keysStream"
 import type { KeyEvent } from "@opentui/core"
 import type { GeneralCommand } from "#/commands/appCommands"
 import type { KeyBinding, KeyInput } from "#/lib/keybinds"
+import type { AppState } from "#/state/types"
 import type { Observable } from "rxjs"
 import type {
 	KeybindCommand,
 	KeybindCommandWhen,
 	KeybindNextUp
 } from "./keybindsState"
-import type { KeyPressEvent } from "./keysStream"
+import type { KeyPressEvent, KeyTypeData } from "./keysStream"
 
 type CallbacksOrSequence =
 	| { type: "callbacks"; callbacks: readonly KeybindCommand["callback"][] }
@@ -37,62 +35,130 @@ export type SequencePart = {
 	nextUp: readonly KeybindNextUp[]
 }
 
-const areKeybindingsDisabled$: Observable<boolean> = appState$.pipe(
-	map((state) => state.focusedInputs.length > 0),
-	startWith(false),
-	distinctUntilChanged(),
-	shareReplay({ refCount: false, bufferSize: 1 })
-)
-
-const keybindingWhen$: Observable<KeybindCommandWhen> = appState$.pipe(
-	map((state) => getKeybindsWhen(state.keybindingWhen)),
-	startWith("default" satisfies KeybindCommandWhen as KeybindCommandWhen),
-	distinctUntilChanged(),
-	shareReplay({ refCount: false, bufferSize: 1 })
-)
-
-const pressed$: Observable<KeyPressEvent> = keyEvents$.pipe(
-	filter((event): event is KeyPressEvent => event.type === "keypress")
-)
-
-const keySequenceResult$: Observable<CallbacksOrSequence | undefined> =
-	pressed$.pipe(
-		withLatestFrom(areKeybindingsDisabled$),
-		filter(([_, isDisabled]) => !isDisabled),
-		map(([keypress]) => openTuiInputToKeyInput(keypress.event)),
-		withLatestFrom(keybindingWhen$),
-		switchMap(([input, when]) => {
-			const sequenceReset$ = merge(
-				// TODO figure out why this is not working properly.
-				// If we use any number smaller than 3 sequenced keybinds stop working after opening and closing the runner
-				keybindingWhen$.pipe(skip(5), distinctUntilChanged()),
-				areKeybindingsDisabled$.pipe(skip(5), distinctUntilChanged())
-			).pipe(map(() => ({ input: undefined, when })))
-
-			return sequenceReset$.pipe(startWith({ input, when }))
-		}),
-		scan(
-			reduceToCommandAndSequences,
-			undefined as CallbacksOrSequence | undefined
-		),
-		distinctUntilChanged()
-	)
-
-export function handleKeybinds() {
-	const subscription = keySequenceResult$.subscribe((inputResult) => {
-		if (inputResult?.type !== "callbacks") return
-
-		callAll(inputResult.callbacks)
-	})
-
-	return () => subscription.unsubscribe()
+export type KeybindManagerDeps = {
+	readonly appState$: Observable<AppState>
+	readonly keybindsState: KeybindsTrie
+	readonly keys$: Observable<KeyTypeData>
 }
 
-/**
- * This is currently only for global keybinds.
- * All configurable keybinds are global right now.
- */
-export function useGetNextKeySequence(): SequencePart | undefined {
+/** Subset of KeybindTrie that the manager needs */
+type KeybindsTrie = {
+	readonly getCommandsForKeys: (
+		sequence: KeyBinding
+	) => readonly KeybindCommand[]
+	readonly getNextUp: (sequence: KeyBinding) => readonly KeybindNextUp[]
+	readonly addSequence: (sequence: KeyBinding, command: KeybindCommand) => void
+	readonly removeSequence: (sequence: KeyBinding, id: string) => void
+}
+
+export type KeybindManager = {
+	readonly handleKeybinds: () => () => void
+	readonly registerKeybinds: (
+		toRegister: readonly GeneralCommandArgument[],
+		options?: { when: KeybindCommandWhen }
+	) => () => void
+	readonly unregisterKeybinds: (
+		toUnregister: readonly GeneralCommandArgument[]
+	) => void
+	readonly keySequenceResult$: Observable<CallbacksOrSequence | undefined>
+}
+
+/** Creates a keybind manager with injected dependencies */
+export function createKeybindManager({
+	appState$,
+	keybindsState,
+	keys$
+}: KeybindManagerDeps): KeybindManager {
+	const areKeybindingsDisabled$: Observable<boolean> = appState$.pipe(
+		map((state) => state.focusedInputs.length > 0),
+		startWith(false),
+		distinctUntilChanged(),
+		shareReplay({ refCount: false, bufferSize: 1 })
+	)
+
+	const keybindingWhen$: Observable<KeybindCommandWhen> = appState$.pipe(
+		map((state) => getKeybindsWhen(state.keybindingWhen)),
+		startWith("default" satisfies KeybindCommandWhen as KeybindCommandWhen),
+		distinctUntilChanged(),
+		shareReplay({ refCount: false, bufferSize: 1 })
+	)
+
+	const pressed$: Observable<KeyPressEvent> = keys$.pipe(
+		filter((event): event is KeyPressEvent => event.type === "keypress")
+	)
+
+	const keySequenceResult$: Observable<CallbacksOrSequence | undefined> =
+		pressed$.pipe(
+			withLatestFrom(areKeybindingsDisabled$),
+			filter(([_, isDisabled]) => !isDisabled),
+			map(([keypress]) => openTuiInputToKeyInput(keypress.event)),
+			withLatestFrom(keybindingWhen$),
+			switchMap(([input, when]) => {
+				const sequenceReset$ = merge(
+					// TODO figure out why this is not working properly.
+					// If we use any number smaller than 3 sequenced keybinds stop working after opening and closing the runner
+					keybindingWhen$.pipe(skip(5), distinctUntilChanged()),
+					areKeybindingsDisabled$.pipe(skip(5), distinctUntilChanged())
+				).pipe(map(() => ({ input: undefined, when })))
+
+				return sequenceReset$.pipe(startWith({ input, when }))
+			}),
+			scan(
+				(previous, current) =>
+					reduceToCommandAndSequences(keybindsState, previous, current),
+				undefined as CallbacksOrSequence | undefined
+			),
+			distinctUntilChanged()
+		)
+
+	function handleKeybinds() {
+		const subscription = keySequenceResult$.subscribe((inputResult) => {
+			if (inputResult?.type !== "callbacks") return
+
+			callAll(inputResult.callbacks)
+		})
+
+		return () => subscription.unsubscribe()
+	}
+
+	function registerKeybinds(
+		toRegister: readonly GeneralCommandArgument[],
+		options?: { when: KeybindCommandWhen }
+	) {
+		toRegister.forEach(({ keybindings, label, callback, id }) =>
+			keybindings.forEach((sequence) => {
+				keybindsState.addSequence(sequence, {
+					callback,
+					id,
+					label,
+					when: options?.when ?? "default"
+				})
+			})
+		)
+
+		return () => unregisterKeybinds(toRegister)
+	}
+
+	function unregisterKeybinds(toUnregister: readonly GeneralCommandArgument[]) {
+		toUnregister.forEach(({ keybindings, id }) =>
+			keybindings.forEach((sequence) =>
+				keybindsState.removeSequence(sequence, id)
+			)
+		)
+	}
+
+	return {
+		handleKeybinds,
+		registerKeybinds,
+		unregisterKeybinds,
+		keySequenceResult$
+	}
+}
+
+/** Hook that subscribes to the key sequence result and returns the current sequence part */
+export function useGetNextKeySequence(
+	keySequenceResult$: Observable<CallbacksOrSequence | undefined>
+): SequencePart | undefined {
 	const [nextUpCommands, setKeySequence] = useState<SequencePart | undefined>(
 		undefined
 	)
@@ -106,12 +172,13 @@ export function useGetNextKeySequence(): SequencePart | undefined {
 		})
 
 		return () => subscription.unsubscribe()
-	}, [])
+	}, [keySequenceResult$])
 
 	return nextUpCommands
 }
 
 function reduceToCommandAndSequences(
+	keybindsState: KeybindsTrie,
 	previous: CallbacksOrSequence | undefined,
 	{
 		input,
@@ -189,7 +256,6 @@ const isLatinLetterRegex = /[a-z]/
 function openTuiInputToKeyInput(event: KeyEvent): KeyInput {
 	const { ctrl, option, shift, name } = event
 
-	// open-tui always gives the lowercase version of letters. Dunno why
 	const shouldUppercase = shift && isLatinLetterRegex.test(name)
 	const key = shouldUppercase ? name.toUpperCase() : name
 
@@ -203,33 +269,3 @@ function openTuiInputToKeyInput(event: KeyEvent): KeyInput {
 }
 
 export type GeneralCommandArgument = Omit<GeneralCommand, "when">
-
-/** Returns the unregister function */
-export function registerKeybinds(
-	toRegister: readonly GeneralCommandArgument[],
-	options?: { when: KeybindCommandWhen }
-) {
-	toRegister.forEach(({ keybindings, label, callback, id }) =>
-		keybindings.forEach((sequence) => {
-			keybindsState.addSequence(sequence, {
-				callback,
-				id,
-				label,
-				when: options?.when ?? "default"
-			})
-		})
-	)
-
-	return () => unregisterKeybinds(toRegister)
-}
-
-export function unregisterKeybinds(
-	toUnregister: readonly GeneralCommandArgument[]
-) {
-	toUnregister.forEach(({ keybindings, id }) =>
-		// a command can have multiple keybindings
-		keybindings.forEach((sequence) =>
-			keybindsState.removeSequence(sequence, id)
-		)
-	)
-}

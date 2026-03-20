@@ -1,13 +1,12 @@
 import { useCallback } from "react"
+import { useAppContext } from "#/appContext"
 import { LoadingText } from "#/components/loadingText"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
-import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
 import { createQueryKey } from "#/queryKey"
-import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import type { PlaylistId } from "#/database/types"
 
@@ -16,8 +15,9 @@ type PlaylistProps = {
 }
 
 export function PlaylistPage({ id }: PlaylistProps) {
-	const query = useCallback(() => database.getPlaylist(id), [id])
-	const response = useQuery(createQueryKey.playlist(id), query)
+	const { database, playNewPlayback } = useAppContext()
+	const queryFn = useCallback(() => database.getPlaylist(id), [id, database])
+	const response = useQuery(createQueryKey.playlist(id), queryFn)
 	const playingIndex = usePlayingIndex({ type: "playlist", id })
 	const playback = usePlaybackData()
 	const amount = response.data?.getOrNull()?.tracks.length

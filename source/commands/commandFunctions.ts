@@ -1,30 +1,43 @@
-import { appConfig } from "#/config/config"
-import { registerKeybinds } from "#/keybindManager/keybindManager"
-import { getCommandCallback } from "./commandsCallbacks"
-import type { AppCommand } from "./appCommands"
+import type { KeybindManager } from "#/keybindManager/keybindManager"
+import type { CommandCallbackGetterFn } from "#/types/types"
+import type { AppCommand, AppCommandsMap } from "./appCommands"
 import type { AppCommandID } from "./commandsBase"
 
 /**
  * Registers the keybinds for the global commands
  */
-export function registerGlobalCommands() {
-	const toRegister = pickCommands([
-		"showKeybinds",
-		"runner.openCommands",
-		"runner.openGoto",
-		"player.toggleShuffle"
-	])
+export function registerGlobalCommands({
+	registerKeybinds,
+	getCommandCallback,
+	keybindings
+}: {
+	readonly registerKeybinds: KeybindManager["registerKeybinds"]
+	readonly getCommandCallback: CommandCallbackGetterFn
+	readonly keybindings: AppCommandsMap
+}): () => void {
+	const toRegister = pickCommands(
+		[
+			"showKeybinds",
+			"runner.openCommands",
+			"runner.openGoto",
+			"player.toggleShuffle"
+		],
+		getCommandCallback,
+		keybindings
+	)
 
-	registerKeybinds(toRegister, { when: "default" })
+	return registerKeybinds(toRegister, { when: "default" })
 }
 
 /**
  * Get commands from the app commands by their id.
  */
-export function pickCommands(
-	ids: readonly AppCommandID[]
+function pickCommands(
+	ids: readonly AppCommandID[],
+	getCommandCallback: CommandCallbackGetterFn,
+	keybindings: AppCommandsMap
 ): readonly AppCommand[] {
 	return ids
-		.map((id) => [id, appConfig.keybindings.get(id)!] as const)
+		.map((id) => [id, keybindings.get(id)!] as const)
 		.map(([id, data]) => ({ id, ...data, callback: getCommandCallback(id) }))
 }

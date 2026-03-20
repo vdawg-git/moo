@@ -3,10 +3,11 @@ import { useSelector } from "@xstate/store/react"
 import { useCallback, useState } from "react"
 import { useColors } from "#/hooks/useColors"
 import { KeybindingWhenProvider } from "#/keybindManager/useKeybindings"
-import { appState } from "#/state/state"
+import { useAppState } from "#/state/useSelectors"
 import type { AppModal } from "#/state/types"
 
 export function ModalManager() {
+	const appState = useAppState()
 	const modal = useSelector(
 		appState,
 		(state) => state.context.modals.at(-1),
@@ -23,10 +24,12 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 	const { width: widthScreen } = useTerminalDimensions()
 	const widthMax = widthScreen - 4
 	const minWidth = Math.max(displayTitle.length + 1, 12)
+	const appState = useAppState()
 
 	const hideModal = useCallback(() => {
-		appState.send({ type: "closeModal", id })
-	}, [id])
+		// refactor use appState.trigger instead of `send`. Its nicer to read. Or do you have other thoughts?
+		appState.trigger.closeModal({ id })
+	}, [id, appState])
 
 	useKeyboard((key) => {
 		if (key.name === "escape") {

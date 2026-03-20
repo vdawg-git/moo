@@ -5,7 +5,7 @@ import untildify from "untildify"
 import { z } from "zod"
 import { isValidationError, toValidationError } from "zod-validation-error"
 import { CONFIG_DIRECTORY } from "#/constants"
-import { enumarateError, logg } from "#/logs"
+import { logger } from "#/logs"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
 import type { FilePath } from "#/types/types"
@@ -66,7 +66,7 @@ export const appConfigSchema = z
 	.strict()
 	.readonly()
 
-type Config = Readonly<z.infer<typeof appConfigSchema>>
+export type AppConfig = Readonly<z.infer<typeof appConfigSchema>>
 
 const defaultConfig: z.input<typeof appConfigSchema> = {
 	$schema: schemaUrl,
@@ -82,7 +82,7 @@ const defaultConfigPath = path.join(CONFIG_DIRECTORY, "config.json5")
 
 async function parseConfig(
 	file: BunFile
-): Promise<Result<Config, ValidationError | Error>> {
+): Promise<Result<AppConfig, ValidationError | Error>> {
 	const config = Result.fromAsyncCatching(json5.parse(await file.text()))
 		.map((data) =>
 			Result.try(() => appConfigSchema.parse(data)).mapError(
@@ -102,10 +102,10 @@ async function parseConfig(
 	return config
 }
 
-async function writeDefaultConfig(): Promise<Result<Config, Error>> {
+async function writeDefaultConfig(): Promise<Result<AppConfig, Error>> {
 	return Result.fromAsync(
 		Bun.write(defaultConfigPath, json5.stringify(defaultConfig, undefined, 4))
-	).map(() => appConfigSchema.parse(defaultConfig))
+	).map(() => appConfigSchema.parse(defaultConfig) as AppConfig)
 }
 
 /**
@@ -113,8 +113,8 @@ async function writeDefaultConfig(): Promise<Result<Config, Error>> {
  *
  * Because we don't want to unwrap everything everywhere where the config is used.
  * Maybe there is a cleaner way, but idk.
- * */
-async function getConfig(): Promise<Config> {
+ */
+export async function getConfig(): Promise<AppConfig> {
 	const configFile = Bun.file(defaultConfigPath)
 
 	return Result.fromAsync(configFile.exists())
@@ -123,9 +123,7 @@ async function getConfig(): Promise<Config> {
 		)
 		.getOrElse((error) => {
 			console.error(isValidationError(error) ? error.message : error)
-			logg.error("Config parse error", enumarateError(error))
+			logger.error("Config parse error", error)
 			process.exit(1)
 		})
 }
-
-export const appConfig = await getConfig()

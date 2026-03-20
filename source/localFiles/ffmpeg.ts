@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { extname } from "node:path"
 import { $ } from "bun"
-import { appConfig } from "#/config/config"
 import { ensureDirectoryExists } from "#/filesystem"
 import type { TrackColumnKey } from "#/database/schema"
 import type { TrackId } from "#/database/types"
@@ -10,18 +9,20 @@ import type { FilePath } from "#/types/types"
 export async function writeTags({
 	id,
 	genre,
-	mood
+	mood,
+	tagSeparator
 }: {
 	id: TrackId
 	genre?: readonly string[]
 	mood?: readonly string[]
+	tagSeparator: string
 }): Promise<void> {
 	if (!genre && !mood) {
 		throw new Error("writeTags: No tags passed")
 	}
 
-	const genreMeta = genre && toMetadataFlag("genre", genre)
-	const moodMeta = mood && toMetadataFlag("mood", mood)
+	const genreMeta = genre && toMetadataFlag("genre", genre, tagSeparator)
+	const moodMeta = mood && toMetadataFlag("mood", mood, tagSeparator)
 
 	const random = randomUUID()
 	const extension = extname(id)
@@ -52,7 +53,8 @@ export async function writeTags({
 
 function toMetadataFlag(
 	flag: TrackColumnKey,
-	data: readonly string[]
+	data: readonly string[],
+	tagSeparator: string
 ): string[] {
-	return [`-metadata`, `${flag}=${data.join(appConfig.quickEdit.tagSeperator)}`]
+	return [`-metadata`, `${flag}=${data.join(tagSeparator)}`]
 }

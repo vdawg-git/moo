@@ -1,14 +1,13 @@
 import { useCallback } from "react"
+import { useAppContext } from "#/appContext"
 import { LoadingText } from "#/components/loadingText"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
-import { appConfig } from "#/config/config"
-import { database } from "#/database/database"
+import { useConfig } from "#/config/configContext"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
 import { createQueryKey } from "#/queryKey"
-import { playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import type { AlbumId } from "#/database/types"
 
@@ -17,13 +16,15 @@ type AlbumPageProps = {
 }
 
 export function AlbumPage({ id }: AlbumPageProps) {
-	const query = useCallback(() => database.getAlbum(id), [id])
-	const response = useQuery(createQueryKey.album(id), query)
+	const { database, playNewPlayback } = useAppContext()
+	const queryFn = useCallback(() => database.getAlbum(id), [id, database])
+	const response = useQuery(createQueryKey.album(id), queryFn)
 	const playingIndex = usePlayingIndex({ type: "album", id })
 	const playback = usePlaybackData()
 	const amount = response.data?.getOrNull()?.tracks.length
 	const displayName = response.data?.getOrNull()?.title ?? id
 	const colors = useColors()
+	const config = useConfig()
 
 	return (
 		<>
@@ -32,7 +33,7 @@ export function AlbumPage({ id }: AlbumPageProps) {
 					title={displayName}
 					tracksAmount={amount ?? 0}
 					color={colors.albums}
-					icon={appConfig.icons.album}
+					icon={config.icons.album}
 				/>
 
 				{response.isLoading ? (

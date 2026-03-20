@@ -1,14 +1,17 @@
 import path from "node:path"
 import { TextAttributes } from "@opentui/core"
 import { useRef } from "react"
-import { appConfig } from "#/config/config"
+import { useAppContext } from "#/appContext"
+import { useConfig } from "#/config/configContext"
 import { useColors } from "#/hooks/useColors"
-import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { keybinding } from "#/lib/keybinds"
-import { appState } from "#/state/state"
 import { List, useList } from "./list"
 import type { AppColor } from "#/config/theme"
-import type { GeneralCommandArgument } from "#/keybindManager/keybindManager"
+import type {
+	GeneralCommandArgument,
+	KeybindManager
+} from "#/keybindManager/keybindManager"
+import type { AppStore } from "#/state/state"
 import type { PlayingState } from "#/types/types"
 import type { BaseTrack } from "../database/types"
 
@@ -32,17 +35,17 @@ export function Tracklist({
 	shuffleMap,
 	playState
 }: PlaylistProps) {
+	const { appState, keybindManager } = useAppContext()
 	const playIndex = shuffleMap ? shuffleMap[basePlayIndex ?? 0] : basePlayIndex
 
-	const onPlayRef = useRef<PlaylistProps["onPlay"]>(null)
-	if (!onPlayRef.current) {
-		onPlayRef.current = onPlay
-	}
+	const onPlayRef = useRef<PlaylistProps["onPlay"]>(onPlay)
+	onPlayRef.current = onPlay
 
 	const listReturn = useList({
 		items: tracks,
 		onSelect: ({ index }) => onPlayRef.current?.(index),
-		onFocusItem: ({ data: track }) => registerTrackCommands(track),
+		onFocusItem: ({ data: track }) =>
+			registerTrackCommands(track, appState, keybindManager),
 		searchKeys: [
 			{ name: "title", getFunction: (item) => item.title ?? item.id }
 		]
@@ -103,13 +106,14 @@ export function TrackItem({
 			? colors.green
 			: (color ?? colors.fg)
 
+	const config = useConfig()
 	const titleDisplay = track.title ?? path.basename(track.id)
 	const artistDisplay = track.artist ?? track.albumartist ?? ""
 	const icon =
 		state === "playing"
-			? appConfig.icons.playingIndicator
+			? config.icons.playingIndicator
 			: state === "paused"
-				? appConfig.icons.pause
+				? config.icons.pause
 				: ""
 
 	return (
@@ -148,7 +152,11 @@ export function TrackItem({
  * Returns the unregister function,
  * which should be called when unmounting
  * */
-function registerTrackCommands(track: BaseTrack): () => void {
+function registerTrackCommands(
+	track: BaseTrack,
+	appState: AppStore,
+	keybindManager: KeybindManager
+): () => void {
 	const { id } = track
 
 	const commands: GeneralCommandArgument[] = [
@@ -184,5 +192,5 @@ function registerTrackCommands(track: BaseTrack): () => void {
 		}
 	]
 
-	return registerKeybinds(commands)
+	return keybindManager.registerKeybinds(commands)
 }

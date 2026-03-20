@@ -1,20 +1,20 @@
 import { match } from "ts-pattern"
 import { Result } from "typescript-result"
+import { useAppContext } from "#/appContext"
 import { List, useList } from "#/components/list"
 import { LoadingText } from "#/components/loadingText"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { TrackItem } from "#/components/tracklist"
-import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
-import { registerKeybinds } from "#/keybindManager/keybindManager"
 import { keybinding } from "#/lib/keybinds"
 import { createQueryKey } from "#/queryKey"
-import { appState } from "#/state/state"
 import { usePlaybackData } from "#/state/useSelectors"
 import type { BaseTrack } from "#/database/types"
 import type { QueryResult } from "#/database/useQuery"
+import type { KeybindManager } from "#/keybindManager/keybindManager"
+import type { AppStore } from "#/state/state"
 import type { AppState } from "#/state/types"
 import type { ComponentProps } from "react"
 
@@ -25,6 +25,7 @@ type ListItemQueue = {
 }
 
 export function QueuePage() {
+	const { database } = useAppContext()
 	const playbackState = usePlaybackData()
 	const { queue, manuallyAdded: manuallyAddedIds } = playbackState
 	const autoTrackIds = queue?.tracks ?? []
@@ -104,12 +105,14 @@ type QueueViewProps = {
 	playIndex: number
 }
 
+// done-refactor resolved: using useAppContext() directly
 function QueueView({
 	isPlayingFromManualQueue,
 	items,
 	playState,
 	playIndex
 }: QueueViewProps) {
+	const { appState, keybindManager } = useAppContext()
 	const colors = useColors()
 
 	const isEmpty = items.length === 0
@@ -127,8 +130,18 @@ function QueueView({
 
 		onFocusItem: ({ data: { type, track, itemIndex: index } }) =>
 			type === "auto"
-				? registerAutoQueueCommands(index, "auto_queue_" + index + track.id)
-				: registerManualQueueCommands(index, "manual_" + index + track.id),
+				? registerAutoQueueCommands(
+						index,
+						"auto_queue_" + index + track.id,
+						appState,
+						keybindManager
+					)
+				: registerManualQueueCommands(
+						index,
+						"manual_" + index + track.id,
+						appState,
+						keybindManager
+					),
 
 		searchKeys: [
 			{ name: "Title", getFunction: ({ track }) => track.title ?? track.id }
@@ -180,8 +193,13 @@ function QueueView({
 	)
 }
 
-function registerManualQueueCommands(index: number, uid: string): () => void {
-	return registerKeybinds([
+function registerManualQueueCommands(
+	index: number,
+	uid: string,
+	appState: AppStore,
+	keybindManager: KeybindManager
+): () => void {
+	return keybindManager.registerKeybinds([
 		{
 			label: "Remove from queue",
 			callback: () => appState.send({ type: "removeFromManualQueue", index }),
@@ -191,8 +209,13 @@ function registerManualQueueCommands(index: number, uid: string): () => void {
 	])
 }
 
-function registerAutoQueueCommands(index: number, uid: string): () => void {
-	return registerKeybinds([
+function registerAutoQueueCommands(
+	index: number,
+	uid: string,
+	appState: AppStore,
+	keybindManager: KeybindManager
+): () => void {
+	return keybindManager.registerKeybinds([
 		{
 			label: "Remove from queue",
 			callback: () => appState.send({ type: "removeFromQueue", index }),

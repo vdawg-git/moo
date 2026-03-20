@@ -3,7 +3,7 @@ import { deepEquals } from "bun"
 import { makeCreator } from "mutative"
 import { IS_DEV } from "#/constants"
 import { shuffleWithMap, unshuffleFromMap } from "#/helpers"
-import { logg } from "#/logs"
+import { logger } from "#/logs"
 import type { Draft } from "mutative"
 import type { TrackId } from "../database/types"
 import type {
@@ -90,7 +90,7 @@ const playFromManualQueue = createAction<{ index: number }>(
 		if (index > 0) {
 			state.playback.manuallyAdded = manuallyAdded.slice(index)
 		}
-		logg.debug("playFromManualQueue", { state: manuallyAdded })
+		logger.debug("playFromManualQueue", { state: manuallyAdded })
 	}
 )
 
@@ -100,7 +100,7 @@ const playIndex = createAction<{ index: number }>((state, { index }) => {
 	const tracksLength = state.playback.queue?.tracks.length ?? 0
 
 	if (index > tracksLength) {
-		logg.error("playIndex index out of bounds", { index, tracksLength })
+		logger.error("playIndex index out of bounds", { index, tracksLength })
 		state.notifications.push(
 			createErrorNotification("Bug happened when playing")
 		)
@@ -161,6 +161,18 @@ const togglePlayback = createAction((context) => {
 	context.playback.playState = playState === "playing" ? "paused" : "playing"
 })
 
+const resumePlayback = createAction((context) => {
+	if (!context.playback.queue) return
+
+	context.playback.playState = "playing"
+})
+
+const pausePlayback = createAction((context) => {
+	if (!context.playback.queue) return
+
+	context.playback.playState = "paused"
+})
+
 const setPlayProgress = createAction<{ newTime: number }>(
 	(context, { newTime }) => {
 		context.playback.progress = newTime
@@ -169,7 +181,7 @@ const setPlayProgress = createAction<{ newTime: number }>(
 
 const toggleShuffle = createAction((context) => {
 	const { shuffleMap } = context.playback
-	logg.debug("toggleShuffle", {
+	logger.debug("toggleShuffle", {
 		shuffleMap,
 		tracks: context.playback.queue?.tracks
 	})
@@ -277,7 +289,7 @@ const navigateForward = createAction((context) => {
 
 const addModal = createAction<{ modal: AppModal }>((context, { modal }) => {
 	if (context.modals.find(({ id }) => modal.id === id)) {
-		logg.warn("Modal id already added", { id: modal.id, title: modal.title })
+		logger.warn("Modal id already added", { id: modal.id, title: modal.title })
 		return
 	}
 
@@ -312,7 +324,7 @@ const unregisterKeybindWhen = createAction<{ id: string }>(
 )
 
 function createErrorNotification(message: string): AppNotification {
-	logg.error("reducer error", { message })
+	logger.error("reducer error", { message })
 	return { id: randomUUID(), message, type: "error" }
 }
 
@@ -331,6 +343,7 @@ export const appStateActionsInternal = {
 	navigateForward,
 	navigateTo,
 	nextTrack,
+	pausePlayback,
 	playFromManualQueue,
 	playIndex,
 	playNewPlayback,
@@ -339,6 +352,7 @@ export const appStateActionsInternal = {
 	removeFocusedInput,
 	removeFromManualQueue,
 	removeFromQueue,
+	resumePlayback,
 	setPlayProgress,
 	stopPlayback,
 	togglePlayback,

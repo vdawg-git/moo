@@ -1,43 +1,36 @@
 // Test setup file to mock dependencies
 
 import { vi } from "bun:test"
-
-// Mock config to prevent file loading
-await vi.module("#/config/config", () => ({
-	config: {
-		musicDirectories: [],
-		keybindings: {},
-		theme: {},
-		icons: {}
-	},
-	loadConfig: vi.fn(),
-	getConfig: vi.fn(() => ({ musicDirectories: [] }))
-}))
+import * as ConstantsModule from "#/constants"
+import * as LoggerModule from "#/logs"
+import { createMockLogger } from "#/testing/mockLogger"
+import type { FilePath } from "#/types/types"
 
 // Mock constants to prevent config loading
-await vi.module("#/constants", () => ({
-	IS_DEV: true,
-	APP_NAME: "moo_test",
-	CONFIG_DIRECTORY: "/tmp/test",
-	DATA_DIRECTORY: "/tmp/test"
-}))
+await vi.module(
+	"#/constants",
+	() =>
+		({
+			IS_DEV: true,
+			APP_NAME: "moo_test",
+			CONFIG_DIRECTORY: "/tmp/test" as FilePath,
+			DATA_DIRECTORY: "/tmp/test" as FilePath,
+			APP_ROOT: "/tmp/test/2",
+			databasePath: "/tmp/test/1" as FilePath,
+			LOGS_DIRECTORY: "/tmp/test/3" as FilePath,
+			playlistExtension: ".yml",
+			playlistsDirectory: "/tmp/test/4" as FilePath,
+			TEMP_DIRECTORY: "/tmp/test/6" as FilePath
+		}) satisfies typeof ConstantsModule
+)
 
-// Mock logs
-await vi.module("#/logs", () => ({
-	logg: {
-		debug: console.log,
-		error: console.error,
-		info: console.log,
-		warn: console.warn
-	},
-	enumarateError: vi.fn((error: any) => ({ error }))
-}))
+const mockLogger = createMockLogger()
 
-// Mock addErrorNotification to avoid circular dependency
-// vi.module("./state", async (importOriginal) => {
-// 	const original = await (importOriginal as any)()
-// 	return {
-// 		...(original as any),
-// 		addErrorNotification: vi.fn()
-// 	}
-// })
+// Mock logs module — shape matches what consumer code imports
+await vi.module(
+	"#/logs",
+	() =>
+		({
+			logger: mockLogger
+		}) satisfies typeof LoggerModule
+)

@@ -11,7 +11,6 @@ import { createAtom, createStore } from "@xstate/store"
 import { useAtom } from "@xstate/store/react"
 import { create } from "mutative"
 import { useRef } from "react"
-import { appConfig } from "#/config/config"
 import type { TagType } from "#/config/config"
 import type { BaseTrack } from "#/database/types"
 
@@ -27,14 +26,16 @@ type QuickEditStateStore = {
 
 export function useQuickEditState(
 	track: BaseTrack,
-	suggestions: SuggestionsRecord
+	suggestions: SuggestionsRecord,
+	defaultTagType: TagType
 ) {
 	const stateRef = useRef<ReturnType<typeof createQuickEditState>>(null)
 	if (!stateRef.current) {
 		stateRef.current = createQuickEditState({
 			appliedMood: track.mood ?? [],
 			appliedGenre: track.genre ?? [],
-			suggestions
+			suggestions,
+			defaultTagType
 		})
 	}
 	const state = stateRef.current
@@ -62,24 +63,25 @@ export function useQuickEditState(
 	}
 }
 
-const initalState: QuickEditStateStore = {
-	input: "",
-	tagsSuggested: { genre: [], mood: [] },
-	tagsApplied: { genre: [], mood: [] },
-	indexSuggestion: 0,
-	tagType: appConfig.quickEdit.defaultTagType
-}
-
 // And manual work, but probably the easiest.
 function createQuickEditState({
 	appliedGenre,
 	appliedMood,
-	suggestions
+	suggestions,
+	defaultTagType
 }: {
 	appliedGenre: readonly string[]
 	appliedMood: readonly string[]
 	suggestions: SuggestionsRecord
+	defaultTagType: TagType
 }) {
+	const initalState: QuickEditStateStore = {
+		input: "",
+		tagsSuggested: { genre: [], mood: [] },
+		tagsApplied: { genre: [], mood: [] },
+		indexSuggestion: 0,
+		tagType: defaultTagType
+	}
 	const state = createStore({
 		context: {
 			...initalState,

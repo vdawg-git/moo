@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useId, useRef } from "react"
-import { appState } from "#/state/state"
-import { registerKeybinds } from "./keybindManager"
+import { useAppContext } from "#/appContext"
 import type { ReactNode } from "react"
 import type { GeneralCommandArgument } from "./keybindManager"
 import type { KeybindCommandWhen } from "./keybindsState"
@@ -26,12 +25,15 @@ export function useKeybindings(
 	commandsRef.current = getCommands
 
 	const keybindingsWhen = useKeybindingContext()
+	const { keybindManager } = useAppContext()
 
 	useEffect(() => {
 		if (!isEnabled) return
 
-		return registerKeybinds(commandsRef.current(), { when: keybindingsWhen })
-	}, [isEnabled, keybindingsWhen])
+		return keybindManager.registerKeybinds(commandsRef.current(), {
+			when: keybindingsWhen
+		})
+	}, [isEnabled, keybindingsWhen, keybindManager])
 }
 
 export function KeybindingWhenProvider({
@@ -42,6 +44,7 @@ export function KeybindingWhenProvider({
 	when: KeybindCommandWhen
 }) {
 	const id = useId()
+	const { appState } = useAppContext()
 
 	// We update the global state so that the keybindManager can filter for the correct commands as updating it directly is kinda ugly
 	useEffect(() => {

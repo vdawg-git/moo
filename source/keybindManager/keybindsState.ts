@@ -22,7 +22,7 @@ export type KeybindMatches = Map<string, CommandData>
 
 type CommandData = Except<KeybindCommand, "id">
 
-class KeybindTrie {
+export class KeybindTrie {
 	root: TrieNode = createEmptyNode()
 
 	addSequence(sequence: KeyBinding, { id, ...commandData }: KeybindCommand) {

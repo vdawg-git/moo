@@ -1,10 +1,6 @@
 <div align="center" style="text-align: center">
 
-
 <img width="160" height="160" src="https://github.com/user-attachments/assets/d7d30704-1966-469f-b7e1-e588c4a2928f" />
-
-
- 
 
 <h1><b>Moo</b></h1>
 <b>Sick terminal music player </b>
@@ -12,7 +8,6 @@
 </br>
 
 ![moo](https://github.com/user-attachments/assets/3045694b-a28f-4527-89e1-656a706a7927)
-
 
 </div>
 

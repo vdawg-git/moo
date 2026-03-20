@@ -1,7 +1,7 @@
 import { useSelector } from "@xstate/store/react"
 import { useEffect, useId } from "react"
 import { useColors } from "#/hooks/useColors"
-import { appState } from "#/state/state"
+import { useAppState } from "#/state/useSelectors"
 import type { InputProps } from "@opentui/react"
 import type { ReactNode } from "react"
 
@@ -11,6 +11,7 @@ export type AppInputProps = InputProps
 export function Input(props: AppInputProps): ReactNode {
 	const { focused } = props
 	const id = useId()
+	const appState = useAppState()
 	const currentlyFocused = useSelector(appState, ({ context }) =>
 		context.focusedInputs.at(-1)
 	)
@@ -20,7 +21,7 @@ export function Input(props: AppInputProps): ReactNode {
 			appState.trigger.addFocusedInput({ id })
 			return () => appState.trigger.removeFocusedInput({ id })
 		}
-	}, [focused, id])
+	}, [focused, id, appState])
 
 	const isFocused = focused && currentlyFocused === id
 	const colors = useColors()

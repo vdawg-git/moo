@@ -1,6 +1,6 @@
 import { useSelector } from "@xstate/store/react"
 import { useEffect, useId } from "react"
-import { appState } from "#/state/state"
+import { useAppState } from "#/state/useSelectors"
 import type { SelectProps } from "@opentui/react"
 import type { ReactNode } from "react"
 
@@ -8,6 +8,7 @@ import type { ReactNode } from "react"
 export function Select(props: SelectProps): ReactNode {
 	const { focused } = props
 	const id = useId()
+	const appState = useAppState()
 	const currentlyFocused = useSelector(appState, ({ context }) =>
 		context.focusedInputs.at(-1)
 	)
@@ -17,7 +18,7 @@ export function Select(props: SelectProps): ReactNode {
 			appState.trigger.addFocusedInput({ id })
 			return () => appState.trigger.removeFocusedInput({ id })
 		}
-	}, [focused, id])
+	}, [focused, id, appState])
 
 	const isFocused = focused && currentlyFocused === id
 

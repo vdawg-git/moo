@@ -1,12 +1,18 @@
 import { createRoot } from "@opentui/react"
 import { Result } from "typescript-result"
 import { App } from "./App"
+import { AppContextProvider, createAppContext } from "./appContext"
 import { registerGlobalCommands } from "./commands/commandFunctions"
-import { appConfig } from "./config/config"
+import { createCommandCallbacks } from "./commands/commandsCallbacks"
+import { getConfig } from "./config/config"
 import { databasePath, IS_DEV } from "./constants"
-import { database } from "./database/database"
+import { createDatabase } from "./database/database"
+import { setupFiles } from "./filesystem"
+import { keybindsState } from "./keybindManager/keybindsState"
+import { keys$ } from "./keybindManager/keysStream"
 import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
-import { logg } from "./logs"
+import { logger } from "./logs"
+import { createLocalPlayer } from "./player/player"
 import { renderer } from "./renderer"
 import {
 	updateSmartPlaylists,
@@ -14,22 +20,84 @@ import {
 } from "./smartPlaylists/smartPlaylist"
 
 export async function startApp() {
-	logg.info("Starting app..", { isDev: IS_DEV, dbPath: databasePath })
+	await setupFiles()
 
-	if (appConfig.watchDirectories) {
-		watchAndUpdateDatabase(appConfig.musicDirectories, database)
-	}
+	process.on("uncaughtException", (error) => {
+		logger.error("uncaughtException", {
+			message: error.message,
+			stack: error.stack
+		})
+		console.error(error.stack ?? error.message)
+	})
 
-	await Result.fromAsync(updateDatabase(appConfig.musicDirectories, database))
-		.map(() => updateSmartPlaylists())
+	logger.info("Starting app..", { isDev: IS_DEV, dbPath: databasePath })
+
+	const appConfig = await getConfig()
+
+	const database = await createDatabase({
+		databasePath,
+		tagSeparator: appConfig.quickEdit.tagSeperator
+	})
+	const player = createLocalPlayer()
+
+	const appContext = createAppContext({
+		config: appConfig,
+		database,
+		player,
+		keybindManagerDeps: { keybindsState, keys$ }
+	})
+
+	const addErrorNotification = appContext.notifications.addError
+	const tagSeparator = appConfig.quickEdit.tagSeperator
+
+	const destroyWatcher = appConfig.watchDirectories
+		? watchAndUpdateDatabase({
+				musicDirectories: appConfig.musicDirectories,
+				database,
+				addErrorNotification,
+				tagSeparator
+			})
+		: undefined
+
+	await Result.fromAsync(
+		updateDatabase({
+			musicDirectories: appConfig.musicDirectories,
+			database,
+			addErrorNotification,
+			tagSeparator
+		})
+	)
+		.map(() => updateSmartPlaylists({ database, addErrorNotification }))
 		.onFailure((error) => {
-			logg.error("Failed to update db at startup", { error })
+			logger.error("Failed to update db at startup", { error })
 			throw new Error("Failed to update database")
 		})
 
-	const watcher = watchPlaylists()
+	const playlistSubscription = watchPlaylists({
+		database,
+		addErrorNotification
+	})
 
-	createRoot(renderer).render(<App />)
-	registerGlobalCommands()
-	watcher.unsubscribe()
+	const { getCommandCallback } = createCommandCallbacks({
+		appState: appContext.appState,
+		currentTrack$: appContext.derived.currentTrack$
+	})
+
+	const destroyGlobalCommands = registerGlobalCommands({
+		registerKeybinds: appContext.keybindManager.registerKeybinds,
+		getCommandCallback,
+		keybindings: appConfig.keybindings
+	})
+
+	createRoot(renderer).render(
+		<AppContextProvider value={appContext}>
+			<App />
+		</AppContextProvider>
+	)
+
+	return function destroy() {
+		destroyWatcher?.()
+		playlistSubscription.unsubscribe()
+		destroyGlobalCommands()
+	}
 }

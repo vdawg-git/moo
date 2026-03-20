@@ -1,19 +1,25 @@
 import path, { basename, extname } from "node:path"
 import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
-import { database } from "#/database/database"
-import { logg } from "#/logs"
-import { addErrorNotification } from "#/state/state"
+import { logger } from "#/logs"
 import {
 	getPlaylistBlueprintFromId,
 	parsePlaylistsAll,
 	playlistsChanged$
 } from "./parsing"
-import type { PlaylistId } from "#/database/types"
-import type { FilePath } from "#/types/types"
+import type { AppDatabase, PlaylistId } from "#/database/types"
+import type { ErrorNotificationFn, FilePath } from "#/types/types"
 import type { Subscription } from "rxjs"
 
-export async function updateSmartPlaylists(): Promise<void> {
+type SmartPlaylistDeps = {
+	readonly database: AppDatabase
+	readonly addErrorNotification: ErrorNotificationFn
+}
+
+export async function updateSmartPlaylists({
+	database,
+	addErrorNotification
+}: SmartPlaylistDeps): Promise<void> {
 	const playlistsParsed = await Result.fromAsync(parsePlaylistsAll())
 		.onFailure((error) =>
 			addErrorNotification("Failed to parse playlists", error)
@@ -75,13 +81,16 @@ export async function updateSmartPlaylists(): Promise<void> {
 	)
 }
 
-export function watchPlaylists(): Subscription {
+export function watchPlaylists({
+	database,
+	addErrorNotification
+}: SmartPlaylistDeps): Subscription {
 	return playlistsChanged$.subscribe(async ({ playlistPath, event }) => {
 		const playlistId = basename(
 			playlistPath,
 			extname(playlistPath)
 		) as PlaylistId
-		logg.debug("playlist changed", { playlistId, playlistPath, event })
+		logger.debug("playlist changed", { playlistId, playlistPath, event })
 
 		await match(event)
 			.with(P.union("add", "change"), () =>
@@ -93,7 +102,10 @@ export function watchPlaylists(): Subscription {
 						})
 					)
 					.onSuccess(() => {
-						logg.silly("Updated smart-playlist", { playlistId, playlistPath })
+						logger.debug("Updated smart-playlist", {
+							playlistId,
+							playlistPath
+						})
 					})
 					.onFailure((error) =>
 						addErrorNotification(
@@ -107,7 +119,10 @@ export function watchPlaylists(): Subscription {
 				database
 					.deletePlaylist(playlistId)
 					.onSuccess(() => {
-						logg.silly("Removed smart-playlist", { playlistId, playlistPath })
+						logger.debug("Removed smart-playlist", {
+							playlistId,
+							playlistPath
+						})
 					})
 					.onFailure((error) =>
 						addErrorNotification(

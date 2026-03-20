@@ -1,13 +1,10 @@
 import { useEffect } from "react"
-import { enumarateError, logg } from "#/logs"
+import { logger } from "#/logs"
 import { CowSay } from "./cowsay"
 
 export function ErrorScreen({ error }: { error: unknown }) {
 	useEffect(() => {
-		logg.error(
-			"An error occured in the app (error screen)",
-			enumarateError(error)
-		)
+		logger.error("An error occured in the app (error screen)", error)
 	}, [error])
 
 	return (

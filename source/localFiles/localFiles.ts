@@ -15,26 +15,32 @@ import {
 	share
 } from "rxjs"
 import { Result } from "typescript-result"
-import { appConfig } from "#/config/config"
 import { DATA_DIRECTORY } from "#/constants"
-import { database } from "#/database/database"
 import { createWatcher } from "#/filesystem"
-import { enumarateError, logg } from "#/logs"
-import { addErrorNotification } from "#/state/state"
+import { logger } from "#/logs"
 import { writeTags } from "./ffmpeg"
 import { supportedFormats } from "./formats"
 import type { TrackFileMeta } from "#/database/schema"
 import type { AppDatabase, TrackData, TrackId } from "#/database/types"
-import type { FilePath } from "#/types/types"
+import type { ErrorNotificationFn, FilePath } from "#/types/types"
 import type { Observable } from "rxjs"
 
-export async function updateDatabase(
-	musicDirectories: readonly FilePath[],
-	database: AppDatabase
-): Promise<Result<void, Error | readonly Error[]>> {
+export async function updateDatabase({
+	musicDirectories,
+	database,
+	addErrorNotification,
+	tagSeparator
+}: {
+	readonly musicDirectories: readonly FilePath[]
+	readonly database: AppDatabase
+	readonly addErrorNotification: ErrorNotificationFn
+	readonly tagSeparator: string
+}): Promise<Result<void, Error | readonly Error[]>> {
 	return Result.fromAsync(scanMusicDirectories(musicDirectories)).map(
 		async (filePaths) => {
-			return Result.fromAsync(batchTrackUpdates(filePaths, database))
+			return Result.fromAsync(
+				batchTrackUpdates(filePaths, database, tagSeparator)
+			)
 				.map(({ errors }) => {
 					if (errors.length) {
 						addErrorNotification(
@@ -75,7 +81,8 @@ type BatchUpdate = Result<
 
 async function batchTrackUpdates(
 	filePaths: readonly FilePath[],
-	database: AppDatabase
+	database: AppDatabase,
+	tagSeparator: string
 ): Promise<BatchUpdate> {
 	const BATCH_AMOUNT = 25
 
@@ -100,7 +107,9 @@ async function batchTrackUpdates(
 		).then(R.filter(R.isNonNullish))
 
 		const { tracksData, parsingErrors } = pipe(
-			await Promise.all(filtered.map(parseMusicFile)),
+			await Promise.all(
+				filtered.map((file) => parseMusicFile(file, tagSeparator))
+			),
 			R.reduce(
 				(accumulator, result) => {
 					result.fold(
@@ -166,10 +175,17 @@ async function scanMusicDirectory(
  * */
 const bufferWatcherTime = 6_000
 
-export function watchAndUpdateDatabase(
-	musicDirectories: readonly FilePath[],
-	database: AppDatabase
-): () => void {
+export function watchAndUpdateDatabase({
+	musicDirectories,
+	database,
+	addErrorNotification,
+	tagSeparator
+}: {
+	readonly musicDirectories: readonly FilePath[]
+	readonly database: AppDatabase
+	readonly addErrorNotification: ErrorNotificationFn
+	readonly tagSeparator: string
+}): () => void {
 	const watcher$ = createMusicDirectoriesWatcher(musicDirectories)
 	const watcherRelease$ = watcher$.pipe(debounceTime(bufferWatcherTime))
 
@@ -204,7 +220,7 @@ export function watchAndUpdateDatabase(
 						continue
 					}
 
-					const result = await parseMusicFile(file)
+					const result = await parseMusicFile(file, tagSeparator)
 					result
 						.onSuccess((track) => {
 							parsed.push(track)
@@ -229,7 +245,8 @@ export function watchAndUpdateDatabase(
  * Also saves the cover art to the data directory. Errors for that just get ignored.
  */
 export async function parseMusicFile(
-	filePath: FilePath
+	filePath: FilePath,
+	tagSeparator: string
 ): Promise<Result<TrackData, Error>> {
 	return Result.fromAsyncCatching(
 		Bun.file(filePath)
@@ -275,7 +292,7 @@ export async function parseMusicFile(
 		// not so nice, but where would this side-effect make more sense
 		if (shouldWriteCover) {
 			await Bun.write(coverData.filePath, coverData.data).catch((error) => {
-				logg.error(`Failed to save cover image of ${filePath}`, error)
+				logger.error(`Failed to save cover image of ${filePath}`, error)
 			})
 		}
 
@@ -374,11 +391,11 @@ export async function parseMusicFile(
 
 			// The quick edit tags
 			genre: joinedTags.genre
-				?.split(appConfig.quickEdit.tagSeperator)
+				?.split(tagSeparator)
 				.map((genre) => genre.trim())
 				.filter(R.isNonNullish),
 			mood: tags.mood
-				?.split(appConfig.quickEdit.tagSeperator)
+				?.split(tagSeparator)
 				.map((mood) => mood.trim())
 				.filter(R.isNonNullish)
 		} satisfies TrackData
@@ -422,7 +439,7 @@ async function isSameAsInDatabase(
 				mtime.valueOf() === metaddata.mtime && size === metaddata.size
 		)
 		.onFailure((error) => {
-			logg.error("failed to stat", { error: enumarateError(error) })
+			logger.error("failed to stat", error)
 		})
 		.getOrDefault(false)
 }
@@ -434,14 +451,20 @@ async function isSameAsInDatabase(
 export async function updateFileTags({
 	id,
 	genre,
-	mood
+	mood,
+	database,
+	tagSeparator
 }: {
-	id: TrackId
-	mood?: readonly string[]
-	genre?: readonly string[]
+	readonly id: TrackId
+	readonly database: AppDatabase
+	readonly mood?: readonly string[]
+	readonly genre?: readonly string[]
+	readonly tagSeparator: string
 }): Promise<void> {
-	await writeTags({ id, genre, mood })
-	const track = (await parseMusicFile(id as unknown as FilePath)).getOrThrow()
+	await writeTags({ id, genre, mood, tagSeparator })
+	const track = (
+		await parseMusicFile(id as unknown as FilePath, tagSeparator)
+	).getOrThrow()
 
 	await database.upsertTracks([track])
 }

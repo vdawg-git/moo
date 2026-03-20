@@ -1,14 +1,29 @@
+import { createHash } from "node:crypto"
 import os from "node:os"
 import MprisService from "@jellybrick/mpris-service"
 import * as R from "remeda"
 import { filter } from "rxjs"
-import { logg } from "#/logs"
-import { currentTrack$, loop$, playState$ } from "#/state/derivedState"
-import { appState } from "#/state/state"
+import { logger } from "#/logs"
 import type { MprisEventsCatalog } from "@jellybrick/mpris-service"
+import type { LocalTrack } from "#/database/localTrack"
+import type { AppStore } from "#/state/state"
+import type { AppState } from "#/state/types"
+import type { Observable } from "rxjs"
+
+type MprisDeps = {
+	readonly appState: AppStore
+	readonly currentTrack$: Observable<LocalTrack | undefined>
+	readonly loop$: Observable<AppState["playback"]["loopState"]>
+	readonly playState$: Observable<AppState["playback"]["playState"]>
+}
 
 /** Handles mpris. Does nothing if not compiled for Linux */
-export function handleMpris() {
+export function handleMpris({
+	appState,
+	currentTrack$,
+	loop$,
+	playState$
+}: MprisDeps) {
 	if (os.platform() !== "linux") {
 		return () => {}
 	}
@@ -21,28 +36,22 @@ export function handleMpris() {
 
 	const subscriptionCurrentTrack = currentTrack$
 		.pipe(filter(R.isNonNullish))
-		.subscribe((_track) => {
-			// TODO fixme
-			// mpris-service logs warnings when passing undefined as it tries to parse it into values,
-			// so we conditonally spread the object
-			// mpris.metadata = {
-			// 	"mpris:trackid": track.id,
-			// 	...(track.title && { "xesam:title": track.title }),
-			// 	...(track.album && { "xesam:album": track.album }),
-			// 	...(track.artist && {
-			// 		"xesam:artist": [track.artist]
-			// 	}),
-			// 	...(track.picture && {
-			// 		"mpris:artUrl": `file://${track.picture}`
-			// 	}),
-			// 	...(track.genre && {
-			// 		"xesam:genre": [track.genre]
-			// 	})
-			// }
-			// Setting duration crashes
-			// "mpris:length": track?.duration,
-			// I dont get what I should pass as ID, but it works without it
-			// "mpris:trackid": track?.id,
+		.subscribe((track) => {
+			const trackIdHash = createHash("md5").update(track.id).digest("hex")
+
+			mpris.metadata = {
+				"mpris:trackid": `/org/mpris/MediaPlayer2/Track/${trackIdHash}`,
+				...(track.title && { "xesam:title": track.title }),
+				...(track.album && { "xesam:album": track.album }),
+				...(track.artist && { "xesam:artist": [track.artist] }),
+				...(track.picture && {
+					"mpris:artUrl": `file://${track.picture}`
+				}),
+				...(track.genre && { "xesam:genre": [...track.genre] }),
+				...(track.duration && {
+					"mpris:length": Math.round(track.duration * 1_000_000)
+				})
+			}
 		})
 
 	const subscriptionPlayState = playState$.subscribe((playState) => {
@@ -77,26 +86,18 @@ export function handleMpris() {
 		[T in keyof MprisEventsCatalog]?: (data: MprisEventsCatalog[T]) => void
 	} = {
 		next: () => appState.send({ type: "nextTrack" }),
-		previous: () => {
-			appState.send({ type: "previousTrack" })
-		},
-		playpause: () => {
-			appState.send({ type: "togglePlayback" })
-		},
-		pause: () => {
-			appState.send({ type: "togglePlayback" })
-		},
-		play: () => {
-			appState.send({ type: "togglePlayback" })
-		},
-		stop: () => appState.send({ type: "togglePlayback" }),
+		previous: () => appState.send({ type: "previousTrack" }),
+		playpause: () => appState.send({ type: "togglePlayback" }),
+		pause: () => appState.send({ type: "pausePlayback" }),
+		play: () => appState.send({ type: "resumePlayback" }),
+		stop: () => appState.send({ type: "stopPlayback" }),
 		quit: () => appState.send({ type: "stopPlayback" })
 	}
 
 	for (const [event, handler] of Object.entries(handlers)) {
 		//@ts-expect-error
 		mpris.on(event, (data) => {
-			logg.debug("mpris event", { event, data })
+			logger.debug("mpris event", { event, data })
 			//@ts-expect-error
 			handler(data)
 		})

@@ -6,49 +6,72 @@ import {
 	shareReplay,
 	switchMap
 } from "rxjs"
-import { database, LocalTrack } from "#/database/database"
-import { observeQuery } from "#/database/useQuery"
-import { enumarateError, logg } from "#/logs"
-import { addErrorNotification, appState$ } from "./state"
+import { LocalTrack } from "#/database/localTrack"
+import { O } from "#/lib/option"
 import { getCurrentTrackIdFromState } from "./stateUtils"
+import type { AppDatabase } from "#/database/types"
+import type { QuerySystem } from "#/database/useQuery"
+import type { Player } from "#/player/types"
+import type { ErrorNotificationFn } from "#/types/types"
 import type { Observable } from "rxjs"
+import type { AppState } from "./types"
 
-const playback$ = appState$.pipe(
-	map((state) => state.playback),
-	shareReplay(1)
-)
-export const loop$ = playback$.pipe(
-	map((state) => state.loopState),
-	distinctUntilChanged(),
-	shareReplay(1)
-)
+export function createDerivedState({
+	appState$,
+	database,
+	player,
+	addErrorNotification,
+	observeQuery
+}: {
+	readonly appState$: Observable<AppState>
+	readonly database: AppDatabase
+	readonly player: Player
+	readonly addErrorNotification: ErrorNotificationFn
+	readonly observeQuery: QuerySystem["observeQuery"]
+}) {
+	const playback$ = appState$.pipe(
+		map((state) => state.playback),
+		shareReplay(1)
+	)
 
-export const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
-	map(getCurrentTrackIdFromState),
-	distinctUntilChanged(),
-	switchMap((idMaybe) => {
-		if (!idMaybe) return of(undefined)
+	const loop$ = playback$.pipe(
+		map((state) => state.loopState),
+		distinctUntilChanged(),
+		shareReplay(1)
+	)
 
-		return observeQuery(["track", idMaybe], () =>
-			database.getTrack(idMaybe)
-		).pipe(
-			filter(({ isFetched }) => isFetched),
-			map(({ data }) =>
-				data
-					?.onFailure((error) => {
-						logg.error("Failed to get current track *&+", enumarateError(error))
-						addErrorNotification("Failed to get current track")
-					})
-					.getOrDefault(undefined)
+	const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
+		map(getCurrentTrackIdFromState),
+		distinctUntilChanged(),
+		switchMap((idMaybe) => {
+			if (!idMaybe) return of(undefined)
+
+			return observeQuery(["track", idMaybe], () =>
+				database.getTrack(idMaybe)
+			).pipe(
+				filter(({ isFetched }) => isFetched),
+				map(({ data }) =>
+					data
+						?.onFailure((error) => {
+							addErrorNotification(
+								"Failed to get current track",
+								error,
+								"Failed to get current track *&+"
+							)
+						})
+						.getOrDefault(undefined)
+				)
 			)
-		)
-	}),
-	map((trackMaybe) => (trackMaybe ? new LocalTrack(trackMaybe) : trackMaybe)),
-	shareReplay({ bufferSize: 1, refCount: false })
-)
+		}),
+		map(O.maybe((track) => new LocalTrack(track, player))),
+		shareReplay({ bufferSize: 1, refCount: false })
+	)
 
-export const playState$ = playback$.pipe(
-	map((playback) => playback.playState),
-	distinctUntilChanged(),
-	shareReplay(1)
-)
+	const playState$ = playback$.pipe(
+		map((playback) => playback.playState),
+		distinctUntilChanged(),
+		shareReplay(1)
+	)
+
+	return { playback$, currentTrack$, playState$, loop$ }
+}

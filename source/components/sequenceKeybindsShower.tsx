@@ -1,4 +1,5 @@
 import { TextAttributes } from "@opentui/core"
+import { useAppContext } from "#/appContext"
 import { useColors } from "#/hooks/useColors"
 import { useGetNextKeySequence } from "#/keybindManager/keybindManager"
 import type { SequencePart } from "#/keybindManager/keybindManager"
@@ -9,7 +10,11 @@ type NextUpKeybind = { label: string; toPress: string; id: string }
  * Shows which keybinds can be pressed next.
  */
 export function NextUpKeybinds() {
-	const sequencePartMaybe = useGetNextKeySequence()
+	const { keybindManager } = useAppContext()
+	const sequencePartMaybe = useGetNextKeySequence(
+		// refactor the hook can just call useAppContext by itself
+		keybindManager.keySequenceResult$
+	)
 
 	const toDisplay = sequencePartMaybe && sequencePartToNextUp(sequencePartMaybe)
 	const colors = useColors()

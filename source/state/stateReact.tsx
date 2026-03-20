@@ -4,12 +4,20 @@ import {
 	NotificationModal,
 	notificationModalId
 } from "#/components/notifications"
-import { appState, appState$ } from "./state"
+import type { Observable } from "rxjs"
+import type { AppStore } from "./state"
+import type { AppState } from "./types"
 
 /**
  * Will get refactored once its bigger
  */
-export function manageNotifications() {
+export function manageNotifications({
+	appState,
+	appState$
+}: {
+	readonly appState: AppStore
+	readonly appState$: Observable<AppState>
+}) {
 	const subscription = appState$
 		.pipe(
 			filter(

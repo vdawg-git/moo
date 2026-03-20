@@ -1,5 +1,4 @@
 import { Result } from "typescript-result"
-import { addErrorNotification } from "#/state/state"
 import type { PlaylistBlueprint } from "#/smartPlaylists/schema"
 import type { FilePath } from "#/types/types"
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
@@ -160,42 +159,20 @@ export abstract class Track {
 	// and a simpler interface
 
 	play() {
-		return Result.fromAsync(this.player.play(this.id)).onFailure((error) =>
-			addErrorNotification(
-				`Failed to play track ${this.title ?? this.id}`,
-				error,
-				"Track playback failed"
-			)
-		)
+		return Result.fromAsync(this.player.play(this.id))
 	}
+
 	pause() {
-		return Result.fromAsync(this.player.pause(this.id)) //
-			.onFailure((error) =>
-				addErrorNotification(
-					`Failed to pause track ${this.title ?? this.id}`,
-					error
-				)
-			)
+		return Result.fromAsync(this.player.pause(this.id))
 	}
+
 	clear() {
-		return Result.fromAsync(this.player.clear()).onFailure((error) =>
-			addErrorNotification(
-				`Failed to clear old track ${this.title ?? this.id}`,
-				error,
-				"Failed to clear player"
-			)
-		)
+		return Result.fromAsync(this.player.clear())
 	}
 
 	/** Duration in seconds to seek. Can be negative */
 	seek(duration: number) {
-		return Result.fromAsync(this.player.seek(duration)).onFailure((error) =>
-			addErrorNotification(
-				`Failed to seek track ${this.id}`,
-				error,
-				"Seek failed"
-			)
-		)
+		return Result.fromAsync(this.player.seek(duration))
 	}
 
 	/** Track number in the album. See {@link trackNumberTotal} for the total number of tracks */

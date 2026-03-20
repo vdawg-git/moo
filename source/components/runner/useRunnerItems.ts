@@ -12,14 +12,14 @@ import {
 } from "rxjs"
 import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
-import { appConfig } from "#/config/config"
-import { database } from "#/database/database"
-import { observeQuery } from "#/database/useQuery"
+import { useAppContext } from "#/appContext"
+import { useConfig } from "#/config/configContext"
 import { keybindsState } from "#/keybindManager/keybindsState"
-import { enumarateError, logg } from "#/logs"
-import { addErrorNotification, appState } from "#/state/state"
-import { searchModes, searchModesList } from "./consts"
+import { logger } from "#/logs"
+import { getSearchModes, getSearchModesList } from "./consts"
 import { openRunner } from "./runner"
+import type { AppContext } from "#/appContext"
+import type { AppConfig } from "#/config/config"
 import type { Observable } from "rxjs"
 import type { SearchMode, SearchModeType } from "./consts"
 import type { RunnerItem } from "./runner"
@@ -39,6 +39,8 @@ export function useRunnerItems({
 	items: readonly RunnerItem[]
 	mode: SearchMode | undefined
 } {
+	const context = useAppContext()
+	const config = useConfig()
 	const [items, setItems] = useState<readonly RunnerItem[]>([])
 	const [mode, setMode] = useState<SearchMode | undefined>(undefined)
 	const [input, setInput] = useState<string | undefined>(initialValue)
@@ -48,8 +50,12 @@ export function useRunnerItems({
 		Subject<string | undefined>
 	>(new Subject())
 
+	// oxlint-disable eslint-plugin-react-hooks(exhaustive-deps) — context and config are stable
 	useEffect(() => {
-		const { results$, mode$, input$ } = createGetRunnerItems()
+		const { results$, mode$, input$ } = createGetRunnerItems(
+			context,
+			config.icons
+		)
 		setResultsInput$(input$)
 
 		const itemsSubscription = results$.subscribe(setItems)
@@ -60,6 +66,7 @@ export function useRunnerItems({
 				subscription.unsubscribe()
 			)
 	}, [])
+	// oxlint-enable eslint-plugin-react-hooks(exhaustive-deps)
 
 	useEffect(() => resultsInput$.next(input), [input, resultsInput$])
 	useEffect(
@@ -75,18 +82,26 @@ export function useRunnerItems({
 	}
 }
 
-function createGetRunnerItems(): {
+function createGetRunnerItems(
+	context: AppContext,
+	icons: AppConfig["icons"]
+): {
 	input$: Subject<string | undefined>
 	results$: Observable<readonly RunnerItem[]>
 	mode$: Observable<SearchMode | undefined>
 } {
+	const { query, database, appState, notifications } = context
+	const addErrorNotification = notifications.addError
+
+	const searchModesList = getSearchModesList(icons)
+
 	const input$ = new Subject<string | undefined>()
 	const inputParsed$ = input$.pipe(
 		map((input) => input?.trim()),
 		filter(R.isNonNullish),
 		distinctUntilChanged(),
 		startWith(""),
-		map(rawInputToPrefixed),
+		map((input) => rawInputToPrefixed(input, searchModesList)),
 		shareReplay({ refCount: true, bufferSize: 1 })
 	)
 
@@ -96,34 +111,40 @@ function createGetRunnerItems(): {
 		switchMap((input) => {
 			const searchModeType: SearchModeType = input.searchMode?.type ?? "goTo"
 
-			const queryRunnerItems = getQueryForRunnerItems(searchModeType)
-
-			return observeQuery([searchModeType, input.value], queryRunnerItems).pipe(
-				map(
-					(result) =>
-						result.data?.fold(
-							(items) =>
-								input.value
-									? new Fuse(items, {
-											isCaseSensitive: false,
-											findAllMatches: false,
-											shouldSort: true,
-											keys: ["label", "id"] satisfies (keyof RunnerItem)[]
-										})
-											.search(input.value, { limit: 35 })
-											.map(({ item }) => {
-												return item
-											})
-									: items,
-							(error) => {
-								logg.error("failed to query runner items", {
-									error: enumarateError(error)
-								})
-								return []
-							}
-						) ?? []
-				)
+			const queryRunnerItems = getQueryForRunnerItems(
+				searchModeType,
+				database,
+				appState,
+				addErrorNotification,
+				icons
 			)
+
+			return query
+				.observeQuery([searchModeType, input.value], queryRunnerItems)
+				.pipe(
+					map(
+						(result) =>
+							result.data?.fold(
+								(items) =>
+									input.value
+										? new Fuse(items, {
+												isCaseSensitive: false,
+												findAllMatches: false,
+												shouldSort: true,
+												keys: ["label", "id"] satisfies (keyof RunnerItem)[]
+											})
+												.search(input.value, { limit: 35 })
+												.map(({ item }) => {
+													return item
+												})
+										: items,
+								(error) => {
+									logger.error("failed to query runner items", error)
+									return []
+								}
+							) ?? []
+					)
+				)
 		})
 	)
 
@@ -134,7 +155,10 @@ function createGetRunnerItems(): {
 	}
 }
 
-function rawInputToPrefixed(input: string): ParsedInput {
+function rawInputToPrefixed(
+	input: string,
+	searchModesList: readonly SearchMode[]
+): ParsedInput {
 	const searchMode = searchModesList.find(({ prefix }) =>
 		input.startsWith(prefix)
 	)
@@ -148,14 +172,21 @@ function rawInputToPrefixed(input: string): ParsedInput {
 }
 
 function getQueryForRunnerItems(
-	mode: SearchModeType
+	mode: SearchModeType,
+	database: AppContext["database"],
+	appState: AppContext["appState"],
+	addErrorNotification: AppContext["notifications"]["addError"],
+	icons: AppConfig["icons"]
 ): () => Promise<readonly RunnerItem[]> {
 	return match(mode)
 		.returnType<() => Promise<readonly RunnerItem[]>>()
 
 		.with("commands", () => () => Promise.resolve(getRunnerCommands()))
 
-		.with(P.union("goTo", "playlists"), () => getGoTos)
+		.with(
+			P.union("goTo", "playlists"),
+			() => () => getGoTos(database, appState, icons)
+		)
 
 		.with(
 			"albums",
@@ -172,16 +203,16 @@ function getQueryForRunnerItems(
 									onSelect: () =>
 										appState.send({
 											type: "navigateTo",
-											goTo: { route: "album", parameter: { id: album.id } }
+											goTo: {
+												route: "album",
+												parameter: { id: album.id }
+											}
 										})
 								}) satisfies RunnerItem
 						)
 					)
 					.onFailure((error) => {
 						addErrorNotification("Failed to get albums", error)
-						logg.error("Failed to get albums", {
-							error: enumarateError(error)
-						})
 					})
 					.getOrElse(() => [] as readonly RunnerItem[])
 		)
@@ -201,16 +232,16 @@ function getQueryForRunnerItems(
 									onSelect: () =>
 										appState.send({
 											type: "navigateTo",
-											goTo: { route: "artist", parameter: { id: artist.name } }
+											goTo: {
+												route: "artist",
+												parameter: { id: artist.name }
+											}
 										})
 								}) satisfies RunnerItem
 						)
 					)
 					.onFailure((error) => {
 						addErrorNotification("Failed to get artists", error)
-						logg.error("Failed to get artists", {
-							error: enumarateError(error)
-						})
 					})
 					.getOrElse(() => [] as readonly RunnerItem[])
 		)
@@ -235,28 +266,34 @@ function getRunnerCommands(): RunnerItem[] {
 		.toArray()
 }
 
-async function getGoTos(): Promise<readonly RunnerItem[]> {
+async function getGoTos(
+	database: AppContext["database"],
+	appState: AppContext["appState"],
+	icons: AppConfig["icons"]
+): Promise<readonly RunnerItem[]> {
+	const searchModes = getSearchModes(icons)
+
 	const artists: RunnerItem = {
 		id: "go-to-artists",
 		label: "Artists",
 		type: "go-to",
-		icon: appConfig.icons.artist,
-		onSelect: () => openRunner(searchModes.artists.prefix)
+		icon: icons.artist,
+		onSelect: () => openRunner(appState, searchModes.artists.prefix)
 	}
 
 	const albums: RunnerItem = {
 		id: "go-to-albums",
 		label: "Albums",
 		type: "go-to",
-		icon: appConfig.icons.album,
-		onSelect: () => openRunner(searchModes.albums.prefix)
+		icon: icons.album,
+		onSelect: () => openRunner(appState, searchModes.albums.prefix)
 	}
 
 	const home: RunnerItem = {
 		id: "all-tracks",
 		label: "All tracks",
 		type: "go-to",
-		icon: appConfig.icons.playlist,
+		icon: icons.playlist,
 		onSelect: () =>
 			appState.send({ type: "navigateTo", goTo: { route: "home" } })
 	}
@@ -265,17 +302,20 @@ async function getGoTos(): Promise<readonly RunnerItem[]> {
 		id: "queue-page",
 		label: "Queue",
 		type: "go-to",
-		icon: appConfig.icons.playlist,
+		icon: icons.playlist,
 		onSelect: () =>
 			appState.send({ type: "navigateTo", goTo: { route: "queue" } })
 	}
 
-	const playlist = await getPlaylistRunnerItems()
+	const playlist = await getPlaylistRunnerItems(database, appState)
 
 	return [home, artists, albums, queue, ...playlist]
 }
 
-async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
+async function getPlaylistRunnerItems(
+	database: AppContext["database"],
+	appState: AppContext["appState"]
+): Promise<RunnerItem[]> {
 	return Result.fromAsync(database.getPlaylists())
 		.map(
 			R.map(
@@ -292,8 +332,8 @@ async function getPlaylistRunnerItems(): Promise<RunnerItem[]> {
 					}) satisfies RunnerItem
 			)
 		)
-		.onFailure((error) =>
-			addErrorNotification("Failed to get playlists for search", error)
-		)
+		.onFailure((error) => {
+			logger.error("Failed to get playlists for search", error)
+		})
 		.getOrDefault([] as RunnerItem[])
 }

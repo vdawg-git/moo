@@ -1,26 +1,22 @@
 import { useKeyboard } from "@opentui/react"
 import { useEffect, useRef, useState } from "react"
-import { pickCommands } from "#/commands/commandFunctions"
-import { appConfig } from "#/config/config"
+import { useAppContext } from "#/appContext"
+import { useConfig } from "#/config/configContext"
 import { useColors } from "#/hooks/useColors"
-import {
-	registerKeybinds,
-	unregisterKeybinds
-} from "#/keybindManager/keybindManager"
-import { logg } from "#/logs"
-import { appState } from "#/state/state"
 import { Input } from "../Input"
 import { Select } from "../select"
 import { useRunnerItems } from "./useRunnerItems"
 import type { InputRenderable, KeyEvent, RGBA } from "@opentui/core"
+import type { AppConfig } from "#/config/config"
 import type { AppColor, AppColorName } from "#/config/theme"
+import type { AppStore } from "#/state/state"
 import type { AppModalContentProps } from "#/state/types"
 import type { RefObject } from "react"
 import type React from "react"
 
 const runnerId = "_runner"
 
-export function openRunner(initialSearch?: string) {
+export function openRunner(appState: AppStore, initialSearch?: string) {
 	const id = runnerId + (initialSearch ?? "")
 
 	appState.send({
@@ -56,6 +52,8 @@ type RunnerProps = {
 }
 
 function Runner({ modal, initialValue }: RunnerProps) {
+	const { keybindManager } = useAppContext()
+	const config = useConfig()
 	const { items, setInput, mode, input } = useRunnerItems({ initialValue })
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [focused, setFocused] = useState<"input" | "list">("input")
@@ -124,19 +122,26 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		// TODO the command still shows, even though it is removed from the keybindingsState
 		// but maybe there is another registration with different keybindings in my config
 		// Need to check later
-		const toUnregister =
-			mode.type === "commands" && pickCommands(["runner.openCommands"])
+		const openCommandsData = config.keybindings.get("runner.openCommands")
+		const toUnregister = mode.type === "commands"
+			&& openCommandsData && [
+				{
+					id: "runner.openCommands",
+					...openCommandsData,
+					callback: () => {}
+				}
+			]
 
 		if (toUnregister) {
-			unregisterKeybinds(toUnregister)
+			keybindManager.unregisterKeybinds(toUnregister)
 		}
 
 		return () => {
 			if (toUnregister) {
-				registerKeybinds(toUnregister, { when: "default" })
+				keybindManager.registerKeybinds(toUnregister, { when: "default" })
 			}
 		}
-	}, [mode, modal])
+	}, [mode, modal, keybindManager, config.keybindings])
 
 	return (
 		<box flexDirection="column" minWidth={"50%"} width={"50%"} maxWidth={50}>
@@ -274,12 +279,16 @@ type RunnerItemProps = {
 
 // const itemIconColor: Record<RunnerItem['type'], RGBA>
 
-const runnerListItemIconByType: Record<RunnerItem["type"], string> = {
-	"go-to": appConfig.icons.arrow,
-	album: appConfig.icons.album,
-	artist: appConfig.icons.artist,
-	command: appConfig.icons.command,
-	playlist: appConfig.icons.playlist
+function getRunnerListItemIconByType(
+	icons: AppConfig["icons"]
+): Record<RunnerItem["type"], string> {
+	return {
+		"go-to": icons.arrow,
+		album: icons.album,
+		artist: icons.artist,
+		command: icons.command,
+		playlist: icons.playlist
+	}
 }
 
 // oxlint-disable eslint(no-unused-vars)
@@ -288,6 +297,7 @@ function RunnerListItem({
 	focused,
 	listFocused
 }: RunnerItemProps): React.ReactNode {
+	const config = useConfig()
 	const colors = useColors()
 
 	const backgroundColor: AppColor | undefined = focused
@@ -308,7 +318,7 @@ function RunnerListItem({
 	}
 
 	const iconColor = iconColors[item.type]
-	const icon = item.icon ?? runnerListItemIconByType[item.type]
+	const icon = item.icon ?? getRunnerListItemIconByType(config.icons)[item.type]
 
 	return (
 		<box minWidth={40} flexDirection="row">

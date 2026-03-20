@@ -1,16 +1,16 @@
 import { useSelector } from "@xstate/store/react"
+import { useAppContext } from "#/appContext"
 import { LoadingText } from "#/components/loadingText"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
-import { database } from "#/database/database"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
 import { createQueryKey } from "#/queryKey"
-import { appState, playNewPlayback } from "#/state/state"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 
 export function All() {
+	const { database, playNewPlayback, appState } = useAppContext()
 	const response = useQuery(createQueryKey.all(), database.getTracks)
 	const playback = usePlaybackData()
 	const playingIndex = usePlayingIndex({ type: "all" })

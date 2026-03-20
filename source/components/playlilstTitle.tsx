@@ -1,5 +1,5 @@
 import { TextAttributes } from "@opentui/core"
-import { appConfig } from "#/config/config"
+import { useConfig } from "#/config/configContext"
 import { useColors } from "#/hooks/useColors"
 import type { AppColor } from "#/config/theme"
 
@@ -14,8 +14,11 @@ export function PlaylistTitle({
 	title,
 	tracksAmount,
 	color,
-	icon = appConfig.icons.playlist
+	icon
 }: PlaylistTitleProps) {
+	// refactor a useIcons hook is nicer
+	const config = useConfig()
+	const resolvedIcon = icon ?? config.icons.playlist
 	const colors = useColors()
 	const isEmpty = tracksAmount === 0
 
@@ -28,7 +31,7 @@ export function PlaylistTitle({
 			zIndex={5}
 		>
 			<text fg={color ?? colors.magenta} attributes={TextAttributes.BOLD}>
-				{icon + "  "}
+				{resolvedIcon + "  "}
 				{title}{" "}
 			</text>
 			<text

@@ -1,8 +1,11 @@
 import { TextAttributes } from "@opentui/core"
-import { appConfig } from "#/config/config"
+import { useConfig } from "#/config/configContext"
 import { useColors } from "#/hooks/useColors"
-import { appState } from "#/state/state"
-import { useCurrentTrack, usePlaybackData } from "#/state/useSelectors"
+import {
+	useAppState,
+	useCurrentTrack,
+	usePlaybackData
+} from "#/state/useSelectors"
 import type { BaseTrack } from "#/database/types"
 
 export function Playbar() {
@@ -39,6 +42,8 @@ function MediaControl() {
 	const hasPlayback = playState !== "stopped"
 	const isShuffling = !!shuffleMap
 	const colors = useColors()
+	const appState = useAppState()
+	const config = useConfig()
 
 	return (
 		<box flexDirection="column" height={2}>
@@ -50,7 +55,7 @@ function MediaControl() {
 					paddingRight={1}
 					fg={colors.fg}
 				>
-					{appConfig.icons.previous}
+					{config.icons.previous}
 				</text>
 
 				<text
@@ -60,9 +65,7 @@ function MediaControl() {
 					paddingRight={1}
 					fg={colors.fg}
 				>
-					{playState === "playing"
-						? appConfig.icons.pause
-						: appConfig.icons.play}
+					{playState === "playing" ? config.icons.pause : config.icons.play}
 				</text>
 
 				<text
@@ -72,7 +75,7 @@ function MediaControl() {
 					paddingRight={1}
 					fg={colors.fg}
 				>
-					{appConfig.icons.next}
+					{config.icons.next}
 				</text>
 			</box>
 
@@ -81,7 +84,7 @@ function MediaControl() {
 				onMouseUp={() => appState.send({ type: "toggleShuffle" })}
 				fg={colors.fg}
 			>
-				{isShuffling ? appConfig.icons.shuffle : appConfig.icons.linear}
+				{isShuffling ? config.icons.shuffle : config.icons.linear}
 			</text>
 		</box>
 	)

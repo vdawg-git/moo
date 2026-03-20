@@ -8,8 +8,7 @@ import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
 import { z } from "zod"
 import { TEMP_DIRECTORY } from "#/constants"
-import { logg } from "#/logs"
-import { addErrorNotification } from "#/state/state"
+import { logger } from "#/logs"
 import { createSocketClient } from "./socket"
 import type { Observable } from "rxjs"
 import type { JsonValue } from "type-fest"
@@ -143,10 +142,10 @@ function parseEvent(event: z.infer<typeof mpvEvent>): PlayerEvent | undefined {
 			)
 		})
 
-		.with({ event: "shutdown" }, (event) => {
-			addErrorNotification("MPV shut down", event)
-			return undefined
-		})
+		.with({ event: "shutdown" }, () => ({
+			type: "error" as const,
+			error: "MPV shut down"
+		}))
 
 		.with({ event: "property-change" }, () => undefined)
 		.exhaustive()
@@ -169,7 +168,7 @@ function runCommand(
 			new Promise((resolve, reject) => {
 				const { payload, id: requestId } = createPayload(command, args)
 
-				logg.debug("mpv command", { command, args, requestId })
+				logger.debug("mpv command", { command, args, requestId })
 				client.write(payload)
 
 				const timeoutId = setTimeout(() => {
@@ -253,7 +252,7 @@ async function spawnMpv(): Promise<SocketWrapper<JsonValue[]>> {
 						try {
 							return JSON.parse(string) as JsonValue
 						} catch (error) {
-							logg.warn("Failed to parse mpv json", { error, string })
+							logger.warn("Failed to parse mpv json", { error, string })
 							return undefined
 						}
 					})
@@ -272,7 +271,7 @@ async function spawnMpv(): Promise<SocketWrapper<JsonValue[]>> {
 		.values()
 		.next()
 		.then((data) => {
-			logg.debug(String(data))
+			logger.debug(String(data))
 		})
 	// setTimeout(() => {
 	// 	resolve()
@@ -286,7 +285,7 @@ async function spawnMpv(): Promise<SocketWrapper<JsonValue[]>> {
 
 	// mpvInstance.stdout.prependOnceListener("data", (event) => {
 	// 	clearTimeout(timeoutId)
-	// 	logg.debug({ socket: event?.toString() })
+	// 	logger.debug({ socket: event?.toString() })
 	// 	resolve()
 	// })
 } */

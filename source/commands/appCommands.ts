@@ -1,4 +1,3 @@
-import { appConfig } from "#/config/config"
 import type { KeybindCommandWhen } from "#/keybindManager/keybindsState"
 import type { Except, OverrideProperties, Simplify } from "type-fest"
 import type {
@@ -31,5 +30,3 @@ export type GeneralCommand = Except<
  * Does not include the callbacks for the commands
  */
 export type AppCommandsMap = Map<AppCommandID, AppCommandBaseData>
-
-export const appCommands: AppCommandsMap = appConfig.keybindings

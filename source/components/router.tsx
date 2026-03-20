@@ -5,7 +5,7 @@ import { ArtistPage } from "#/pages/artistPage"
 import { PlaylistPage } from "#/pages/playlistPage"
 import { QueuePage } from "#/pages/queuePage"
 import { QuickEditPage } from "#/pages/quickEdit/quickEditPage"
-import { appState } from "#/state/state"
+import { useAppState } from "#/state/useSelectors"
 import type { ViewPage, ViewPages } from "#/state/types"
 import type { ReactNode } from "react"
 
@@ -21,6 +21,7 @@ const routes: Routes = {
 }
 
 export function Router() {
+	const appState = useAppState()
 	const viewData = useSelector(
 		appState,
 		({ context: { view } }) => view.history[view.historyIndex]
