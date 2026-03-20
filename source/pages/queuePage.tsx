@@ -93,7 +93,7 @@ function QueueView({ items }: QueueViewProps) {
 
 	const isEmpty = items.length === 0
 
-	const useListReturn = useList({
+	const { register } = useList({
 		items,
 		keepIndex: true,
 
@@ -136,7 +136,7 @@ function QueueView({ items }: QueueViewProps) {
 	return (
 		<List
 			flexDirection="column"
-			register={useListReturn}
+			register={register}
 			render={({ type, track, playState }, { focused }) => (
 				<TrackItem
 					track={track}

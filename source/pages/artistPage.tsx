@@ -53,8 +53,7 @@ export function ArtistPage({ id }: ArtistPageProps) {
 									shuffleMap={playback.shuffleMap}
 									playState={playback.playState}
 									playingIndex={playingIndex}
-									// A bit weird, but useList needs that
-									key={JSON.stringify(album.tracks)}
+									key={id}
 								/>
 							) : (
 								"Album not found. Diz is a bug"

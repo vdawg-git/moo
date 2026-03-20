@@ -4,14 +4,19 @@ import { Input } from "../Input"
 import type { ScrollBoxProps } from "@opentui/react"
 import type { ReactNode } from "react"
 import type { Except } from "type-fest"
-import type { UseListReturn } from "./listState"
+import type { ListRegister } from "./listState"
 import type { ListItemContextData } from "./listTypes"
 
-export { type UseListArgument, type UseListReturn, useList } from "./listState"
+export {
+	type UseListArgument,
+	type UseListResult,
+	type ListRegister,
+	useList
+} from "./listState"
 export type { ListItem } from "./listTypes"
 
 type ListArgument<T> = {
-	register: UseListReturn<T>
+	register: ListRegister<T>
 	render: (item: T, context: ListItemContextData) => ReactNode
 } & Except<ScrollBoxProps, "children">
 
@@ -33,7 +38,9 @@ export function List<T>({
 		mode,
 		setSearchString,
 		searchString,
-		setMode
+		setMode,
+		setIndex,
+		onSelect
 	} = register
 
 	const colors = useColors()
@@ -87,8 +94,8 @@ export function List<T>({
 						<box
 							onMouseDown={() =>
 								focused
-									? register.onSelect(item)
-									: register.setIndex(indexDisplayed)
+									? onSelect(item)
+									: setIndex(indexDisplayed)
 							}
 							key={item.index}
 						>

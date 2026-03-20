@@ -41,7 +41,7 @@ export function Tracklist({
 	const onPlayRef = useRef<PlaylistProps["onPlay"]>(onPlay)
 	onPlayRef.current = onPlay
 
-	const listReturn = useList({
+	const { register } = useList({
 		items: tracks,
 		onSelect: ({ index }) => onPlayRef.current?.(index),
 		onFocusItem: ({ data: track }) =>
@@ -59,7 +59,7 @@ export function Tracklist({
 		</box>
 	) : (
 		<List
-			register={listReturn}
+			register={register}
 			render={(track, { focused: isFocus, indexDisplayed }) => (
 				<TrackItem
 					track={track}

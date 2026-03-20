@@ -1,5 +1,6 @@
 import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store/react"
+import { deepEquals } from "bun"
 import Fuse from "fuse.js"
 import { useEffect, useId, useRef } from "react"
 import { useKeybindings } from "#/keybindManager/useKeybindings"
@@ -9,16 +10,25 @@ import type { ScrollBoxRenderable } from "@opentui/core"
 import type { RefObject } from "react"
 import type { ListItem } from "./listTypes"
 
-export type UseListReturn<T> = {
-	setIndex: (index: number) => void
-	setSearchString: (searchString: string) => void
-	setMode: (mode: ListMode) => void
+/** Opaque handle consumed by the `List` component. Page code should not reach into this. */
+export type ListRegister<T> = {
+	readonly scrollboxRef: React.RefObject<ScrollBoxRenderable | null>
+	readonly items: readonly ListItem<T>[]
+	readonly index: number
+	readonly mode: ListMode
+	readonly searchString: string | undefined
+	readonly setSearchString: (searchString: string) => void
+	readonly setMode: (mode: ListMode) => void
+	readonly setIndex: (index: number) => void
+	readonly onSelect: (item: ListItem<T>) => void
+}
+
+/** Consumer-facing return value of `useList`. */
+export type UseListResult<T> = {
+	register: ListRegister<T>
 	index: number
-	scrollboxRef: React.RefObject<ScrollBoxRenderable | null>
 	items: readonly ListItem<T>[]
-	searchString: string | undefined
-	mode: ListMode
-	onSelect: (item: ListItem<T>) => void
+	setIndex: (index: number) => void
 }
 
 export type UseListArgument<T> = {
@@ -71,7 +81,7 @@ export function useList<T>({
 	keepIndex = false,
 	onFocusItem,
 	onSelect
-}: UseListArgument<T>): UseListReturn<T> {
+}: UseListArgument<T>): UseListResult<T> {
 	const scrollboxRef = useRef<ScrollBoxRenderable>(null)
 	const id = (name ?? "") + useId()
 
@@ -243,22 +253,29 @@ export function useList<T>({
 		return () => subscription.unsubscribe()
 	}, [])
 
-	return {
+	const setIndex = (index: number) =>
+		stateRef.current.state.trigger.setIndex({ index })
+
+	const register: ListRegister<T> = {
 		index,
 		scrollboxRef,
 		items,
 		searchString,
 		mode,
-		setIndex: (index) => stateRef.current.state.trigger.setIndex({ index }),
+		setIndex,
 		setMode: (mode) => stateRef.current.state.trigger.setMode({ mode }),
 		setSearchString: (searchString) =>
 			stateRef.current.state.trigger.setSearchString({ searchString }),
 		onSelect
 	}
+
+	return { register, index, items, setIndex }
 }
 
 type ListState<T> = {
 	items: readonly ListItem<T>[]
+	/** Raw unfiltered source items — used as search base and for shallow comparison */
+	itemsSource: readonly T[]
 	searchString?: string
 	index: number
 	scrollPosition: number
@@ -288,6 +305,7 @@ function createListState<T>({
 	const defaultState: ListState<T> = {
 		index: 0,
 		items: itemsUnfiltered.map((item, index) => ({ data: item, index })),
+		itemsSource: itemsUnfiltered,
 		searchString: undefined,
 		scrollPosition: 0,
 		mode: "default"
@@ -296,13 +314,20 @@ function createListState<T>({
 	const state = createStore({
 		context: defaultState,
 		on: {
-			setItems: (context, { items: newItems }: { items: readonly T[] }) => ({
-				...context,
-				items: newItems.map((item, index) => ({ data: item, index })),
-				index: 0
-			}),
+			setItems: (context, { items: newItems }: { items: readonly T[] }) => {
+				if (deepEquals(context.itemsSource, newItems)) return context
+
+				return {
+					...context,
+					itemsSource: newItems,
+					items: newItems.map((item, index) => ({ data: item, index })),
+					index: 0
+				}
+			},
 
 			updateItems: (context, { items: newItems }: { items: readonly T[] }) => {
+				if (deepEquals(context.itemsSource, newItems)) return context
+
 				const items = newItems.map((item, index) => ({
 					data: item,
 					index
@@ -310,6 +335,7 @@ function createListState<T>({
 
 				return {
 					...context,
+					itemsSource: newItems,
 					items,
 					index: Math.min(context.index, Math.max(0, items.length - 1)),
 					scrollPosition: Math.min(
@@ -338,16 +364,21 @@ function createListState<T>({
 				context,
 				{ searchString }: { searchString: string }
 			) => {
+				const allItems = context.itemsSource.map((item, index) => ({
+					data: item,
+					index
+				}))
+
 				if (!searchString) {
 					return {
 						...context,
 						index: 0,
-						items: defaultState.items,
+						items: allItems,
 						searchString
 					}
 				}
 
-				const items = new Fuse(defaultState.items, {
+				const items = new Fuse(allItems, {
 					keys: searchKeys.map((key) => ({
 						...key,
 						getFn: (item: ListItem<T>) => key.getFunction(item.data)

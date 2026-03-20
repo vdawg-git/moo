@@ -45,8 +45,7 @@ export function PlaylistPage({ id }: PlaylistProps) {
 								shuffleMap={playback.shuffleMap}
 								playState={playback.playState}
 								playingIndex={playingIndex}
-								// A bit weird, but useList needs that
-								key={JSON.stringify(playlist.tracks)}
+								key={id}
 							/>
 						),
 						(error) => <text fg={colors.red}>Error: {String(error)}</text>
