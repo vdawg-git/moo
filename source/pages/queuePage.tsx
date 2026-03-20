@@ -35,25 +35,21 @@ export function QueuePage() {
 	const response: QueryResult<readonly ListItemQueue[]> = useQuery(
 		createQueryKey.tracks(uniqueIds),
 		() =>
-			Result.fromAsyncCatching(database.getTracks(trackIds)).map(
-				(tracks) => {
-					const trackMap = new Map(
-						tracks.map((track) => [track.id, track])
-					)
+			Result.fromAsyncCatching(database.getTracks(trackIds)).map((tracks) => {
+				const trackMap = new Map(tracks.map((track) => [track.id, track]))
 
-					return displayItems.flatMap((item) => {
-						const track = trackMap.get(item.trackId)
-						if (!track) return []
+				return displayItems.flatMap((item) => {
+					const track = trackMap.get(item.trackId)
+					if (!track) return []
 
-						return {
-							type: item.type,
-							track,
-							queueIndex: item.queueIndex,
-							playState: item.playState
-						} satisfies ListItemQueue
-					})
-				}
-			)
+					return {
+						type: item.type,
+						track,
+						queueIndex: item.queueIndex,
+						playState: item.playState
+					} satisfies ListItemQueue
+				})
+			})
 	)
 
 	const colors = useColors()
@@ -61,19 +57,14 @@ export function QueuePage() {
 	return (
 		<>
 			<box flexGrow={1} flexDirection="column">
-				<PlaylistTitle
-					title={"Queue"}
-					tracksAmount={displayItems.length}
-				/>
+				<PlaylistTitle title={"Queue"} tracksAmount={displayItems.length} />
 
 				{response.isLoading ? (
 					<LoadingText />
 				) : (
 					response.data.fold(
 						(items) => <QueueView items={items} />,
-						(error) => (
-							<text fg={colors.red}>Error: {String(error)}</text>
-						)
+						(error) => <text fg={colors.red}>Error: {String(error)}</text>
 					)
 				)}
 			</box>

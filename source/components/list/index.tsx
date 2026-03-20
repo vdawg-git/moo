@@ -93,9 +93,7 @@ export function List<T>({
 					return (
 						<box
 							onMouseDown={() =>
-								focused
-									? onSelect(item)
-									: setIndex(indexDisplayed)
+								focused ? onSelect(item) : setIndex(indexDisplayed)
 							}
 							key={item.index}
 						>

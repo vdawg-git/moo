@@ -1,23 +1,31 @@
-import type { TrackId } from "#/database/types"
+import type { TrackData, TrackId } from "#/database/types"
 import type { AppState, Queue } from "#/state/types"
+import type { LoopState, PlayingState } from "#/types/types"
 
-export function createInitialState(options?: {
-	tracks?: readonly TrackId[]
-	manuallyAdded?: readonly TrackId[]
-}): AppState {
+type CreateStateOptions = {
+	readonly tracks?: readonly TrackId[]
+	readonly manuallyAdded?: readonly TrackId[]
+	readonly index?: number
+	readonly playState?: PlayingState
+	readonly loopState?: LoopState
+	readonly shuffleMap?: readonly number[]
+	readonly isPlayingFromManualQueue?: boolean
+	readonly progress?: number
+}
+
+export function createInitialState(options?: CreateStateOptions): AppState {
 	const tracks = options?.tracks
-	const manuallyAdded = options?.manuallyAdded
 
 	return {
 		playback: {
 			queue: tracks ? { source: { type: "all" }, tracks } : undefined,
-			manuallyAdded: manuallyAdded ?? [],
-			index: 0,
-			playState: "stopped",
-			loopState: "none",
-			shuffleMap: undefined,
-			isPlayingFromManualQueue: false,
-			progress: 0
+			manuallyAdded: options?.manuallyAdded ?? [],
+			index: options?.index ?? 0,
+			playState: options?.playState ?? "stopped",
+			loopState: options?.loopState ?? "none",
+			shuffleMap: options?.shuffleMap,
+			isPlayingFromManualQueue: options?.isPlayingFromManualQueue ?? false,
+			progress: options?.progress ?? 0
 		},
 		view: {
 			historyIndex: 0,
@@ -28,6 +36,19 @@ export function createInitialState(options?: {
 		focusedInputs: [],
 		keybindingWhen: []
 	}
+}
+
+export function mockTrackData(id: string): TrackData {
+	return {
+		id: id as TrackId,
+		sourceProvider: "local",
+		duration: 180,
+		title: `Track ${id}`,
+		artist: "Test Artist",
+		album: "Test Album",
+		mtime: Date.now(),
+		size: 1024
+	} as TrackData
 }
 
 export function createMockQueue(trackCount = 5): Queue {

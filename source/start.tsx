@@ -7,17 +7,12 @@ import { createCommandCallbacks } from "./commands/commandsCallbacks"
 import { getConfig } from "./config/config"
 import { databasePath, IS_DEV } from "./constants"
 import { createDatabase } from "./database/database"
-import { setupFiles } from "./filesystem"
+import { createRealFileSystem, setupFiles } from "./filesystem"
 import { keybindsState } from "./keybindManager/keybindsState"
 import { keys$ } from "./keybindManager/keysStream"
-import { updateDatabase, watchAndUpdateDatabase } from "./localFiles/localFiles"
 import { logger } from "./logs"
 import { createLocalPlayer } from "./player/player"
 import { renderer } from "./renderer"
-import {
-	updateSmartPlaylists,
-	watchPlaylists
-} from "./smartPlaylists/smartPlaylist"
 
 export async function startApp() {
 	await setupFiles()
@@ -39,44 +34,28 @@ export async function startApp() {
 		tagSeparator: appConfig.quickEdit.tagSeperator
 	})
 	const player = createLocalPlayer()
+	const fileSystem = createRealFileSystem()
 
 	const appContext = createAppContext({
 		config: appConfig,
 		database,
 		player,
-		keybindManagerDeps: { keybindsState, keys$ }
+		keybindManagerDeps: { keybindsState, keys$ },
+		fileSystem
 	})
 
-	const addErrorNotification = appContext.notifications.addError
-	const tagSeparator = appConfig.quickEdit.tagSeperator
-
 	const destroyWatcher = appConfig.watchDirectories
-		? watchAndUpdateDatabase({
-				musicDirectories: appConfig.musicDirectories,
-				database,
-				addErrorNotification,
-				tagSeparator
-			})
+		? appContext.musicLibrary.watch()
 		: undefined
 
-	await Result.fromAsync(
-		updateDatabase({
-			musicDirectories: appConfig.musicDirectories,
-			database,
-			addErrorNotification,
-			tagSeparator
-		})
-	)
-		.map(() => updateSmartPlaylists({ database, addErrorNotification }))
+	await Result.fromAsync(appContext.musicLibrary.scan())
+		.map(() => appContext.playlistManager.scanAll())
 		.onFailure((error) => {
 			logger.error("Failed to update db at startup", { error })
 			throw new Error("Failed to update database")
 		})
 
-	const playlistSubscription = watchPlaylists({
-		database,
-		addErrorNotification
-	})
+	const playlistSubscription = appContext.playlistManager.watch()
 
 	const { getCommandCallback } = createCommandCallbacks({
 		appState: appContext.appState,

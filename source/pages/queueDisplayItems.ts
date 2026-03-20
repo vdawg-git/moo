@@ -12,14 +12,14 @@ export type QueueDisplayItem = {
 
 /** Computes the current + upcoming tracks for the queue page display. */
 export function getQueueDisplayItems(
-	playback: AppState["playback"],
+	playback: AppState["playback"]
 ): readonly QueueDisplayItem[] {
 	const { queue, manuallyAdded, isPlayingFromManualQueue, index } = playback
 
 	const item = (
 		queueIndex: number,
 		source: "auto" | "manual",
-		playState?: "playing" | "paused",
+		playState?: "playing" | "paused"
 	): QueueDisplayItem => ({
 		type: source,
 		trackId:
@@ -27,7 +27,7 @@ export function getQueueDisplayItems(
 				? manuallyAdded[queueIndex]!
 				: queue!.tracks[queueIndex]!,
 		queueIndex,
-		playState,
+		playState
 	})
 
 	const current = getCurrentTrack(playback)
@@ -37,8 +37,8 @@ export function getQueueDisplayItems(
 					item(
 						current.queueIndex,
 						current.source,
-						playback.playState === "playing" ? "playing" : "paused",
-					),
+						playback.playState === "playing" ? "playing" : "paused"
+					)
 				]
 			: []
 
@@ -47,8 +47,8 @@ export function getQueueDisplayItems(
 		.slice(manualStart)
 		.map((_, offset) => item(manualStart + offset, "manual"))
 
-	const autoUpcoming = (queue?.tracks.slice(index + 1) ?? []).map(
-		(_, offset) => item(index + 1 + offset, "auto"),
+	const autoUpcoming = (queue?.tracks.slice(index + 1) ?? []).map((_, offset) =>
+		item(index + 1 + offset, "auto")
 	)
 
 	return [...currentItems, ...manualUpcoming, ...autoUpcoming]

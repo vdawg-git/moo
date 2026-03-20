@@ -1,20 +1,8 @@
 import { describe, expect, it } from "bun:test"
 import { firstValueFrom } from "rxjs"
+import { mockTrackData } from "#/testHelpers"
 import { createMemoryDatabase } from "./createMemoryDatabase"
-import type { TrackData, TrackId } from "./types"
-
-function mockTrackData(id: string): TrackData {
-	return {
-		id: id as TrackId,
-		sourceProvider: "local",
-		duration: 180,
-		title: `Track ${id}`,
-		artist: "Test Artist",
-		album: "Test Album",
-		mtime: Date.now(),
-		size: 1024
-	} as TrackData
-}
+import type { TrackId } from "./types"
 
 describe("database integration", () => {
 	it("upsert tracks and query them back", async () => {

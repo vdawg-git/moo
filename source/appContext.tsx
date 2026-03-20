@@ -1,6 +1,9 @@
 import { createContext, useContext } from "react"
+import { DATA_DIRECTORY, playlistsDirectory } from "./constants"
 import { createQuerySystem } from "./database/useQuery"
 import { createKeybindManager } from "./keybindManager/keybindManager"
+import { createMusicLibrary } from "./localFiles/musicLibrary"
+import { createPlaylistManager } from "./smartPlaylists/playlistManager"
 import { createDerivedState } from "./state/derivedState"
 import {
 	createAppState,
@@ -12,17 +15,22 @@ import type { ReactNode } from "react"
 import type { AppConfig } from "./config/config"
 import type { AppDatabase } from "./database/types"
 import type { QuerySystem } from "./database/useQuery"
+import type { AppFileSystem } from "./filesystem"
 import type {
 	KeybindManager,
 	KeybindManagerDeps
 } from "./keybindManager/keybindManager"
+import type { MusicLibrary } from "./localFiles/musicLibrary"
 import type { Player } from "./player/types"
+import type { PlaylistManager } from "./smartPlaylists/playlistManager"
 import type { NotificationAdd, PlaybackSource } from "./state/types"
 
 export type AppContext = {
 	readonly config: AppConfig
 	readonly database: AppDatabase
 	readonly player: Player
+	readonly musicLibrary: MusicLibrary
+	readonly playlistManager: PlaylistManager
 	readonly appState: ReturnType<typeof createAppState>["appState"]
 	readonly appState$: ReturnType<typeof createAppState>["appState$"]
 	readonly notifications: {
@@ -43,12 +51,14 @@ export function createAppContext({
 	config,
 	database,
 	player,
-	keybindManagerDeps
+	keybindManagerDeps,
+	fileSystem
 }: {
 	readonly config: AppConfig
 	readonly database: AppDatabase
 	readonly player: Player
 	readonly keybindManagerDeps: Omit<KeybindManagerDeps, "appState$">
+	readonly fileSystem: AppFileSystem
 }): AppContext {
 	const { appState, appState$ } = createAppState()
 	const { addErrorNotification, addNotification } = createNotificationHelpers({
@@ -72,10 +82,28 @@ export function createAppContext({
 		observeQuery: query.observeQuery
 	})
 
+	const musicLibrary = createMusicLibrary({
+		fileSystem,
+		database,
+		addErrorNotification,
+		musicDirectories: config.musicDirectories,
+		tagSeparator: config.quickEdit.tagSeperator,
+		dataDirectory: DATA_DIRECTORY
+	})
+
+	const playlistManager = createPlaylistManager({
+		fileSystem,
+		database,
+		addErrorNotification,
+		playlistsDirectory
+	})
+
 	return {
 		config,
 		database,
 		player,
+		musicLibrary,
+		playlistManager,
 		appState,
 		appState$,
 		notifications: {

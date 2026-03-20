@@ -11,7 +11,6 @@ import { useConfig } from "#/config/configContext"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
 import { useFocusItems, useFocusItemsKeybings } from "#/hooks/useFocusItems"
-import { updateFileTags } from "#/localFiles/localFiles"
 import { createQueryKey } from "#/queryKey"
 import { BracketButton } from "../../components/button"
 import { Input } from "../../components/Input"
@@ -73,7 +72,7 @@ function QuickEditEditor({
 	track,
 	suggestions: suggestionsUnfiltered
 }: QuickEditorProps) {
-	const { database, appState, notifications } = useAppContext()
+	const { appState, notifications, musicLibrary } = useAppContext()
 	const config = useConfig()
 	const { state, suggestions, tagsActive } = useQuickEditState(
 		track,
@@ -234,11 +233,9 @@ function QuickEditEditor({
 				<CloseDialogContent
 					onExit={async () => {
 						try {
-							await updateFileTags({
+							await musicLibrary.updateTags({
 								id: track.id,
-								database,
-								[tagType]: tagsActive,
-								tagSeparator: config.quickEdit.tagSeperator
+								[tagType]: tagsActive
 							})
 							appState.trigger.goBackOrHome()
 						} catch (error) {

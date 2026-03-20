@@ -85,15 +85,18 @@ Bun runtime, React 19 + OpenTUI (TUI rendering), Drizzle ORM + SQLite, XState st
 - Props should be generic (callbacks, primitives) — avoid passing store types or domain models into leaf components
 - Extract non-trivial event handlers into named functions
 - Colocate feature code: components + hooks in same feature folder
+- No inline `function()` in JSX props — use arrow functions. Exception: when `this` binding is needed (e.g. OpenTUI's `onSizeChange`)
 
 **Testing**
 
 - Prefer `it()` over `test()` in test files
+- Tests can assert multiple related behaviors in one `it()` block to avoid duplicating setup — especially in integration tests. Use assertion messages for clear failure pinpointing.
 
 ## Testability & Dependency Injection
 
 - **No module-level singletons** — don't initialize state at module scope. Use React Context providers or factory functions with injected dependencies
 - **Systems use constructor injection** — `createFoo(deps)` pattern. Provide dependencies via React Context, not module imports
+- **Keep helper functions standalone** — in `createFoo(deps)` factories, prefer module-scope pure functions over nested closures. Pass deps explicitly rather than closing over them. Only the public API methods should live inside the factory return
 - **Systems must be destroyable** — every system returns a `destroy()` for cleanup (tests, HMR, unmount)
 - **Side effects must be explicit and cancelable** — no fire-and-forget inits. Use Observable subscriptions or cleanup functions that can be torn down
 - **Decouple creation from wiring** — factory functions create systems, a provider wires them together. Tests can wire differently

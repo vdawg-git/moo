@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test"
-import { appStateActionsInternal as actions } from "./actions"
 import {
 	createInitialState,
 	createMockQueue,
@@ -7,28 +6,30 @@ import {
 	trackIds,
 	trackIdsRange
 } from "#/testHelpers"
+import { appStateActionsInternal as actions } from "./actions"
+import type { AlbumId, ArtistId, PlaylistId } from "#/database/types"
 
 describe("stopPlayback", () => {
 	it("should reset playback state to initial values", () => {
-		// Given a state with active playback
-		const state = createInitialState()
-		state.playback.queue = createMockQueue()
-		state.playback.index = 2
-		state.playback.manuallyAdded = trackIds("track-1", "track-2")
-		state.playback.playState = "playing"
-		state.playback.progress = 45
-		state.playback.shuffleMap = [0, 2, 1, 4, 3]
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			index: 2,
+			manuallyAdded: trackIds("track-1", "track-2"),
+			playState: "playing",
+			progress: 45,
+			shuffleMap: [0, 2, 1, 4, 3]
+		})
 
-		// When stopPlayback is called
 		const newState = actions.stopPlayback(state)
 
-		// Then playback should be reset
-		expect(newState.playback.queue).toBeUndefined()
-		expect(newState.playback.index).toBe(0)
-		expect(newState.playback.manuallyAdded).toEqual([])
-		expect(newState.playback.playState).toBe("stopped")
-		expect(newState.playback.progress).toBe(0)
-		expect(newState.playback.shuffleMap).toEqual([])
+		expect(newState.playback).toMatchObject({
+			queue: undefined,
+			index: 0,
+			manuallyAdded: [],
+			playState: "stopped",
+			progress: 0,
+			shuffleMap: []
+		})
 	})
 })
 
@@ -39,10 +40,12 @@ describe("playNewPlayback", () => {
 
 		const newState = actions.playNewPlayback(state, { queue, index: 2 })
 
-		expect(newState.playback.queue).toEqual(queue)
-		expect(newState.playback.index).toBe(2)
-		expect(newState.playback.playState).toBe("playing")
-		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
+		expect(newState.playback).toMatchObject({
+			queue,
+			index: 2,
+			playState: "playing",
+			isPlayingFromManualQueue: false
+		})
 	})
 
 	it("should set new queue with default index 0", () => {
@@ -55,8 +58,7 @@ describe("playNewPlayback", () => {
 	})
 
 	it("should shuffle tracks when shuffleMap is active", () => {
-		const state = createInitialState()
-		state.playback.shuffleMap = [] // Indicates shuffle is on
+		const state = createInitialState({ shuffleMap: [] })
 		const queue = createMockQueue(3)
 
 		const newState = actions.playNewPlayback(state, { queue, index: 1 })
@@ -69,21 +71,22 @@ describe("playNewPlayback", () => {
 
 describe("playFromManualQueue", () => {
 	it("should start playing from manual queue at given index", () => {
-		const state = createInitialState()
 		const added = trackIds("track-1", "track-2", "track-3")
-
-		state.playback.manuallyAdded = added
+		const state = createInitialState({ manuallyAdded: added })
 
 		const newState = actions.playFromManualQueue(state, { index: 0 })
 
-		expect(newState.playback.isPlayingFromManualQueue).toBe(true)
-		expect(newState.playback.playState).toBe("playing")
-		expect(newState.playback.manuallyAdded).toEqual(added)
+		expect(newState.playback).toMatchObject({
+			isPlayingFromManualQueue: true,
+			playState: "playing",
+			manuallyAdded: added
+		})
 	})
 
 	it("should slice manual queue when index > 0", () => {
-		const state = createInitialState()
-		state.playback.manuallyAdded = trackIds("1", "2", "3")
+		const state = createInitialState({
+			manuallyAdded: trackIds("1", "2", "3")
+		})
 
 		const newState = actions.playFromManualQueue(state, { index: 1 })
 
@@ -91,41 +94,37 @@ describe("playFromManualQueue", () => {
 	})
 
 	it("should not modify state when index is out of bounds", () => {
-		const state = createInitialState()
-		state.playback.manuallyAdded = trackIds("1")
+		const state = createInitialState({ manuallyAdded: trackIds("1") })
 
 		const newState = actions.playFromManualQueue(state, { index: 5 })
 
-		// State should remain unchanged (except for any side effects from addErrorNotification)
 		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
 	})
 })
 
 describe("playIndex", () => {
 	it("should set playback index and start playing", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue()
+		const state = createInitialState({ tracks: trackIdsRange(5) })
 
 		const newState = actions.playIndex(state, { index: 3 })
 
-		expect(newState.playback.index).toBe(3)
-		expect(newState.playback.playState).toBe("playing")
-		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
+		expect(newState.playback).toMatchObject({
+			index: 3,
+			playState: "playing",
+			isPlayingFromManualQueue: false
+		})
 	})
 
 	it("should handle index out of bounds gracefully", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue(3) // Only 3 tracks
+		const state = createInitialState({ tracks: trackIdsRange(3) })
 
 		const newState = actions.playIndex(state, { index: 5 })
 
-		// Should not crash and handle error appropriately
 		expect(newState.playback.playState).toBe("playing")
 	})
 
 	it("should handle no queue gracefully", () => {
 		const state = createInitialState()
-		// No queue set
 
 		const newState = actions.playIndex(state, { index: 0 })
 
@@ -135,9 +134,10 @@ describe("playIndex", () => {
 
 describe("nextTrack", () => {
 	it("should advance to next track", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue()
-		state.playback.index = 1
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			index: 1
+		})
 
 		const newState = actions.nextTrack(state)
 
@@ -145,10 +145,11 @@ describe("nextTrack", () => {
 	})
 
 	it("should loop to beginning when at end with loop_queue", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue(3)
-		state.playback.index = 2 // Last track
-		state.playback.loopState = "loop_queue"
+		const state = createInitialState({
+			tracks: trackIdsRange(3),
+			index: 2,
+			loopState: "loop_queue"
+		})
 
 		const newState = actions.nextTrack(state)
 
@@ -157,7 +158,6 @@ describe("nextTrack", () => {
 
 	it("should not change when no queue exists", () => {
 		const state = createInitialState()
-		// No queue
 
 		const newState = actions.nextTrack(state)
 
@@ -167,67 +167,74 @@ describe("nextTrack", () => {
 	it("should switch to manual queue when items exist", () => {
 		const state = createInitialState({
 			tracks: trackIdsRange(5),
-			manuallyAdded: trackIds("manual-1", "manual-2")
+			manuallyAdded: trackIds("manual-1", "manual-2"),
+			index: 1
 		})
-		state.playback.index = 1
 
 		const newState = actions.nextTrack(state)
 
-		expect(newState.playback.isPlayingFromManualQueue).toBe(true)
-		expect(newState.playback.index).toBe(1) // auto queue index unchanged
-		expect(newState.playback.manuallyAdded).toEqual(
-			trackIds("manual-1", "manual-2")
-		)
+		expect(newState.playback).toMatchObject({
+			isPlayingFromManualQueue: true,
+			index: 1,
+			manuallyAdded: trackIds("manual-1", "manual-2")
+		})
 	})
 
 	it("should consume current manual track and stay on manual queue", () => {
 		const state = createInitialState({
 			tracks: trackIdsRange(5),
-			manuallyAdded: trackIds("manual-1", "manual-2")
+			manuallyAdded: trackIds("manual-1", "manual-2"),
+			isPlayingFromManualQueue: true
 		})
-		state.playback.isPlayingFromManualQueue = true
 
 		const newState = actions.nextTrack(state)
 
-		expect(newState.playback.isPlayingFromManualQueue).toBe(true)
-		expect(newState.playback.manuallyAdded).toEqual(trackIds("manual-2"))
+		expect(newState.playback).toMatchObject({
+			isPlayingFromManualQueue: true,
+			manuallyAdded: trackIds("manual-2")
+		})
 	})
 
 	it("should fall back to auto queue after exhausting manual queue", () => {
 		const state = createInitialState({
 			tracks: trackIdsRange(5),
-			manuallyAdded: trackIds("manual-1")
+			manuallyAdded: trackIds("manual-1"),
+			isPlayingFromManualQueue: true,
+			index: 2
 		})
-		state.playback.isPlayingFromManualQueue = true
-		state.playback.index = 2
 
 		const newState = actions.nextTrack(state)
 
-		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
-		expect(newState.playback.manuallyAdded).toEqual([])
-		expect(newState.playback.index).toBe(3) // advanced auto queue
+		expect(newState.playback).toMatchObject({
+			isPlayingFromManualQueue: false,
+			manuallyAdded: [],
+			index: 3
+		})
 	})
 
 	it("should stop when auto queue exhausted after manual queue", () => {
 		const state = createInitialState({
 			tracks: trackIdsRange(3),
-			manuallyAdded: trackIds("manual-1")
+			manuallyAdded: trackIds("manual-1"),
+			isPlayingFromManualQueue: true,
+			index: 2
 		})
-		state.playback.isPlayingFromManualQueue = true
-		state.playback.index = 2 // last auto track
 
 		const newState = actions.nextTrack(state)
 
-		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
-		expect(newState.playback.playState).toBe("stopped")
+		expect(newState.playback).toMatchObject({
+			isPlayingFromManualQueue: false,
+			playState: "stopped"
+		})
 	})
 })
 
 describe("previousTrack", () => {
 	it("should go to previous track", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue()
-		state.playback.index = 2
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			index: 2
+		})
 
 		const newState = actions.previousTrack(state)
 
@@ -235,37 +242,41 @@ describe("previousTrack", () => {
 	})
 
 	it("should loop to end when at beginning with loop_queue", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue(5)
-		state.playback.index = 0
-		state.playback.loopState = "loop_queue"
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			index: 0,
+			loopState: "loop_queue"
+		})
 
 		const newState = actions.previousTrack(state)
 
-		expect(newState.playback.index).toBe(4) // Last track
+		expect(newState.playback.index).toBe(4)
 	})
 
 	it("should exit manual queue and consume the current manual queue item, then resume auto queue at same index", () => {
 		const state = createInitialState({
 			tracks: trackIdsRange(5),
-			manuallyAdded: trackIds("manual-1", "manual-2")
+			manuallyAdded: trackIds("manual-1", "manual-2"),
+			isPlayingFromManualQueue: true,
+			index: 3
 		})
-		state.playback.isPlayingFromManualQueue = true
-		state.playback.index = 3
 
 		const newState = actions.previousTrack(state)
 
-		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
-		expect(newState.playback.index).toBe(3) // unchanged
-		expect(newState.playback.manuallyAdded).toEqual(trackIds("manual-2"))
+		expect(newState.playback).toMatchObject({
+			isPlayingFromManualQueue: false,
+			index: 3,
+			manuallyAdded: trackIds("manual-2")
+		})
 	})
 })
 
 describe("togglePlayback", () => {
 	it("should pause when playing", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue()
-		state.playback.playState = "playing"
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			playState: "playing"
+		})
 
 		const newState = actions.togglePlayback(state)
 
@@ -273,9 +284,10 @@ describe("togglePlayback", () => {
 	})
 
 	it("should play when paused", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue()
-		state.playback.playState = "paused"
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			playState: "paused"
+		})
 
 		const newState = actions.togglePlayback(state)
 
@@ -284,7 +296,6 @@ describe("togglePlayback", () => {
 
 	it("should not change state when no queue", () => {
 		const state = createInitialState()
-		state.playback.playState = "stopped"
 
 		const newState = actions.togglePlayback(state)
 
@@ -304,9 +315,10 @@ describe("setPlayProgress", () => {
 
 describe("toggleShuffle", () => {
 	it("should enable shuffle when disabled", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue(4)
-		state.playback.index = 1
+		const state = createInitialState({
+			tracks: trackIdsRange(4),
+			index: 1
+		})
 
 		const newState = actions.toggleShuffle(state)
 
@@ -315,20 +327,20 @@ describe("toggleShuffle", () => {
 	})
 
 	it("should disable shuffle when enabled", () => {
-		const state = createInitialState()
-		state.playback.queue = createMockQueue(4)
-		state.playback.shuffleMap = [2, 0, 3, 1]
-		state.playback.index = 2 // Index in shuffled array
+		const state = createInitialState({
+			tracks: trackIdsRange(4),
+			shuffleMap: [2, 0, 3, 1],
+			index: 2
+		})
 
 		const newState = actions.toggleShuffle(state)
 
 		expect(newState.playback.shuffleMap).toBeUndefined()
-		expect(newState.playback.index).toBe(3) // Mapped back to original position
+		expect(newState.playback.index).toBe(3)
 	})
 
 	it("should handle no queue with shuffle toggle", () => {
 		const state = createInitialState()
-		state.playback.shuffleMap = undefined
 
 		const newState = actions.toggleShuffle(state)
 
@@ -338,24 +350,21 @@ describe("toggleShuffle", () => {
 
 describe("addToManualQueueFirst", () => {
 	it("should add track to beginning of manual queue", () => {
-		const given = trackIds("1")
-		const toAdd = trackId("2")
-		const expected = trackIds("2", "1")
-
-		const state = createInitialState({ manuallyAdded: given })
+		const state = createInitialState({ manuallyAdded: trackIds("1") })
 
 		const newState = actions.addToManualQueueFirst(state, {
-			trackId: toAdd
+			trackId: trackId("2")
 		})
 
-		expect(newState.playback.manuallyAdded).toEqual(expected)
+		expect(newState.playback.manuallyAdded).toEqual(trackIds("2", "1"))
 	})
 })
 
 describe("addToManualQueueLast", () => {
 	it("should add track to end of manual queue", () => {
-		const state = createInitialState()
-		state.playback.manuallyAdded = trackIds("track-1")
+		const state = createInitialState({
+			manuallyAdded: trackIds("track-1")
+		})
 
 		const newState = actions.addToManualQueueLast(state, {
 			trackId: trackId("track-2")
@@ -370,12 +379,10 @@ describe("addToManualQueueLast", () => {
 describe("removeFromManualQueue", () => {
 	it("should remove track at given index", () => {
 		const given = trackIdsRange(3)
-		const toRemove = 1
 		const expected = [given[0]!, given[2]!]
-
 		const state = createInitialState({ manuallyAdded: given })
 
-		const newState = actions.removeFromManualQueue(state, { index: toRemove })
+		const newState = actions.removeFromManualQueue(state, { index: 1 })
 
 		expect(newState.playback.manuallyAdded).toEqual(expected)
 	})
@@ -385,7 +392,6 @@ describe("removeFromQueue", () => {
 	it("should remove track from queue at given index", () => {
 		const given = trackIdsRange(3)
 		const expected = [given[0]!, given[2]!]
-
 		const state = createInitialState({ tracks: given })
 
 		const newState = actions.removeFromQueue(state, { index: 1 })
@@ -407,7 +413,7 @@ describe("navigateTo", () => {
 		const state = createInitialState()
 		const newPage = {
 			route: "album" as const,
-			parameter: { id: "album-1" as any }
+			parameter: { id: "album-1" as AlbumId }
 		}
 
 		const newState = actions.navigateTo(state, { goTo: newPage })
@@ -429,17 +435,16 @@ describe("navigateTo", () => {
 
 	it("should replace forward history when navigating from middle", () => {
 		const state = createInitialState()
-		// Simulate having forward history
 		state.view.history = [
 			{ route: "home" },
-			{ route: "album", parameter: { id: "album-1" as any } },
-			{ route: "artist", parameter: { id: "artist-1" as any } }
+			{ route: "album", parameter: { id: "album-1" as AlbumId } },
+			{ route: "artist", parameter: { id: "artist-1" as ArtistId } }
 		]
 		state.view.historyIndex = 1
 
 		const newPage = {
 			route: "playlist" as const,
-			parameter: { id: "playlist-1" as any }
+			parameter: { id: "playlist-1" as PlaylistId }
 		}
 		const newState = actions.navigateTo(state, { goTo: newPage })
 
@@ -454,7 +459,7 @@ describe("navigateBack", () => {
 		const state = createInitialState()
 		state.view.history = [
 			{ route: "home" },
-			{ route: "album", parameter: { id: "album-1" as any } }
+			{ route: "album", parameter: { id: "album-1" as AlbumId } }
 		]
 		state.view.historyIndex = 1
 
@@ -477,7 +482,7 @@ describe("navigateForward", () => {
 		const state = createInitialState()
 		state.view.history = [
 			{ route: "home" },
-			{ route: "album", parameter: { id: "album-1" as any } }
+			{ route: "album", parameter: { id: "album-1" as AlbumId } }
 		]
 		state.view.historyIndex = 0
 
@@ -572,4 +577,3 @@ describe("closeModal", () => {
 		expect(newState.modals).toHaveLength(1)
 	})
 })
-

@@ -1,19 +1,6 @@
 import { describe, expect, it } from "bun:test"
+import { mockTrackData } from "#/testHelpers"
 import { createTestContext } from "#/testing/createTestContext"
-import type { TrackData, TrackId } from "#/database/types"
-
-function mockTrackData(id: string): TrackData {
-	return {
-		id: id as TrackId,
-		sourceProvider: "local",
-		duration: 180,
-		title: `Track ${id}`,
-		artist: "Test Artist",
-		album: "Test Album",
-		mtime: Date.now(),
-		size: 1024
-	} as TrackData
-}
 
 describe("state integration", () => {
 	it("playNewPlayback populates state queue", async () => {
@@ -30,8 +17,6 @@ describe("state integration", () => {
 		expect(state.playback.playState).toBe("playing")
 		expect(state.playback.queue).toBeDefined()
 		expect(state.playback.queue!.tracks.length).toBeGreaterThan(0)
-
-		context.destroy()
 	})
 
 	it("nextTrack advances the index", async () => {
@@ -52,8 +37,6 @@ describe("state integration", () => {
 
 		const stateAfter = context.appState.getSnapshot().context
 		expect(stateAfter.playback.index).toBe(1)
-
-		context.destroy()
 	})
 
 	it("togglePlayback pauses and resumes", async () => {
@@ -75,8 +58,6 @@ describe("state integration", () => {
 		expect(context.appState.getSnapshot().context.playback.playState).toBe(
 			"playing"
 		)
-
-		context.destroy()
 	})
 
 	it("addErrorNotification creates a notification", async () => {
@@ -88,7 +69,5 @@ describe("state integration", () => {
 		expect(state.notifications).toHaveLength(1)
 		expect(state.notifications[0]!.type).toBe("error")
 		expect(state.notifications[0]!.message).toBe("Something went wrong")
-
-		context.destroy()
 	})
 })

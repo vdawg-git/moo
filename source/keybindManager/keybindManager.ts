@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { isTruthy } from "remeda"
-import { useAppContext } from "#/appContext"
 import {
 	distinctUntilChanged,
 	filter,
@@ -14,6 +13,7 @@ import {
 	withLatestFrom
 } from "rxjs"
 import { match, P } from "ts-pattern"
+import { useAppContext } from "#/appContext"
 import { callAll } from "#/helpers"
 import { getKeybindsWhen } from "#/state/stateUtils"
 import type { KeyEvent } from "@opentui/core"
