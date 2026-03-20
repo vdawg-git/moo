@@ -4,9 +4,9 @@ import { LoadingText } from "#/components/loadingText"
 import { Playbar } from "#/components/playbar"
 import { PlaylistTitle } from "#/components/playlilstTitle"
 import { Tracklist } from "#/components/tracklist"
-import { useConfig } from "#/config/configContext"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
+import { useIcons } from "#/hooks/useIcons"
 import { createQueryKey } from "#/queryKey"
 import { usePlaybackData, usePlayingIndex } from "#/state/useSelectors"
 import type { ArtistId } from "#/database/types"
@@ -24,8 +24,7 @@ export function ArtistPage({ id }: ArtistPageProps) {
 	const amount = response.data?.getOrNull()?.tracks.length
 	const displayName = response.data?.getOrNull()?.name ?? id
 	const colors = useColors()
-	// refactor a useIcons hook would be nicer here
-	const config = useConfig()
+	const icons = useIcons()
 
 	return (
 		<>
@@ -34,7 +33,7 @@ export function ArtistPage({ id }: ArtistPageProps) {
 					title={displayName}
 					tracksAmount={amount ?? 0}
 					color={colors.artists}
-					icon={config.icons.artist}
+					icon={icons.artist}
 				/>
 
 				{response.isLoading ? (

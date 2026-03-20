@@ -8,7 +8,7 @@ import {
 } from "rxjs"
 import { LocalTrack } from "#/database/localTrack"
 import { O } from "#/lib/option"
-import { getCurrentTrackIdFromState } from "./stateUtils"
+import { getCurrentTrack } from "./stateUtils"
 import type { AppDatabase } from "#/database/types"
 import type { QuerySystem } from "#/database/useQuery"
 import type { Player } from "#/player/types"
@@ -41,7 +41,7 @@ export function createDerivedState({
 	)
 
 	const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
-		map(getCurrentTrackIdFromState),
+		map((playback) => getCurrentTrack(playback)?.trackId),
 		distinctUntilChanged(),
 		switchMap((idMaybe) => {
 			if (!idMaybe) return of(undefined)

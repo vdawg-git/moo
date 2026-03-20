@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { isTruthy } from "remeda"
+import { useAppContext } from "#/appContext"
 import {
 	distinctUntilChanged,
 	filter,
@@ -156,23 +157,24 @@ export function createKeybindManager({
 }
 
 /** Hook that subscribes to the key sequence result and returns the current sequence part */
-export function useGetNextKeySequence(
-	keySequenceResult$: Observable<CallbacksOrSequence | undefined>
-): SequencePart | undefined {
+export function useGetNextKeySequence(): SequencePart | undefined {
+	const { keybindManager } = useAppContext()
 	const [nextUpCommands, setKeySequence] = useState<SequencePart | undefined>(
 		undefined
 	)
 
 	useEffect(() => {
-		const subscription = keySequenceResult$.subscribe((inputResult) => {
-			const sequenceMaybe =
-				inputResult?.type === "sequence" ? inputResult.sequence : undefined
+		const subscription = keybindManager.keySequenceResult$.subscribe(
+			(inputResult) => {
+				const sequenceMaybe =
+					inputResult?.type === "sequence" ? inputResult.sequence : undefined
 
-			setKeySequence(sequenceMaybe)
-		})
+				setKeySequence(sequenceMaybe)
+			}
+		)
 
 		return () => subscription.unsubscribe()
-	}, [keySequenceResult$])
+	}, [keybindManager.keySequenceResult$])
 
 	return nextUpCommands
 }

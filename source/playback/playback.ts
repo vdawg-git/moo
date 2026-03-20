@@ -28,7 +28,6 @@ import type {
 } from "#/types/types"
 import type { Observable } from "rxjs"
 
-// refactor what are your thoughts on having one big AppContext type and systems just do Pick<AppContext, "what-they-need">? And instead of declaring loop$ etc as a dep they just declare "derived"? This might make thinkgs simpler and type-safer
 export type AudioPlaybackDeps = {
 	readonly appState: AppStore
 	readonly appState$: Observable<AppState>

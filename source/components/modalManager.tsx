@@ -27,7 +27,6 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 	const appState = useAppState()
 
 	const hideModal = useCallback(() => {
-		// refactor use appState.trigger instead of `send`. Its nicer to read. Or do you have other thoughts?
 		appState.trigger.closeModal({ id })
 	}, [id, appState])
 
