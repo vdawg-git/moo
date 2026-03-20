@@ -48,6 +48,11 @@ const mpvEvent = z.union([otherEvents, endFileEvent])
 export function createMpvPlayer(): Player {
 	const socket = spawnMpv()
 
+	// Subscribe to playback-time so mpv sends progress events
+	socket.then(() =>
+		runCommand("observe_property", [1, "playback-time"], socket)
+	)
+
 	const events$ = socketToPlayerEvents(socket)
 
 	return {

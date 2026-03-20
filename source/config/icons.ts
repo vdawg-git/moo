@@ -53,6 +53,11 @@ export const iconsSchema = z
 		edit: z
 			.string()
 			.default("")
-			.describe("Edit icon. Used fo example for quick-edit.")
+			.describe("Edit icon. Used fo example for quick-edit."),
+
+		progressDot: z
+			.string()
+			.default("")
+			.describe("Dot indicator on the progress bar.")
 	})
 	.describe("Change the icons used in the app.")

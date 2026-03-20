@@ -1,4 +1,5 @@
 import { TextAttributes } from "@opentui/core"
+import { ProgressBar } from "#/components/progressBar"
 import { useConfig } from "#/config/configContext"
 import { useColors } from "#/hooks/useColors"
 import {
@@ -20,19 +21,25 @@ export function Playbar() {
 			borderColor={colors.yellow}
 			paddingLeft={1}
 			paddingRight={1}
-			flexDirection="row"
+			flexDirection="column"
 			zIndex={5}
 			backgroundColor={colors.bg}
 		>
-			<box flexGrow={1} alignItems="flex-start" justifyContent="flex-start">
-				{currentTrack ? (
-					<TrackDisplay track={currentTrack} />
-				) : (
-					<text fg={colors.brightBlack}>{"૮₍⎚¯⎚₎ა\n (O_O)"}</text>
-				)}
+			<box flexDirection="row" flexGrow={1}>
+				<box flexGrow={1} alignItems="flex-start" justifyContent="flex-start">
+					{currentTrack ? (
+						<TrackDisplay track={currentTrack} />
+					) : (
+						<text fg={colors.brightBlack}>{"૮₍⎚¯⎚₎ა\n (O_O)"}</text>
+					)}
+				</box>
+
+				<MediaControl />
 			</box>
 
-			<MediaControl />
+			<box marginBottom={-1}>
+				<ProgressBar />
+			</box>
 		</box>
 	)
 }
