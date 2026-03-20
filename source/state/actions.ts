@@ -65,11 +65,6 @@ const playNewPlayback = createAction<{ queue: Queue; index?: number }>(
 
 		context.playback.isPlayingFromManualQueue = false
 		context.playback.playState = "playing"
-
-		// remove the currently playing song from the manual queue
-		if (context.playback.isPlayingFromManualQueue) {
-			context.playback.manuallyAdded.shift()
-		}
 	}
 )
 
@@ -112,9 +107,19 @@ const playIndex = createAction<{ index: number }>((state, { index }) => {
 const nextTrack = createAction((context) => {
 	if (!context.playback.queue) return
 
-	// TODO add manuallyAdded handling
-	// should switch to manuallyAdded if there is manually added stuff,
-	// should shift from manuallyAdded if already playing from manually added
+	if (context.playback.isPlayingFromManualQueue) {
+		context.playback.manuallyAdded.shift()
+
+		if (context.playback.manuallyAdded.length > 0) return
+
+		context.playback.isPlayingFromManualQueue = false
+	}
+
+	if (context.playback.manuallyAdded.length > 0) {
+		context.playback.isPlayingFromManualQueue = true
+
+		return
+	}
 
 	const loop = context.playback.loopState
 
@@ -127,6 +132,7 @@ const nextTrack = createAction((context) => {
 		} else {
 			context.playback.playState = "stopped"
 		}
+
 		return
 	}
 
@@ -135,6 +141,13 @@ const nextTrack = createAction((context) => {
 
 const previousTrack = createAction((context) => {
 	if (!context.playback.queue) return
+
+	if (context.playback.isPlayingFromManualQueue) {
+		context.playback.isPlayingFromManualQueue = false
+		context.playback.manuallyAdded.shift()
+
+		return
+	}
 
 	const loop = context.playback.loopState
 
@@ -147,6 +160,7 @@ const previousTrack = createAction((context) => {
 		} else {
 			context.playback.playState = "stopped"
 		}
+
 		return
 	}
 

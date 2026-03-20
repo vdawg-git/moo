@@ -158,6 +158,64 @@ describe("nextTrack", () => {
 
 		expect(newState.playback.index).toBe(0)
 	})
+
+	it("should switch to manual queue when items exist", () => {
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			manuallyAdded: trackIds("manual-1", "manual-2")
+		})
+		state.playback.index = 1
+
+		const newState = actions.nextTrack(state)
+
+		expect(newState.playback.isPlayingFromManualQueue).toBe(true)
+		expect(newState.playback.index).toBe(1) // auto queue index unchanged
+		expect(newState.playback.manuallyAdded).toEqual(
+			trackIds("manual-1", "manual-2")
+		)
+	})
+
+	it("should consume current manual track and stay on manual queue", () => {
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			manuallyAdded: trackIds("manual-1", "manual-2")
+		})
+		state.playback.isPlayingFromManualQueue = true
+
+		const newState = actions.nextTrack(state)
+
+		expect(newState.playback.isPlayingFromManualQueue).toBe(true)
+		expect(newState.playback.manuallyAdded).toEqual(trackIds("manual-2"))
+	})
+
+	it("should fall back to auto queue after exhausting manual queue", () => {
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			manuallyAdded: trackIds("manual-1")
+		})
+		state.playback.isPlayingFromManualQueue = true
+		state.playback.index = 2
+
+		const newState = actions.nextTrack(state)
+
+		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
+		expect(newState.playback.manuallyAdded).toEqual([])
+		expect(newState.playback.index).toBe(3) // advanced auto queue
+	})
+
+	it("should stop when auto queue exhausted after manual queue", () => {
+		const state = createInitialState({
+			tracks: trackIdsRange(3),
+			manuallyAdded: trackIds("manual-1")
+		})
+		state.playback.isPlayingFromManualQueue = true
+		state.playback.index = 2 // last auto track
+
+		const newState = actions.nextTrack(state)
+
+		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
+		expect(newState.playback.playState).toBe("stopped")
+	})
 })
 
 describe("previousTrack", () => {
@@ -180,6 +238,21 @@ describe("previousTrack", () => {
 		const newState = actions.previousTrack(state)
 
 		expect(newState.playback.index).toBe(4) // Last track
+	})
+
+	it("should exit manual queue and consume the current manual queue item, then resume auto queue at same index", () => {
+		const state = createInitialState({
+			tracks: trackIdsRange(5),
+			manuallyAdded: trackIds("manual-1", "manual-2")
+		})
+		state.playback.isPlayingFromManualQueue = true
+		state.playback.index = 3
+
+		const newState = actions.previousTrack(state)
+
+		expect(newState.playback.isPlayingFromManualQueue).toBe(false)
+		expect(newState.playback.index).toBe(3) // unchanged
+		expect(newState.playback.manuallyAdded).toEqual(trackIds("manual-2"))
 	})
 })
 

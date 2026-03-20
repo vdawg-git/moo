@@ -175,7 +175,7 @@ function registerTrackCommands(
 			id: "play_last" + id,
 			callback: () =>
 				appState.send({
-					type: "addToManualQueueFirst",
+					type: "addToManualQueueLast",
 					trackId: id
 				}),
 			keybindings: keybinding("q l")
