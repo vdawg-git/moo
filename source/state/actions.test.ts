@@ -1,7 +1,12 @@
 import { describe, expect, it } from "bun:test"
 import { appStateActionsInternal as actions } from "./actions"
-import type { TrackId } from "../database/types"
-import type { AppState, Queue } from "./types"
+import {
+	createInitialState,
+	createMockQueue,
+	trackId,
+	trackIds,
+	trackIdsRange
+} from "#/testHelpers"
 
 describe("stopPlayback", () => {
 	it("should reset playback state to initial values", () => {
@@ -353,7 +358,7 @@ describe("addToManualQueueLast", () => {
 		state.playback.manuallyAdded = trackIds("track-1")
 
 		const newState = actions.addToManualQueueLast(state, {
-			trackId: "track-2" as TrackId
+			trackId: trackId("track-2")
 		})
 
 		expect(newState.playback.manuallyAdded).toEqual(
@@ -568,50 +573,3 @@ describe("closeModal", () => {
 	})
 })
 
-function createInitialState(options?: {
-	tracks?: readonly TrackId[]
-	manuallyAdded?: readonly TrackId[]
-}): AppState {
-	const tracks = options?.tracks
-	const manuallyAdded = options?.manuallyAdded
-
-	return {
-		playback: {
-			queue: tracks ? { source: { type: "all" }, tracks } : undefined,
-			manuallyAdded: manuallyAdded ?? [],
-			index: 0,
-			playState: "stopped",
-			loopState: "none",
-			shuffleMap: undefined,
-			isPlayingFromManualQueue: false,
-			progress: 0
-		},
-		view: {
-			historyIndex: 0,
-			history: [{ route: "home" }]
-		},
-		notifications: [],
-		modals: [],
-		focusedInputs: [],
-		keybindingWhen: []
-	}
-}
-
-function createMockQueue(trackCount = 5): Queue {
-	return {
-		tracks: trackIdsRange(trackCount),
-		source: { type: "all" }
-	}
-}
-
-function trackIdsRange(amount: number): TrackId[] {
-	return Array.from({ length: amount }, (_, i) => trackId(`track-${i}`))
-}
-
-function trackIds(...names: string[]): TrackId[] {
-	return names as TrackId[]
-}
-
-function trackId(name: string): TrackId {
-	return name as TrackId
-}

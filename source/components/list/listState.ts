@@ -52,6 +52,9 @@ export type UseListArgument<T> = {
 
 	/** How closely the search results should match the input. Default is quite strict */
 	searchThreshold?: number
+
+	/** When true, preserve cursor position when items change instead of resetting to 0 */
+	keepIndex?: boolean
 }
 
 /**
@@ -65,6 +68,7 @@ export function useList<T>({
 	searchThreshold = 0.1,
 	focused = true,
 	index: indexProp,
+	keepIndex = false,
 	onFocusItem,
 	onSelect
 }: UseListArgument<T>): UseListReturn<T> {
@@ -130,10 +134,11 @@ export function useList<T>({
 	}, [focused])
 
 	useEffect(() => {
-		stateRef.current.state.trigger.setItems({
+		const action = keepIndex ? "updateItems" : "setItems"
+		stateRef.current.state.trigger[action]({
 			items: itemsUnfiltered
 		})
-	}, [itemsUnfiltered])
+	}, [itemsUnfiltered, keepIndex])
 
 	const indexRef = useRef(index)
 	indexRef.current = index
@@ -296,6 +301,23 @@ function createListState<T>({
 				items: newItems.map((item, index) => ({ data: item, index })),
 				index: 0
 			}),
+
+			updateItems: (context, { items: newItems }: { items: readonly T[] }) => {
+				const items = newItems.map((item, index) => ({
+					data: item,
+					index
+				}))
+
+				return {
+					...context,
+					items,
+					index: Math.min(context.index, Math.max(0, items.length - 1)),
+					scrollPosition: Math.min(
+						context.scrollPosition,
+						Math.max(0, items.length - 1)
+					)
+				}
+			},
 
 			setIndex: (context, { index }: { index: number }) => ({
 				...context,

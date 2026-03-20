@@ -1,4 +1,3 @@
-import { match } from "ts-pattern"
 import { Result } from "typescript-result"
 import { useAppContext } from "#/appContext"
 import { List, useList } from "#/components/list"
@@ -9,62 +8,52 @@ import { TrackItem } from "#/components/tracklist"
 import { useQuery } from "#/database/useQuery"
 import { useColors } from "#/hooks/useColors"
 import { keybinding } from "#/lib/keybinds"
+import { getQueueDisplayItems } from "#/pages/queueDisplayItems"
 import { createQueryKey } from "#/queryKey"
 import { usePlaybackData } from "#/state/useSelectors"
 import type { BaseTrack } from "#/database/types"
 import type { QueryResult } from "#/database/useQuery"
 import type { KeybindManager } from "#/keybindManager/keybindManager"
 import type { AppStore } from "#/state/state"
-import type { AppState } from "#/state/types"
-import type { ComponentProps } from "react"
 
 type ListItemQueue = {
 	type: "auto" | "manual"
 	track: BaseTrack
-	itemIndex: number
+	/** Original index in the source queue — needed for action dispatch */
+	queueIndex: number
+	playState: "playing" | "paused" | undefined
 }
 
 export function QueuePage() {
 	const { database } = useAppContext()
 	const playbackState = usePlaybackData()
-	const { queue, manuallyAdded: manuallyAddedIds } = playbackState
-	const autoTrackIds = queue?.tracks ?? []
 
-	const ids = [...(queue?.tracks ?? []), ...manuallyAddedIds]
-	const totalTracks = queue?.tracks.length ?? 0 + manuallyAddedIds.length
+	const displayItems = getQueueDisplayItems(playbackState)
+	const trackIds = displayItems.map((item) => item.trackId)
+	const uniqueIds = Array.from(new Set(trackIds))
 
 	const response: QueryResult<readonly ListItemQueue[]> = useQuery(
-		createQueryKey.tracks(Array.from(new Set(ids))),
+		createQueryKey.tracks(uniqueIds),
 		() =>
-			Result.fromAsyncCatching(database.getTracks(ids)).map((tracks) => {
-				const autoTracks = autoTrackIds
-					.flatMap(
-						(id) => tracks.find(({ id: trackId }) => id === trackId) ?? []
-					)
-					.map(
-						(track, index) =>
-							({
-								type: "auto" as const,
-								track,
-								itemIndex: index
-							}) satisfies ListItemQueue
+			Result.fromAsyncCatching(database.getTracks(trackIds)).map(
+				(tracks) => {
+					const trackMap = new Map(
+						tracks.map((track) => [track.id, track])
 					)
 
-				const manualTracks = manuallyAddedIds
-					.flatMap(
-						(id) => tracks.find(({ id: trackId }) => trackId === id) ?? []
-					)
-					.map(
-						(track, index) =>
-							({
-								type: "manual",
-								track,
-								itemIndex: index
-							}) satisfies ListItemQueue
-					)
+					return displayItems.flatMap((item) => {
+						const track = trackMap.get(item.trackId)
+						if (!track) return []
 
-				return [...manualTracks, ...autoTracks]
-			})
+						return {
+							type: item.type,
+							track,
+							queueIndex: item.queueIndex,
+							playState: item.playState
+						} satisfies ListItemQueue
+					})
+				}
+			)
 	)
 
 	const colors = useColors()
@@ -72,23 +61,19 @@ export function QueuePage() {
 	return (
 		<>
 			<box flexGrow={1} flexDirection="column">
-				<PlaylistTitle title={"Queue"} tracksAmount={totalTracks} />
+				<PlaylistTitle
+					title={"Queue"}
+					tracksAmount={displayItems.length}
+				/>
 
 				{response.isLoading ? (
 					<LoadingText />
 				) : (
 					response.data.fold(
-						(items) => (
-							<QueueView
-								items={items}
-								isPlayingFromManualQueue={
-									playbackState.isPlayingFromManualQueue
-								}
-								playState={playbackState.playState}
-								playIndex={playbackState.index}
-							/>
-						),
-						(error) => <text fg={colors.red}>Error: {String(error)}</text>
+						(items) => <QueueView items={items} />,
+						(error) => (
+							<text fg={colors.red}>Error: {String(error)}</text>
+						)
 					)
 				)}
 			</box>
@@ -100,18 +85,9 @@ export function QueuePage() {
 
 type QueueViewProps = {
 	items: readonly ListItemQueue[]
-	isPlayingFromManualQueue: boolean
-	playState: AppState["playback"]["playState"]
-	playIndex: number
 }
 
-// done-refactor resolved: using useAppContext() directly
-function QueueView({
-	isPlayingFromManualQueue,
-	items,
-	playState,
-	playIndex
-}: QueueViewProps) {
+function QueueView({ items }: QueueViewProps) {
 	const { appState, keybindManager } = useAppContext()
 	const colors = useColors()
 
@@ -119,26 +95,27 @@ function QueueView({
 
 	const useListReturn = useList({
 		items,
+		keepIndex: true,
 
-		onSelect: ({ data: { type, itemIndex: index } }) =>
+		onSelect: ({ data: { type, queueIndex } }) =>
 			type === "auto"
-				? appState.send({ type: "playIndex", index })
+				? appState.send({ type: "playIndex", index: queueIndex })
 				: appState.send({
 						type: "playFromManualQueue",
-						index
+						index: queueIndex
 					}),
 
-		onFocusItem: ({ data: { type, track, itemIndex: index } }) =>
+		onFocusItem: ({ data: { type, track, queueIndex } }) =>
 			type === "auto"
 				? registerAutoQueueCommands(
-						index,
-						"auto_queue_" + index + track.id,
+						queueIndex,
+						"auto_queue_" + queueIndex + track.id,
 						appState,
 						keybindManager
 					)
 				: registerManualQueueCommands(
-						index,
-						"manual_" + index + track.id,
+						queueIndex,
+						"manual_" + queueIndex + track.id,
 						appState,
 						keybindManager
 					),
@@ -160,35 +137,14 @@ function QueueView({
 		<List
 			flexDirection="column"
 			register={useListReturn}
-			render={({ type, track }, { indexItem, focused }) => {
-				const state = match({
-					type,
-					isPlayingFromManualQueue,
-					playState,
-					indexItem,
-					playIndex
-				})
-					.returnType<ComponentProps<typeof TrackItem>["state"]>()
-					.with(
-						{ type: "manual", isPlayingFromManualQueue: true, indexItem: 0 },
-						() => "playing"
-					)
-					.with(
-						{ type: "auto" },
-						({ indexItem, playIndex }) => indexItem === playIndex,
-						() => "playing"
-					)
-					.otherwise(() => undefined)
-
-				return (
-					<TrackItem
-						track={track}
-						focused={focused}
-						state={state}
-						color={type === "manual" ? colors.magenta : undefined}
-					/>
-				)
-			}}
+			render={({ type, track, playState }, { focused }) => (
+				<TrackItem
+					track={track}
+					focused={focused}
+					state={playState}
+					color={type === "manual" ? colors.magenta : undefined}
+				/>
+			)}
 		/>
 	)
 }
