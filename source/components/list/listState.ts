@@ -424,7 +424,7 @@ function createListState<T>({
 				const scrollbox = scrollboxRef.current
 				const scrollPosition =
 					scrollbox && index <= scrollbox.scrollTop
-						? index - 1
+						? Math.max(index - 1, 0)
 						: context.scrollPosition
 
 				return { ...context, index: newIndex, scrollPosition }

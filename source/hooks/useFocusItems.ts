@@ -62,17 +62,24 @@ export function useFocusItemsKeybings({
 		if (key.name === "left" || key.name === "h") {
 			if (key.ctrl) {
 				goLast()
+
+				return
 			}
 
 			goPrevious()
+
 			return
 		}
 
 		if (key.name === "right" || key.name === "l") {
 			if (key.ctrl) {
 				goFirst()
+
+				return
 			}
+
 			goNext()
+
 			return
 		}
 	})

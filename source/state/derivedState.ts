@@ -31,13 +31,13 @@ export function createDerivedState({
 }) {
 	const playback$ = appState$.pipe(
 		map((state) => state.playback),
-		shareReplay(1)
+		shareReplay({ bufferSize: 1, refCount: false })
 	)
 
 	const loop$ = playback$.pipe(
 		map((state) => state.loopState),
 		distinctUntilChanged(),
-		shareReplay(1)
+		shareReplay({ bufferSize: 1, refCount: false })
 	)
 
 	const currentTrack$: Observable<LocalTrack | undefined> = playback$.pipe(
@@ -70,7 +70,7 @@ export function createDerivedState({
 	const playState$ = playback$.pipe(
 		map((playback) => playback.playState),
 		distinctUntilChanged(),
-		shareReplay(1)
+		shareReplay({ bufferSize: 1, refCount: false })
 	)
 
 	return { playback$, currentTrack$, playState$, loop$ }

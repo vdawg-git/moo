@@ -94,7 +94,7 @@ const playIndex = createAction<{ index: number }>((state, { index }) => {
 	state.playback.playState = "playing"
 	const tracksLength = state.playback.queue?.tracks.length ?? 0
 
-	if (index > tracksLength) {
+	if (index >= tracksLength) {
 		logger.error("playIndex index out of bounds", { index, tracksLength })
 		state.notifications.push(
 			createErrorNotification("Bug happened when playing")
@@ -152,7 +152,7 @@ const previousTrack = createAction((context) => {
 	const loop = context.playback.loopState
 
 	const currentIndex = context.playback.index
-	const overLastTrack = currentIndex - 1 <= 0
+	const overLastTrack = currentIndex - 1 < 0
 
 	if (overLastTrack) {
 		if (loop === "loop_queue") {

@@ -411,20 +411,21 @@ async function initDatabase({
 
 	logger.info("running database migration")
 
-	await db2.transaction(async (tx) => {
-		// reset db
-		db.run("PRAGMA foreign_keys = OFF;")
-		for (const setupCommand of setupCalls) {
-			tx.run(setupCommand)
-		}
+	db.run("PRAGMA foreign_keys = OFF;")
+	try {
+		await db2.transaction(async (tx) => {
+			for (const setupCommand of setupCalls) {
+				tx.run(setupCommand)
+			}
 
-		await tx.insert(metaTable).values({
-			version: DATABASE_VERSION,
-			tagSeperator: tagSeparator
+			await tx.insert(metaTable).values({
+				version: DATABASE_VERSION,
+				tagSeperator: tagSeparator
+			})
 		})
-
+	} finally {
 		db.run("PRAGMA foreign_keys = ON;")
-	})
+	}
 
 	return db2
 }
