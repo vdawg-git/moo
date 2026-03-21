@@ -25,7 +25,6 @@ export function createCommandCallbacks({
 			"runner.openGoto": () => openRunner(appState),
 
 			showKeybinds: () => {
-				// refactor-later use appState.trigger instead of `send`. Its nicer to read. Or do you have other thoughts? I mean replace it everywhere in the app
 				appState.send({
 					type: "addModal",
 					modal: {
