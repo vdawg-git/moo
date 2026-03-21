@@ -29,7 +29,7 @@
 
 		"paths": {
 			"#/*": ["./source/*"],
-			"#components/*": ["./source/components/*"]
+			"#components/*": ["./source/ui/components/*"]
 		}
 	}
 }

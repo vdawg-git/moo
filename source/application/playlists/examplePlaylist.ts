@@ -1,0 +1,16 @@
+import { schemaUrl } from "#/shared/config/config"
+
+export const examplePlaylist: string = `# yaml-language-server: $schema=${schemaUrl}
+
+rules:
+  - artist:
+      includes: ["Rick Astley", "Waterman"]
+  - title:
+      includes: "never gonna give you up"
+  - any:
+      - genre:
+          includes: "deephouse"
+      - genre:
+          includes: "synthwave"
+
+`

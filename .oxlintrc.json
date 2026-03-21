@@ -1,6 +1,6 @@
 {
 	"$schema": "./node_modules/oxlint/configuration_schema.json",
-	"plugins": ["unicorn", "typescript", "oxc", "react", "react-perf", "node"],
+	"plugins": ["import", "unicorn", "typescript", "oxc", "react", "react-perf", "node"],
 	"categories": {},
 	"rules": {
 		"constructor-super": "warn",
@@ -132,5 +132,54 @@
 		"builtin": true
 	},
 	"globals": {},
-	"ignorePatterns": []
+	"ignorePatterns": [],
+	"overrides": [
+		{
+			"files": ["source/core/**/*"],
+			"rules": {
+				"no-restricted-imports": ["error", {
+					"patterns": [
+						{ "group": ["#/ports/**", "#/application/**", "#/ui/**", "#/app/**"],
+							"message": "core/ is pure — cannot import from ports, application, ui, or app" },
+						{ "group": ["#/adapters/**"],
+							"allowImportNames": ["tableTracks", "TrackColumnKey"],
+							"message": "core/ cannot import from adapters — exception: tableTracks/TrackColumnKey from schema for playlist DSL" }
+					]
+				}]
+			}
+		},
+		{
+			"files": ["source/shared/**/*"],
+			"rules": {
+				"no-restricted-imports": ["error", {
+					"patterns": [
+						{ "group": ["#/adapters/**", "#/application/**", "#/ui/**"],
+							"message": "shared/ should not import from adapters, application, or ui" }
+					]
+				}]
+			}
+		},
+		{
+			"files": ["source/adapters/**/*"],
+			"rules": {
+				"no-restricted-imports": ["error", {
+					"patterns": [
+						{ "group": ["#/core/**", "#/application/**", "#/ui/**", "#/app/**"],
+							"message": "adapters/ can only import from ports/ and shared/" }
+					]
+				}]
+			}
+		},
+		{
+			"files": ["source/ui/**/*"],
+			"rules": {
+				"no-restricted-imports": ["error", {
+					"patterns": [
+						{ "group": ["#/adapters/**"],
+							"message": "ui/ cannot import from adapters — access services through context" }
+					]
+				}]
+			}
+		}
+	]
 }

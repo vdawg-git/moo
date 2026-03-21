@@ -22,13 +22,33 @@ Bun runtime, React 19 + OpenTUI (TUI rendering), Drizzle ORM + SQLite, XState st
 - **FFmpeg** — tag writing
 - **Nerd Font** terminal
 
+## Architecture
+
+Ports & Adapters (Hexagonal). **The one rule:** Core never imports infrastructure. Dependencies point inward.
+
+| Layer | Purpose | Can import from |
+|---|---|---|
+| `core/` | Pure state + reducers, command defs, playlist DSL schema | `core/`, `shared/` |
+| `ports/` | Interfaces (Player, AppDatabase, AppFileSystem) | `ports/`, `shared/` |
+| `adapters/` | Implementations (MPV, SQLite, filesystem) | `ports/`, `shared/` |
+| `application/` | Use cases, orchestration | `core/`, `ports/`, `application/`, `shared/` |
+| `ui/` | React components + hooks | `core/` (types), `ports/` (types), `app/` (context), `ui/`, `shared/` |
+| `app/` | Composition root, wiring | everything |
+| `shared/` | Pure utilities, config, types | `shared/`, `ports/` (types), `core/` (types), `app/` (context) |
+| `test-helpers/` | Test mocks, fixtures, helpers | everything |
+
+Enforced via oxlint `no-restricted-imports` overrides in `.oxlintrc.json`.
+
 ## Key Paths
 
-- Entry: `source/index.ts` → `source/start.tsx` → `source/App.tsx`
-- State: `source/state/state.ts`
-- DB: `source/database/database.ts`, `source/database/schema.ts`
-- Player: `source/player/mpv.ts`
-- Smart playlists: `source/smartPlaylists/`
+- Entry: `source/app/index.ts` → `source/app/start.tsx` → `source/app/App.tsx`
+- Context: `source/app/context.tsx`
+- State: `source/core/state/state.ts`, types in `source/core/state/types.ts`
+- Ports: `source/ports/player.ts`, `source/ports/database.ts`, `source/ports/filesystem.ts`
+- DB: `source/adapters/sqlite/database.ts`, `source/adapters/sqlite/schema.ts`
+- Player: `source/adapters/mpv/mpv.ts`
+- Playback: `source/application/playback/playback.ts`
+- Smart playlists: `source/core/playlists/` (DSL), `source/application/playlists/` (manager)
 - Config: `~/.config/moo/`, Data: `~/.local/share/moo/`, Cache: `~/.cache/moo/`
 
 ## Tech Rules
