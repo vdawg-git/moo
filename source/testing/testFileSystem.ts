@@ -38,6 +38,13 @@ export type TestFileSystem = AppFileSystem
 			yaml: string,
 			options?: { directory?: string }
 		): void
+		/** Remove a track file. Mirrors `addTrack` path resolution. */
+		removeTrack(
+			fileNameOrPath: string,
+			options?: { directory?: string }
+		): void
+		/** Remove a playlist file. Auto-appends `.yml` extension. Mirrors `addPlaylist` path resolution. */
+		removePlaylist(name: string, options?: { directory?: string }): void
 	}>
 
 /** In-memory FileSystem for testing. setFile/removeFile emit watch events. */
@@ -177,6 +184,19 @@ export function createTestFileSystem(): TestFileSystem {
 		addPlaylist(name, yaml, options) {
 			const directory = options?.directory ?? testPlaylistsDirectory
 			setFile(`${directory}/${name}.yml`, yaml)
+		},
+
+		removeTrack(fileNameOrPath, options) {
+			const filePath = fileNameOrPath.startsWith("/")
+				? fileNameOrPath
+				: `${options?.directory ?? "/music"}/${fileNameOrPath}`
+
+			fileSystem.removeFile(filePath)
+		},
+
+		removePlaylist(name, options) {
+			const directory = options?.directory ?? testPlaylistsDirectory
+			fileSystem.removeFile(`${directory}/${name}.yml`)
 		}
 	}
 

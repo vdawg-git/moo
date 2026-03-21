@@ -68,8 +68,7 @@ describe("playlistManager integration", () => {
 		await manager.scanAll()
 		expect((await database.getPlaylists()).getOrThrow()).toHaveLength(2)
 
-		// refactor also add removeTrack and removePlaylist helpers
-		fileSystem.removeFile(`${testPlaylistsDirectory}/rock.yml`)
+		fileSystem.removePlaylist("rock")
 		await manager.scanAll()
 
 		const playlists = await database.getPlaylists()

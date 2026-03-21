@@ -98,8 +98,7 @@ describe("musicLibrary integration", () => {
 		await library.scan()
 		expect((await database.getTracks()).getOrThrow()).toHaveLength(2)
 
-		// Remove one file and rescan
-		fileSystem.removeFile("/music/song2.flac")
+		fileSystem.removeTrack("song2.flac")
 		await library.scan()
 
 		const tracks = await database.getTracks()
