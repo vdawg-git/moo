@@ -40,6 +40,7 @@ export function List<T>({
 		searchString,
 		setMode,
 		setIndex,
+		setScrollboxSize,
 		onSelect
 	} = register
 
@@ -83,6 +84,12 @@ export function List<T>({
 				}}
 				{...scrollboxProps}
 				ref={scrollboxRef}
+				onSizeChange={function () {
+					setScrollboxSize({
+						scrollboxHeight: this.height,
+						viewportHeight: this.viewport.height
+					})
+				}}
 			>
 				{items.map((item, indexDisplayed) => {
 					// The item index is different here as the items could be filtered.

@@ -43,6 +43,7 @@ export function Tracklist({
 
 	const { register } = useList({
 		items: tracks,
+		centerOnIndex: playIndex,
 		onSelect: ({ index }) => onPlayRef.current?.(index),
 		onFocusItem: ({ data: track }) =>
 			registerTrackCommands(track, appState, keybindManager),

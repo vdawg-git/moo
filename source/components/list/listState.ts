@@ -7,7 +7,6 @@ import { useKeybindings } from "#/keybindManager/useKeybindings"
 import { keybinding } from "#/lib/keybinds"
 import { logger } from "#/logs"
 import type { ScrollBoxRenderable } from "@opentui/core"
-import type { RefObject } from "react"
 import type { ListItem } from "./listTypes"
 
 /** Opaque handle consumed by the `List` component. Page code should not reach into this. */
@@ -20,6 +19,10 @@ export type ListRegister<T> = {
 	readonly setSearchString: (searchString: string) => void
 	readonly setMode: (mode: ListMode) => void
 	readonly setIndex: (index: number) => void
+	readonly setScrollboxSize: (size: {
+		scrollboxHeight: number
+		viewportHeight: number
+	}) => void
 	readonly onSelect: (item: ListItem<T>) => void
 }
 
@@ -65,6 +68,9 @@ export type UseListArgument<T> = {
 
 	/** When true, preserve cursor position when items change instead of resetting to 0 */
 	keepIndex?: boolean
+
+	/** When set, scrolls to center this original item index if it's off-screen. Does not move cursor. */
+	centerOnIndex?: number
 }
 
 /**
@@ -79,6 +85,7 @@ export function useList<T>({
 	focused = true,
 	index: indexProp,
 	keepIndex = false,
+	centerOnIndex,
 	onFocusItem,
 	onSelect
 }: UseListArgument<T>): UseListResult<T> {
@@ -91,7 +98,6 @@ export function useList<T>({
 	if (!stateRef.current) {
 		stateRef.current = createListState<T>({
 			items: itemsUnfiltered,
-			scrollboxRef,
 			searchKeys,
 			searchThreshold
 		})
@@ -158,6 +164,14 @@ export function useList<T>({
 
 		stateRef.current.state.trigger.setIndex({ index: indexProp })
 	}, [indexProp])
+
+	useEffect(() => {
+		if (centerOnIndex === undefined) return
+
+		stateRef.current.state.trigger.centerIfNotVisible({
+			itemIndex: centerOnIndex
+		})
+	}, [centerOnIndex])
 
 	useKeybindings(
 		() => [
@@ -266,6 +280,8 @@ export function useList<T>({
 		setMode: (mode) => stateRef.current.state.trigger.setMode({ mode }),
 		setSearchString: (searchString) =>
 			stateRef.current.state.trigger.setSearchString({ searchString }),
+		setScrollboxSize: (size) =>
+			stateRef.current.state.trigger.setScrollboxSize(size),
 		onSelect
 	}
 
@@ -279,19 +295,39 @@ type ListState<T> = {
 	searchString?: string
 	index: number
 	scrollPosition: number
+	scrollboxHeight: number
+	viewportHeight: number
 	mode: ListMode
 }
 
 type ListMode = "default" | "searchInput"
 
-function createListState<T>({
+/** Minimal scroll adjustment to make targetIndex visible. */
+function computeScrollToShow(
+	targetIndex: number,
+	scrollPosition: number,
+	scrollboxHeight: number
+): number {
+	if (
+		targetIndex >= scrollPosition
+		&& targetIndex < scrollPosition + scrollboxHeight
+	) {
+		return scrollPosition
+	}
+
+	if (targetIndex < scrollPosition) {
+		return targetIndex
+	}
+
+	return targetIndex - scrollboxHeight + 1
+}
+
+export function createListState<T>({
 	items: itemsUnfiltered,
-	scrollboxRef,
 	searchKeys = [],
 	searchThreshold
 }: {
 	items: readonly T[]
-	scrollboxRef: RefObject<ScrollBoxRenderable | null>
 	/** Required to make the list searchable. Should have at least one item */
 	searchKeys?: {
 		name: string
@@ -308,6 +344,8 @@ function createListState<T>({
 		itemsSource: itemsUnfiltered,
 		searchString: undefined,
 		scrollPosition: 0,
+		scrollboxHeight: 0,
+		viewportHeight: 0,
 		mode: "default"
 	}
 
@@ -402,30 +440,36 @@ function createListState<T>({
 				{ scrollPosition }: { scrollPosition: number }
 			) => ({ ...context, scrollPosition }),
 
-			goNext: (context) => {
-				const { items } = context
-				const indexLastElement = items.length - 1
+			setScrollboxSize: (
+				context,
+				{
+					scrollboxHeight,
+					viewportHeight
+				}: { scrollboxHeight: number; viewportHeight: number }
+			) => ({ ...context, scrollboxHeight, viewportHeight }),
 
-				const previous = context.index
-				const newIndex = Math.min(previous + 1, indexLastElement)
-				const scrollbox = scrollboxRef.current
-				const scrollPosition =
-					scrollbox && previous >= scrollbox.scrollTop + scrollbox.height - 1
-						? context.scrollPosition + 1
-						: context.scrollPosition
+			goNext: (context) => {
+				if (context.scrollboxHeight <= 0) return context
+
+				const newIndex = Math.min(context.index + 1, context.items.length - 1)
+				const scrollPosition = computeScrollToShow(
+					newIndex,
+					context.scrollPosition,
+					context.scrollboxHeight
+				)
 
 				return { ...context, index: newIndex, scrollPosition }
 			},
 
 			goPrevious: (context) => {
-				const { index } = context
+				if (context.scrollboxHeight <= 0) return context
 
-				const newIndex = Math.max(index - 1, 0)
-				const scrollbox = scrollboxRef.current
-				const scrollPosition =
-					scrollbox && index <= scrollbox.scrollTop
-						? Math.max(index - 1, 0)
-						: context.scrollPosition
+				const newIndex = Math.max(context.index - 1, 0)
+				const scrollPosition = computeScrollToShow(
+					newIndex,
+					context.scrollPosition,
+					context.scrollboxHeight
+				)
 
 				return { ...context, index: newIndex, scrollPosition }
 			},
@@ -447,38 +491,66 @@ function createListState<T>({
 			}),
 
 			scrollDown: (context) => {
-				const scrollbox = scrollboxRef.current
-				if (!scrollbox) return context
+				if (context.viewportHeight <= 0) return context
 
-				const { scrollTop } = scrollbox
-				const { height } = scrollbox.viewport
+				const newScrollPosition =
+					context.scrollPosition + context.viewportHeight
 				const newIndex = Math.min(
 					context.items.length - 1,
-					Math.ceil(scrollTop + height + 1 + height / 2)
+					Math.ceil(newScrollPosition + context.viewportHeight / 2)
 				)
-				const newScrollPosition = context.scrollPosition + height
+				const scrollPosition = computeScrollToShow(
+					newIndex,
+					newScrollPosition,
+					context.scrollboxHeight
+				)
 
-				return {
-					...context,
-					index: newIndex,
-					scrollPosition: newScrollPosition
-				}
+				return { ...context, index: newIndex, scrollPosition }
 			},
 
 			scrollUp: (context) => {
-				const scrollbox = scrollboxRef.current
-				if (!scrollbox) return
+				if (context.viewportHeight <= 0) return context
 
-				const { scrollTop } = scrollbox
-				const { height } = scrollbox.viewport
-
+				const newScrollPosition =
+					context.scrollPosition - context.viewportHeight
 				const newIndex = Math.max(
 					0,
-					Math.ceil(scrollTop - height - 1 + height / 2)
+					Math.ceil(newScrollPosition + context.viewportHeight / 2)
 				)
-				const scrollPosition = context.scrollPosition - height
+				const scrollPosition = computeScrollToShow(
+					newIndex,
+					newScrollPosition,
+					context.scrollboxHeight
+				)
 
 				return { ...context, index: newIndex, scrollPosition }
+			},
+
+			centerIfNotVisible: (
+				context,
+				{ itemIndex }: { itemIndex: number }
+			) => {
+				if (context.scrollboxHeight <= 0) return context
+
+				const displayIndex = context.items.findIndex(
+					(item) => item.index === itemIndex
+				)
+				if (displayIndex === -1) return context
+
+				if (
+					displayIndex >= context.scrollPosition
+					&& displayIndex
+						< context.scrollPosition + context.scrollboxHeight
+				) {
+					return context
+				}
+
+				const scrollPosition = Math.max(
+					0,
+					displayIndex - Math.floor(context.scrollboxHeight / 2)
+				)
+
+				return { ...context, scrollPosition }
 			}
 		}
 	})
