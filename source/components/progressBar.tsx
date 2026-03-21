@@ -5,6 +5,7 @@ import { useColors } from "#/hooks/useColors"
 import { useIcons } from "#/hooks/useIcons"
 import { useCurrentTrack, usePlaybackData } from "#/state/useSelectors"
 import type { RGBA } from "@opentui/core"
+import type { AppColors } from "#/config/theme"
 import type { PlayingState } from "#/types/types"
 
 type BarSegment = {
@@ -92,11 +93,7 @@ function buildBarSegments({
 	readonly progressCell: number
 	readonly timeText: string
 	readonly timeStart: number
-	readonly colors: {
-		readonly brightYellow: RGBA
-		readonly brightBlack: RGBA
-		readonly yellow: RGBA
-	}
+	readonly colors: AppColors
 	readonly playState: PlayingState
 	readonly dotIcon: string
 }): readonly BarSegment[] {
@@ -158,7 +155,7 @@ function classifyPosition({
 	readonly progressCell: number
 	readonly timeText: string
 	readonly timeStart: number
-	readonly colors: { readonly brightYellow: RGBA; readonly brightBlack: RGBA }
+	readonly colors: AppColors
 	readonly timeFutureFg: RGBA
 	readonly dotIcon: string
 }): BarSegment {
@@ -170,7 +167,7 @@ function classifyPosition({
 		if (isPast) {
 			return {
 				text: char,
-				fg: colors.brightYellow,
+				fg: colors.green,
 				attributes: TextAttributes.INVERSE
 			}
 		}
@@ -179,11 +176,11 @@ function classifyPosition({
 	}
 
 	if (index === progressCell) {
-		return { text: dotIcon, fg: colors.brightYellow }
+		return { text: dotIcon, fg: colors.green }
 	}
 
 	if (isPast) {
-		return { text: "─", fg: colors.brightYellow }
+		return { text: "─", fg: colors.green }
 	}
 
 	return { text: "─", fg: colors.brightBlack, attributes: TextAttributes.DIM }
