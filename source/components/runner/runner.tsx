@@ -7,6 +7,7 @@ import { Input } from "../Input"
 import { Select } from "../select"
 import { useRunnerItems } from "./useRunnerItems"
 import type { InputRenderable, KeyEvent, RGBA } from "@opentui/core"
+import type { InputProps } from "@opentui/react"
 import type { AppConfig } from "#/config/config"
 import type { AppColor, AppColorName } from "#/config/theme"
 import type { AppStore } from "#/state/state"
@@ -102,7 +103,7 @@ function Runner({ modal, initialValue }: RunnerProps) {
 			// But the cursor position gets set outside of the React lifecyle, so we delay a bit
 			setTimeout(() => {
 				if (inputRef.current) {
-					inputRef.current.cursorPosition = newInput.length
+					inputRef.current.cursorOffset = newInput.length
 				}
 			}, 5)
 
@@ -212,7 +213,7 @@ function RunnerInput({
 				textColor={colors.brightBlack}
 				placeholderColor={colors.black}
 				focusedBackgroundColor={colors.bg}
-				onSubmit={onSubmit}
+				onSubmit={onSubmit as InputProps["onSubmit"]}
 				cursorStyle={{
 					blinking: focused,
 					style: focused ? "line" : "underline"

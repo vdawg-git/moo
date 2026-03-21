@@ -18,6 +18,7 @@ import { Select } from "../../components/select"
 import { useQuickEditState } from "./quickEditState"
 import type { TagType } from "#/config/config"
 import type { BaseTrack, TrackId } from "#/database/types"
+import type { InputProps } from "@opentui/react"
 import type { ReactNode } from "react"
 import type { SuggestionsRecord } from "./quickEditState"
 
@@ -287,7 +288,7 @@ function TagsInput({
 				onInput={onChange}
 				placeholder={placeholder}
 				width={"100%"}
-				onSubmit={onSubmit}
+				onSubmit={onSubmit as InputProps["onSubmit"]}
 			/>
 		</box>
 	)

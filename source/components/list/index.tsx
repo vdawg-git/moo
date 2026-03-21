@@ -60,7 +60,6 @@ export function List<T>({
 						focused={mode === "searchInput"}
 						placeholder="Search.."
 						onInput={setSearchString}
-						height={1}
 						width={"100%"}
 						textColor={mode === "default" ? colors.brightBlack : undefined}
 						onKeyDown={({ name }) => {
