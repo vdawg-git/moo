@@ -136,7 +136,7 @@ function handlePlayer(
 	 */
 	const progressInput$ = new Subject<number>()
 	const progressSubscription = progressInput$
-		.pipe(auditTime(500))
+		.pipe(auditTime(250))
 		.subscribe((newTime) => {
 			appState.send({ type: "setPlayProgress", newTime })
 		})
