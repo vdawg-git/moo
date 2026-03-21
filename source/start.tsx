@@ -5,9 +5,10 @@ import { AppContextProvider, createAppContext } from "./appContext"
 import { registerGlobalCommands } from "./commands/commandFunctions"
 import { createCommandCallbacks } from "./commands/commandsCallbacks"
 import { getConfig } from "./config/config"
-import { databasePath, IS_DEV } from "./constants"
+import { databasePath, IS_DEV, playlistsDirectory } from "./constants"
 import { createDatabase } from "./database/database"
 import { createRealFileSystem, setupFiles } from "./filesystem"
+import { createBlueprintResolver } from "./smartPlaylists/playlistManager"
 import { keybindsState } from "./keybindManager/keybindsState"
 import { keys$ } from "./keybindManager/keysStream"
 import { logger } from "./logs"
@@ -29,12 +30,13 @@ export async function startApp() {
 
 	const appConfig = await getConfig()
 
+	const fileSystem = createRealFileSystem()
 	const database = await createDatabase({
 		databasePath,
-		tagSeparator: appConfig.quickEdit.tagSeperator
+		tagSeparator: appConfig.quickEdit.tagSeperator,
+		getBlueprint: createBlueprintResolver({ fileSystem, playlistsDirectory })
 	})
 	const player = createLocalPlayer()
-	const fileSystem = createRealFileSystem()
 
 	const appContext = createAppContext({
 		config: appConfig,

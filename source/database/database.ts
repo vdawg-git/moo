@@ -7,7 +7,6 @@ import { Result } from "typescript-result"
 import { DATA_DIRECTORY, IS_DEV } from "#/constants.js"
 import { nullsToUndefined } from "#/helpers.js"
 import { logger } from "#/logs.js"
-import { getPlaylistBlueprintFromId } from "#/smartPlaylists/parsing.js"
 import { getSmartPlaylistTracks } from "#/smartPlaylists/toSql.js"
 // @ts-expect-error
 import setupSqlRaw from "../../drizzle/setup.sql" with { type: "text" }
@@ -30,6 +29,8 @@ import {
 	selectorTrackSort
 } from "./selectors.js"
 import { upsert } from "./sqlHelper.js"
+import type { PlaylistBlueprint } from "#/smartPlaylists/schema"
+import type { AsyncResult } from "typescript-result"
 import type { TrackFileMeta } from "./schema.js"
 import type {
 	AlbumId,
@@ -37,17 +38,24 @@ import type {
 	ArtistId,
 	DrizzleDatabase,
 	Playlist,
+	PlaylistId,
 	TrackId
 } from "./types.js"
+
+export type GetBlueprintFn = (
+	id: PlaylistId
+) => AsyncResult<PlaylistBlueprint, Error>
 
 export type CreateDatabaseDeps = {
 	readonly databasePath: string
 	readonly tagSeparator: string
+	readonly getBlueprint: GetBlueprintFn
 }
 
 export async function createDatabase({
 	databasePath,
-	tagSeparator
+	tagSeparator,
+	getBlueprint
 }: CreateDatabaseDeps): Promise<AppDatabase> {
 	logger.info("database init", {
 		databasePath: databasePath,
@@ -58,14 +66,16 @@ export async function createDatabase({
 
 	const db = await initDatabase({ databasePath, tagSeparator })
 
-	return wrapDrizzleDatabase({ db })
+	return wrapDrizzleDatabase({ db, getBlueprint })
 }
 
 /** Wraps a raw Drizzle instance with the AppDatabase interface */
 export function wrapDrizzleDatabase({
-	db
+	db,
+	getBlueprint
 }: {
 	readonly db: DrizzleDatabase
+	readonly getBlueprint: GetBlueprintFn
 }): AppDatabase {
 	const changed$ = new Subject<string>()
 
@@ -131,16 +141,10 @@ export function wrapDrizzleDatabase({
 
 		getPlaylist: (id) =>
 			Result.try(async () => {
-				const blueprint = await getPlaylistBlueprintFromId(id).getOrThrow()
+				const blueprint = await getBlueprint(id).getOrThrow()
 
 				return getSmartPlaylistTracks(db, blueprint)
-					.onSuccess((tracks) => {
-						logger.debug("playlist get BEFORE sort", { tracks })
-					})
 					.map(sortTracks)
-					.onSuccess((tracks) => {
-						logger.debug("playlist get after sort", { tracks })
-					})
 					.map(
 						(tracks) =>
 							({
@@ -364,7 +368,10 @@ function mergeDepuplicate<T extends object, Key extends keyof T>(
 async function initDatabase({
 	databasePath,
 	tagSeparator
-}: CreateDatabaseDeps): Promise<DrizzleDatabase> {
+}: Pick<
+	CreateDatabaseDeps,
+	"databasePath" | "tagSeparator"
+>): Promise<DrizzleDatabase> {
 	const db = drizzle(databasePath, { schema })
 
 	const shouldRecreate = await db

@@ -144,6 +144,18 @@ export function createPlaylistManager(
 	}
 }
 
+/** Creates a standalone blueprint resolver for use outside the playlist manager */
+export function createBlueprintResolver(deps: {
+	readonly fileSystem: AppFileSystem
+	readonly playlistsDirectory: FilePath
+}): (id: PlaylistId) => AsyncResult<PlaylistBlueprint, Error> {
+	return (id) =>
+		parsePlaylistBlueprintFromPath(
+			deps.fileSystem,
+			playlistIdToFilePath(deps.playlistsDirectory, id)
+		)
+}
+
 function isSupportedExtension(filepath: string): boolean {
 	return path.extname(filepath) === playlistExtension
 }

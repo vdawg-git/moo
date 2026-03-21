@@ -17,6 +17,15 @@ rules:
           includes: "Test Artist"
 `
 
+const bareColumnPlaylistYaml = `
+name: Bare Rules Playlist
+rules:
+  - artist:
+      includes: "Test Artist"
+  - genre:
+      is: "pop"
+`
+
 const anotherPlaylistYaml = `
 name: Rock Playlist
 rules:
@@ -96,11 +105,13 @@ describe("playlistManager integration", () => {
 		const parsed = blueprint.getOrThrow()
 		expect(parsed.name).toBe("Test Playlist")
 		expect(parsed.rules).toHaveLength(1)
-		expect(parsed.rules[0]!._type).toBe("all")
-		expect(parsed.rules[0]!.fields).toHaveLength(1)
 
-		const field = parsed.rules[0]!.fields[0]!
-		expect(field).toMatchObject({
+		const rule = parsed.rules[0]!
+		expect(rule._type).toBe("all")
+		if (!("fields" in rule)) throw new Error("expected MetaOperator")
+		expect(rule.fields).toHaveLength(1)
+
+		expect(rule.fields[0]).toMatchObject({
 			_type: "column",
 			column: "artist",
 			rules: { includes: "Test Artist", _type: "string" }
@@ -113,6 +124,29 @@ describe("playlistManager integration", () => {
 		const result = await manager.getBlueprint("nonexistent" as PlaylistId)
 
 		expect(result.isError()).toBe(true)
+	})
+
+	it("should parse bare column rules (no all:/any: wrapper)", async () => {
+		const { fileSystem, manager } = await createTestManager()
+		fileSystem.addPlaylist("bare", bareColumnPlaylistYaml)
+
+		const blueprint = await manager.getBlueprint("bare" as PlaylistId)
+
+		expect(blueprint.isOk()).toBe(true)
+		const parsed = blueprint.getOrThrow()
+		expect(parsed.name).toBe("Bare Rules Playlist")
+		expect(parsed.rules).toHaveLength(2)
+
+		expect(parsed.rules[0]).toMatchObject({
+			_type: "column",
+			column: "artist",
+			rules: { includes: "Test Artist", _type: "string" }
+		})
+		expect(parsed.rules[1]).toMatchObject({
+			_type: "column",
+			column: "genre",
+			rules: { is: "pop", _type: "string" }
+		})
 	})
 
 	it("should handle empty playlists directory", async () => {

@@ -223,14 +223,16 @@ export const playlistBlueprintSchema = z.object({
 			"Optional display name. If not set the filename will get shown in the app."
 		),
 
-	rules: metaOperatorSchema
+	rules: z
+		.union([metaOperatorSchema, trackColumnSchema])
 		.array()
 		.nonempty("`rules` is empty and would lead to an empty playlist.")
 		.readonly()
 		.describe(
 			stripIndent(`Dictates what to put into the smart playlist.
 				All top level rules need to match for a track to get added.
-				An "any" group matches if any single rule within it matches. Whereas an "all" rules matches only if all rules match.`)
+				Bare column rules (e.g. "artist:", "genre:") are AND'd together.
+				Use "all:" or "any:" groups only when you need explicit grouping.`)
 		)
 })
 
