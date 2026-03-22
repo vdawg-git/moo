@@ -97,10 +97,7 @@ export function List<T>({
 				{...scrollboxProps}
 				ref={scrollboxRef}
 				onSizeChange={function () {
-					setScrollboxSize({
-						scrollboxHeight: this.height,
-						viewportHeight: this.viewport.height
-					})
+					setScrollboxSize({ scrollboxHeight: this.height })
 				}}
 			>
 				{windowStart > 0 && <box height={windowStart} />}

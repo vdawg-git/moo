@@ -6,10 +6,7 @@ const items = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
 function createTestState(overrides?: { items?: readonly string[] }) {
 	const { state } = createListState({ items: overrides?.items ?? items })
 
-	state.trigger.setScrollboxSize({
-		scrollboxHeight: 5,
-		viewportHeight: 4
-	})
+	state.trigger.setScrollboxSize({ scrollboxHeight: 5 })
 
 	return state
 }
@@ -127,28 +124,28 @@ describe("centerIfNotVisible", () => {
 })
 
 describe("scrollDown / scrollUp", () => {
-	it("scrollDown jumps by viewport height", () => {
+	it("scrollDown jumps by scrollbox height", () => {
 		const state = createTestState()
 
 		state.trigger.scrollDown()
 
-		// viewportHeight is 4
-		expect(context(state).scrollPosition).toBe(4)
+		// scrollboxHeight is 5
+		expect(context(state).scrollPosition).toBe(5)
 		expect(context(state).index).toBeGreaterThan(0)
 	})
 
-	it("scrollUp jumps by viewport height", () => {
+	it("scrollUp jumps by scrollbox height", () => {
 		const state = createTestState()
 		state.trigger.setScrollPosition({ scrollPosition: 5 })
 		state.trigger.setIndex({ index: 7 })
 
 		state.trigger.scrollUp()
 
-		// 5 - 4 = 1
-		expect(context(state).scrollPosition).toBe(1)
+		// 5 - 5 = 0
+		expect(context(state).scrollPosition).toBe(0)
 	})
 
-	it("no-ops when viewportHeight is 0", () => {
+	it("no-ops when scrollboxHeight is 0", () => {
 		const { state } = createListState({ items })
 
 		state.trigger.scrollDown()
@@ -211,6 +208,6 @@ describe("goFirst / goLast", () => {
 		state.trigger.goLast()
 
 		expect(context(state).index).toBe(9)
-		expect(context(state).scrollPosition).toBe(9)
+		expect(context(state).scrollPosition).toBe(5)
 	})
 })

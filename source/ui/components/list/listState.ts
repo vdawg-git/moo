@@ -21,10 +21,7 @@ export type ListRegister<T> = {
 	readonly setSearchString: (searchString: string) => void
 	readonly setMode: (mode: ListMode) => void
 	readonly setIndex: (index: number) => void
-	readonly setScrollboxSize: (size: {
-		scrollboxHeight: number
-		viewportHeight: number
-	}) => void
+	readonly setScrollboxSize: (size: { scrollboxHeight: number }) => void
 	readonly onSelect: (item: ListItem<T>) => void
 }
 
@@ -302,7 +299,6 @@ type ListState<T> = {
 	index: number
 	scrollPosition: number
 	scrollboxHeight: number
-	viewportHeight: number
 	mode: ListMode
 }
 
@@ -351,7 +347,6 @@ export function createListState<T>({
 		searchString: undefined,
 		scrollPosition: 0,
 		scrollboxHeight: 0,
-		viewportHeight: 0,
 		mode: "default"
 	}
 
@@ -448,11 +443,8 @@ export function createListState<T>({
 
 			setScrollboxSize: (
 				context,
-				{
-					scrollboxHeight,
-					viewportHeight
-				}: { scrollboxHeight: number; viewportHeight: number }
-			) => ({ ...context, scrollboxHeight, viewportHeight }),
+				{ scrollboxHeight }: { scrollboxHeight: number }
+			) => ({ ...context, scrollboxHeight }),
 
 			goNext: (context) => {
 				if (context.scrollboxHeight <= 0) return context
@@ -486,7 +478,10 @@ export function createListState<T>({
 				return {
 					...context,
 					index: indexLastElement,
-					scrollPosition: indexLastElement
+					scrollPosition: Math.max(
+						0,
+						context.items.length - context.scrollboxHeight
+					)
 				}
 			},
 
@@ -497,15 +492,15 @@ export function createListState<T>({
 			}),
 
 			scrollDown: (context) => {
-				if (context.viewportHeight <= 0) return context
+				if (context.scrollboxHeight <= 0) return context
 
 				const newScrollPosition = Math.min(
-					context.scrollPosition + context.viewportHeight,
+					context.scrollPosition + context.scrollboxHeight,
 					Math.max(0, context.items.length - context.scrollboxHeight)
 				)
 				const newIndex = Math.min(
 					context.items.length - 1,
-					Math.ceil(newScrollPosition + context.viewportHeight / 2)
+					Math.ceil(newScrollPosition + context.scrollboxHeight / 2)
 				)
 				const scrollPosition = computeScrollToShow(
 					newIndex,
@@ -517,15 +512,15 @@ export function createListState<T>({
 			},
 
 			scrollUp: (context) => {
-				if (context.viewportHeight <= 0) return context
+				if (context.scrollboxHeight <= 0) return context
 
 				const newScrollPosition = Math.max(
 					0,
-					context.scrollPosition - context.viewportHeight
+					context.scrollPosition - context.scrollboxHeight
 				)
 				const newIndex = Math.max(
 					0,
-					Math.ceil(newScrollPosition + context.viewportHeight / 2)
+					Math.ceil(newScrollPosition + context.scrollboxHeight / 2)
 				)
 				const scrollPosition = computeScrollToShow(
 					newIndex,
