@@ -15,7 +15,6 @@ export function createAppState() {
 			togglePlayback: a.togglePlayback,
 			resumePlayback: a.resumePlayback,
 			pausePlayback: a.pausePlayback,
-			setPlayProgress: a.setPlayProgress,
 			toggleShuffle: a.toggleShuffle,
 			removeFromQueue: a.removeFromQueue,
 
@@ -64,8 +63,7 @@ function createInitalState(): AppState {
 			playState: "stopped",
 			loopState: "none",
 			shuffleMap: undefined,
-			isPlayingFromManualQueue: false,
-			progress: 0
+			isPlayingFromManualQueue: false
 		},
 		view: {
 			historyIndex: 0,

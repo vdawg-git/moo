@@ -9,7 +9,7 @@ export type CurrentTrack = {
 }
 
 export function getCurrentTrack(
-	playback: Omit<AppState["playback"], "progress">
+	playback: AppState["playback"]
 ): CurrentTrack | undefined {
 	const { index, queue, manuallyAdded, isPlayingFromManualQueue } = playback
 

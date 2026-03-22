@@ -10,7 +10,6 @@ type CreateStateOptions = {
 	readonly loopState?: LoopState
 	readonly shuffleMap?: readonly number[]
 	readonly isPlayingFromManualQueue?: boolean
-	readonly progress?: number
 }
 
 export function createInitialState(options?: CreateStateOptions): AppState {
@@ -24,8 +23,7 @@ export function createInitialState(options?: CreateStateOptions): AppState {
 			playState: options?.playState ?? "stopped",
 			loopState: options?.loopState ?? "none",
 			shuffleMap: options?.shuffleMap,
-			isPlayingFromManualQueue: options?.isPlayingFromManualQueue ?? false,
-			progress: options?.progress ?? 0
+			isPlayingFromManualQueue: options?.isPlayingFromManualQueue ?? false
 		},
 		view: {
 			historyIndex: 0,

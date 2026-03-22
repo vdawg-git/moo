@@ -16,7 +16,6 @@ describe("stopPlayback", () => {
 			index: 2,
 			manuallyAdded: trackIds("track-1", "track-2"),
 			playState: "playing",
-			progress: 45,
 			shuffleMap: [0, 2, 1, 4, 3]
 		})
 
@@ -27,7 +26,6 @@ describe("stopPlayback", () => {
 			index: 0,
 			manuallyAdded: [],
 			playState: "stopped",
-			progress: 0,
 			shuffleMap: []
 		})
 	})
@@ -300,16 +298,6 @@ describe("togglePlayback", () => {
 		const newState = actions.togglePlayback(state)
 
 		expect(newState.playback.playState).toBe("stopped")
-	})
-})
-
-describe("setPlayProgress", () => {
-	it("should update progress time", () => {
-		const state = createInitialState()
-
-		const newState = actions.setPlayProgress(state, { newTime: 123.45 })
-
-		expect(newState.playback.progress).toBe(123.45)
 	})
 })
 

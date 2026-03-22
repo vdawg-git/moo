@@ -33,8 +33,6 @@ export interface AppState {
 		 */
 		shuffleMap: readonly number[] | undefined
 		isPlayingFromManualQueue: boolean
-		/** Time in seconds */
-		progress: number
 	}
 
 	/** This dictates the navigation */

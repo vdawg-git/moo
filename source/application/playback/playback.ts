@@ -1,12 +1,10 @@
 import {
-	auditTime,
 	combineLatest,
 	distinctUntilChanged,
 	EMPTY,
 	map,
 	pairwise,
 	startWith,
-	Subject,
 	switchMap,
 	tap
 } from "rxjs"
@@ -129,18 +127,6 @@ function handlePlayer(
 	}: Pick<AudioPlaybackDeps, "appState" | "player" | "addErrorNotification">,
 	toPlay$: Observable<BaseTrack | undefined>
 ) {
-	/**
-	 * Progress has its own stream,
-	 * so that we are able to throttle it here,
-	 * without Players having to worry about that.
-	 */
-	const progressInput$ = new Subject<number>()
-	const progressSubscription = progressInput$
-		.pipe(auditTime(250))
-		.subscribe((newTime) => {
-			appState.send({ type: "setPlayProgress", newTime })
-		})
-
 	const playEventsSubscription = toPlay$
 		.pipe(
 			switchMap((track) => (track ? player.events$ : EMPTY)),
@@ -156,9 +142,7 @@ function handlePlayer(
 					addErrorNotification("Error when playing back", error)
 				})
 
-				.with({ type: "progress" }, ({ currentTime }) => {
-					progressInput$.next(currentTime)
-				})
+				.with({ type: "progress" }, () => {})
 				.exhaustive()
 		)
 
@@ -193,7 +177,7 @@ function handlePlayer(
 		})
 
 	return () =>
-		[playSubscription, playEventsSubscription, progressSubscription].forEach(
-			(subscription) => subscription.unsubscribe()
+		[playSubscription, playEventsSubscription].forEach((subscription) =>
+			subscription.unsubscribe()
 		)
 }

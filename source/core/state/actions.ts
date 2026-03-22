@@ -46,7 +46,6 @@ const stopPlayback = createAction((context) => {
 	context.playback.index = 0
 	context.playback.manuallyAdded = []
 	context.playback.playState = "stopped"
-	context.playback.progress = 0
 	context.playback.shuffleMap = context.playback.shuffleMap ? [] : undefined
 })
 
@@ -186,12 +185,6 @@ const pausePlayback = createAction((context) => {
 
 	context.playback.playState = "paused"
 })
-
-const setPlayProgress = createAction<{ newTime: number }>(
-	(context, { newTime }) => {
-		context.playback.progress = newTime
-	}
-)
 
 const toggleShuffle = createAction((context) => {
 	const { shuffleMap } = context.playback
@@ -367,7 +360,6 @@ export const appStateActionsInternal = {
 	removeFromManualQueue,
 	removeFromQueue,
 	resumePlayback,
-	setPlayProgress,
 	stopPlayback,
 	togglePlayback,
 	toggleShuffle,

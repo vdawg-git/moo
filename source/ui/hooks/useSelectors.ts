@@ -1,7 +1,7 @@
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { useAppContext } from "#/app/context"
-import { useObservable } from "#/ui/hooks/useObservable"
+import { useBehaviorSubject, useObservable } from "#/ui/hooks/useObservable"
 import type { AppState, PlaybackSource } from "#/core/state/types"
 import type { BaseTrack } from "#/ports/database"
 import type { PlayingState } from "#/shared/types/types"
@@ -36,26 +36,15 @@ export function useShuffleMap(): readonly number[] | undefined {
 }
 
 export function usePlayProgress(): number {
-	const appState = useAppState()
+	const { derived } = useAppContext()
 
-	return useSelector(appState, ({ context }) => context.playback.progress)
+	return useBehaviorSubject(derived.progress$)
 }
 
-type PlaybackQueueData = Omit<AppState["playback"], "progress">
-
-/** Selects all playback data except progress — avoids 250ms re-renders from progress ticks. */
-export function usePlaybackQueue(): PlaybackQueueData {
+export function usePlaybackQueue(): AppState["playback"] {
 	const appState = useAppState()
 
-	return useSelector(
-		appState,
-		({ context }) => {
-			const { progress: _, ...rest } = context.playback
-
-			return rest
-		},
-		shallowEquals
-	)
+	return useSelector(appState, ({ context }) => context.playback)
 }
 
 /**
@@ -76,17 +65,4 @@ export function usePlayingIndex(source: PlaybackSource): number | undefined {
 
 		return isSourcePlaying ? playback.index : undefined
 	})
-}
-
-function shallowEquals(
-	a: Record<string, unknown> | undefined,
-	b: Record<string, unknown> | undefined
-): boolean {
-	if (a === b) return true
-	if (!a || !b) return false
-
-	const keysA = Object.keys(a)
-	if (keysA.length !== Object.keys(b).length) return false
-
-	return keysA.every((key) => Object.is(a[key], b[key]))
 }

@@ -76,7 +76,8 @@ export function createAppContext({
 		appState$,
 		database,
 		addErrorNotification,
-		observeQuery: query.observeQuery
+		observeQuery: query.observeQuery,
+		playerEvents$: player.events$
 	})
 
 	const musicLibrary = createMusicLibrary({

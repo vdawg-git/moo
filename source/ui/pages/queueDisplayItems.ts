@@ -12,7 +12,7 @@ export type QueueDisplayItem = {
 
 /** Computes the current + upcoming tracks for the queue page display. */
 export function getQueueDisplayItems(
-	playback: Omit<AppState["playback"], "progress">
+	playback: AppState["playback"]
 ): readonly QueueDisplayItem[] {
 	const { queue, manuallyAdded, isPlayingFromManualQueue, index } = playback
 
