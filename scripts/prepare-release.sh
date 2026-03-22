@@ -4,7 +4,7 @@ set -euo pipefail
 echo "Compiling binary..."
 mkdir -p ./dist
 
-bun compile
+bun build --compile  ./source/app/index.ts --no-compile-autoload-dotenv --sourcemap ./source/app/index.ts --outfile ./dist/moo
 
 echo "Calculating hash..."
 HASH=$(nix-hash --type sha256 --flat --base32 dist/moo)
