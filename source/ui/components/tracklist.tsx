@@ -36,7 +36,10 @@ export function Tracklist({
 	playState
 }: PlaylistProps) {
 	const { appState, keybindManager } = useAppContext()
-	const playIndex = shuffleMap ? shuffleMap[basePlayIndex ?? 0] : basePlayIndex
+	const playIndex =
+		basePlayIndex !== undefined && shuffleMap
+			? shuffleMap[basePlayIndex]
+			: basePlayIndex
 
 	const onPlayRef = useRef<PlaylistProps["onPlay"]>(onPlay)
 	onPlayRef.current = onPlay
@@ -61,12 +64,12 @@ export function Tracklist({
 	) : (
 		<List
 			register={register}
-			render={(track, { focused: isFocus, indexDisplayed }) => (
+			render={(track, { focused: isFocus, indexItem }) => (
 				<TrackItem
 					track={track}
 					focused={isFocus}
 					state={
-						indexDisplayed === playIndex
+						indexItem === playIndex
 							? playState === "playing"
 								? "playing"
 								: "paused"

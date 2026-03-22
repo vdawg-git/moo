@@ -1,12 +1,3 @@
-// I could create a stream which fetches the genre and moods via combine latest,
-// and then maps those to the store
-// and ultimately returning the store wrapped in a QueryResult.
-// However, I am not sure if this is the best way.
-// Doesnt feel like it.
-// I could create the store and the queries in parallel,
-// and when a query completes, I update the store.
-// But thats kinda imperative..
-
 import { createAtom, createStore } from "@xstate/store"
 import { useAtom } from "@xstate/store/react"
 import { create } from "mutative"
@@ -32,8 +23,10 @@ export function useQuickEditState(
 	const stateRef = useRef<ReturnType<typeof createQuickEditState>>(null)
 	if (!stateRef.current) {
 		stateRef.current = createQuickEditState({
-			appliedMood: track.mood ?? [],
-			appliedGenre: track.genre ?? [],
+			appliedTags: {
+				mood: track.mood ?? [],
+				genre: track.genre ?? []
+			},
 			suggestions,
 			defaultTagType
 		})
@@ -43,19 +36,6 @@ export function useQuickEditState(
 	const suggestionsFiltered = useAtom(state.suggestionsAtom)
 	const tagsActive = useAtom(state.tagsActiveAtom)
 
-	// 	useEffect(()=> {
-	// 		// database.getCoOccurenceGenres
-	// 		//
-
-	// Promise.all		(
-	// 	[
-	// 		Promise.resolve(["mood 1", "mood 2", "mood 3"]),
-	// 		Promise.resolve( ["genre 1", "genre 2", "genre 3"])
-	// 	]
-	// 		).then(([moods, genres])=> stateRef.current?.state.trigger.setActiveTags())
-
-	// 	}, [track])
-
 	return {
 		state: stateRef.current.state,
 		suggestions: suggestionsFiltered,
@@ -63,15 +43,12 @@ export function useQuickEditState(
 	}
 }
 
-// And manual work, but probably the easiest.
-function createQuickEditState({
-	appliedGenre,
-	appliedMood,
+export function createQuickEditState({
+	appliedTags,
 	suggestions,
 	defaultTagType
 }: {
-	appliedGenre: readonly string[]
-	appliedMood: readonly string[]
+	appliedTags: SuggestionsRecord
 	suggestions: SuggestionsRecord
 	defaultTagType: TagType
 }) {
@@ -86,10 +63,7 @@ function createQuickEditState({
 		context: {
 			...initalState,
 			tagsSuggested: suggestions,
-			tagsApplied: {
-				genre: appliedGenre,
-				mood: appliedMood
-			}
+			tagsApplied: appliedTags
 		} satisfies QuickEditStateStore,
 		on: {
 			switchTagType: (context, { tagType }: { tagType: TagType }) => ({

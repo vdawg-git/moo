@@ -2,7 +2,7 @@ import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import Fuse from "fuse.js"
-import { useEffect, useId, useRef } from "react"
+import { useEffect, useId, useLayoutEffect, useRef } from "react"
 import { useKeybindings } from "#/application/keybinds/useKeybindings"
 import { keybinding } from "#/shared/library/keybinds"
 import { logger } from "#/shared/logs"
@@ -14,6 +14,8 @@ export type ListRegister<T> = {
 	readonly scrollboxRef: React.RefObject<ScrollBoxRenderable | null>
 	readonly items: readonly ListItem<T>[]
 	readonly index: number
+	readonly scrollPosition: number
+	readonly scrollboxHeight: number
 	readonly mode: ListMode
 	readonly searchString: string | undefined
 	readonly setSearchString: (searchString: string) => void
@@ -118,6 +120,14 @@ export function useList<T>({
 	const mode = useSelector(
 		stateRef.current.state,
 		({ context }) => context.mode
+	)
+	const scrollPosition = useSelector(
+		stateRef.current.state,
+		({ context }) => context.scrollPosition
+	)
+	const scrollboxHeight = useSelector(
+		stateRef.current.state,
+		({ context }) => context.scrollboxHeight
 	)
 
 	const onFocusItemRef = useRef(onFocusItem)
@@ -257,21 +267,17 @@ export function useList<T>({
 		{ enabled: mode === "searchInput" && !!searchKeys }
 	)
 
-	useEffect(() => {
-		const subscription = stateRef.current.state
-			.select((context) => context.scrollPosition)
-			.subscribe((scrollPosition) => {
-				scrollboxRef.current?.scrollTo(scrollPosition)
-			})
-
-		return () => subscription.unsubscribe()
-	}, [])
+	useLayoutEffect(() => {
+		scrollboxRef.current?.scrollTo(scrollPosition)
+	}, [scrollPosition])
 
 	const setIndex = (index: number) =>
 		stateRef.current.state.trigger.setIndex({ index })
 
 	const register: ListRegister<T> = {
 		index,
+		scrollPosition,
+		scrollboxHeight,
 		scrollboxRef,
 		items,
 		searchString,
@@ -493,8 +499,10 @@ export function createListState<T>({
 			scrollDown: (context) => {
 				if (context.viewportHeight <= 0) return context
 
-				const newScrollPosition =
-					context.scrollPosition + context.viewportHeight
+				const newScrollPosition = Math.min(
+					context.scrollPosition + context.viewportHeight,
+					Math.max(0, context.items.length - context.scrollboxHeight)
+				)
 				const newIndex = Math.min(
 					context.items.length - 1,
 					Math.ceil(newScrollPosition + context.viewportHeight / 2)
@@ -511,8 +519,10 @@ export function createListState<T>({
 			scrollUp: (context) => {
 				if (context.viewportHeight <= 0) return context
 
-				const newScrollPosition =
+				const newScrollPosition = Math.max(
+					0,
 					context.scrollPosition - context.viewportHeight
+				)
 				const newIndex = Math.max(
 					0,
 					Math.ceil(newScrollPosition + context.viewportHeight / 2)

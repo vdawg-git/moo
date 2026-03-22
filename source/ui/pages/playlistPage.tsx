@@ -7,7 +7,11 @@ import { PlaylistTitle } from "#/ui/components/playlistTitle"
 import { Tracklist } from "#/ui/components/tracklist"
 import { useColors } from "#/ui/hooks/useColors"
 import { useQuery } from "#/ui/hooks/useQuery"
-import { usePlaybackData, usePlayingIndex } from "#/ui/hooks/useSelectors"
+import {
+	usePlayingIndex,
+	usePlayState,
+	useShuffleMap
+} from "#/ui/hooks/useSelectors"
 import type { PlaylistId } from "#/ports/database"
 
 type PlaylistProps = {
@@ -19,7 +23,8 @@ export function PlaylistPage({ id }: PlaylistProps) {
 	const queryFn = useCallback(() => database.getPlaylist(id), [id, database])
 	const response = useQuery(createQueryKey.playlist(id), queryFn)
 	const playingIndex = usePlayingIndex({ type: "playlist", id })
-	const playback = usePlaybackData()
+	const shuffleMap = useShuffleMap()
+	const playState = usePlayState()
 	const amount = response.data?.getOrNull()?.tracks.length
 	const displayName = response.data?.getOrNull()?.displayName ?? id
 	const colors = useColors()
@@ -42,8 +47,8 @@ export function PlaylistPage({ id }: PlaylistProps) {
 										index
 									})
 								}
-								shuffleMap={playback.shuffleMap}
-								playState={playback.playState}
+								shuffleMap={shuffleMap}
+								playState={playState}
 								playingIndex={playingIndex}
 								key={id}
 							/>

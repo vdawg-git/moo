@@ -9,7 +9,7 @@ import { PlaylistTitle } from "#/ui/components/playlistTitle"
 import { TrackItem } from "#/ui/components/tracklist"
 import { useColors } from "#/ui/hooks/useColors"
 import { useQuery } from "#/ui/hooks/useQuery"
-import { usePlaybackData } from "#/ui/hooks/useSelectors"
+import { usePlaybackQueue } from "#/ui/hooks/useSelectors"
 import { getQueueDisplayItems } from "#/ui/pages/queueDisplayItems"
 import type { KeybindManager } from "#/application/keybinds/keybindManager"
 import type { AppStore } from "#/core/state/state"
@@ -26,9 +26,9 @@ type ListItemQueue = {
 
 export function QueuePage() {
 	const { database } = useAppContext()
-	const playbackState = usePlaybackData()
+	const queue = usePlaybackQueue()
 
-	const displayItems = getQueueDisplayItems(playbackState)
+	const displayItems = getQueueDisplayItems(queue)
 	const trackIds = displayItems.map((item) => item.trackId)
 	const uniqueIds = Array.from(new Set(trackIds))
 

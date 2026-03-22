@@ -274,5 +274,5 @@ export type TrackFileMeta = Readonly<{
 
 export type CoOccurenceReturn = {
 	genre: { name: string; score: number }[]
-	moods: { name: string; score: number }[]
+	mood: { name: string; score: number }[]
 }

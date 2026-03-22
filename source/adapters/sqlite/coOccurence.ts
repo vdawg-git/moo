@@ -89,12 +89,12 @@ FROM genre_score
 UNION ALL
 SELECT mood_score.mood as key,
   mood_score.score as score,
-  'moods' as type
+  'mood' as type
 FROM mood_score
 ORDER BY score DESC`
 
 	const rawData = database.all<{
-		type: "genre" | "moods"
+		type: "genre" | "mood"
 		key: string
 		score: number
 	}>(query)
@@ -105,6 +105,6 @@ ORDER BY score DESC`
 
 			return accumulator
 		},
-		{ genre: [], moods: [] } as CoOccurenceReturn
+		{ genre: [], mood: [] } as CoOccurenceReturn
 	)
 }

@@ -8,7 +8,11 @@ import { Tracklist } from "#/ui/components/tracklist"
 import { useColors } from "#/ui/hooks/useColors"
 import { useIcons } from "#/ui/hooks/useIcons"
 import { useQuery } from "#/ui/hooks/useQuery"
-import { usePlaybackData, usePlayingIndex } from "#/ui/hooks/useSelectors"
+import {
+	usePlayingIndex,
+	usePlayState,
+	useShuffleMap
+} from "#/ui/hooks/useSelectors"
 import type { ArtistId } from "#/ports/database"
 
 type ArtistPageProps = {
@@ -20,7 +24,8 @@ export function ArtistPage({ id }: ArtistPageProps) {
 	const queryFn = useCallback(() => database.getArtist(id), [id, database])
 	const response = useQuery(createQueryKey.artist(id), queryFn)
 	const playingIndex = usePlayingIndex({ type: "artist", id })
-	const playback = usePlaybackData()
+	const shuffleMap = useShuffleMap()
+	const playState = usePlayState()
 	const amount = response.data?.getOrNull()?.tracks.length
 	const displayName = response.data?.getOrNull()?.name ?? id
 	const colors = useColors()
@@ -50,8 +55,8 @@ export function ArtistPage({ id }: ArtistPageProps) {
 											index
 										})
 									}
-									shuffleMap={playback.shuffleMap}
-									playState={playback.playState}
+									shuffleMap={shuffleMap}
+									playState={playState}
 									playingIndex={playingIndex}
 									key={id}
 								/>

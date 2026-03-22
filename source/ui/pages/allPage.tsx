@@ -1,4 +1,3 @@
-import { useSelector } from "@xstate/store/react"
 import { useAppContext } from "#/app/context"
 import { createQueryKey } from "#/shared/queryKey"
 import { LoadingText } from "#/ui/components/loadingText"
@@ -7,17 +6,18 @@ import { PlaylistTitle } from "#/ui/components/playlistTitle"
 import { Tracklist } from "#/ui/components/tracklist"
 import { useColors } from "#/ui/hooks/useColors"
 import { useQuery } from "#/ui/hooks/useQuery"
-import { usePlaybackData, usePlayingIndex } from "#/ui/hooks/useSelectors"
+import {
+	usePlayingIndex,
+	usePlayState,
+	useShuffleMap
+} from "#/ui/hooks/useSelectors"
 
 export function All() {
-	const { database, playNewPlayback, appState } = useAppContext()
+	const { database, playNewPlayback } = useAppContext()
 	const response = useQuery(createQueryKey.all(), database.getTracks)
-	const playback = usePlaybackData()
+	const shuffleMap = useShuffleMap()
 	const playingIndex = usePlayingIndex({ type: "all" })
-	const playState = useSelector(
-		appState,
-		(snapshot) => snapshot.context.playback.playState
-	)
+	const playState = usePlayState()
 	const amount = response.data?.getOrNull()?.length
 	const colors = useColors()
 
@@ -34,7 +34,7 @@ export function All() {
 							<Tracklist
 								tracks={tracks}
 								playState={playState}
-								shuffleMap={playback.shuffleMap}
+								shuffleMap={shuffleMap}
 								onPlay={(index) =>
 									playNewPlayback({
 										source: { type: "all" },

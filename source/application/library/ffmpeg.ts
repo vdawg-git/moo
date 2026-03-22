@@ -26,7 +26,7 @@ export async function writeTags({
 
 	const random = randomUUID()
 	const extension = extname(id)
-	const tmpPath = `/tmp/moo/${random}.${extension}`
+	const tmpPath = `/tmp/moo/${random}${extension}`
 
 	await ensureDirectoryExists("/tmp/moo" as FilePath)
 

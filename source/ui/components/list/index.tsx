@@ -35,6 +35,8 @@ export function List<T>({
 		index: indexFocused,
 		items,
 		scrollboxRef,
+		scrollPosition,
+		scrollboxHeight,
 		mode,
 		setSearchString,
 		searchString,
@@ -45,6 +47,15 @@ export function List<T>({
 	} = register
 
 	const colors = useColors()
+
+	const BUFFER = 5
+	const visibleHeight = scrollboxHeight > 0 ? scrollboxHeight : 50
+	const windowStart = Math.max(0, scrollPosition - BUFFER)
+	const windowEnd = Math.min(
+		items.length,
+		scrollPosition + visibleHeight + BUFFER
+	)
+	const windowedItems = items.slice(windowStart, windowEnd)
 
 	return (
 		<box>
@@ -71,6 +82,7 @@ export function List<T>({
 			)}
 
 			<scrollbox
+				viewportCulling
 				scrollbarOptions={{
 					trackOptions: {
 						backgroundColor: colors.bg,
@@ -91,9 +103,10 @@ export function List<T>({
 					})
 				}}
 			>
-				{items.map((item, indexDisplayed) => {
-					// The item index is different here as the items could be filtered.
-					// The item.index is the original one.
+				{windowStart > 0 && <box height={windowStart} />}
+
+				{windowedItems.map((item, windowIndex) => {
+					const indexDisplayed = windowStart + windowIndex
 					const focused = indexFocused === indexDisplayed
 
 					return (
@@ -104,13 +117,15 @@ export function List<T>({
 							key={item.index}
 						>
 							{render(item.data, {
-								focused: indexDisplayed === indexFocused,
-								indexDisplayed: indexDisplayed,
+								focused,
+								indexDisplayed,
 								indexItem: item.index
 							})}
 						</box>
 					)
 				})}
+
+				{windowEnd < items.length && <box height={items.length - windowEnd} />}
 			</scrollbox>
 		</box>
 	)

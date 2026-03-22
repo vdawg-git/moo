@@ -3,7 +3,11 @@ import { useRef, useState } from "react"
 import { useAppContext } from "#/app/context"
 import { useColors } from "#/ui/hooks/useColors"
 import { useIcons } from "#/ui/hooks/useIcons"
-import { useCurrentTrack, usePlaybackData } from "#/ui/hooks/useSelectors"
+import {
+	useCurrentTrack,
+	usePlayProgress,
+	usePlayState
+} from "#/ui/hooks/useSelectors"
 import type { RGBA } from "@opentui/core"
 import type { AppColors } from "#/shared/config/theme"
 import type { PlayingState } from "#/shared/types/types"
@@ -20,7 +24,8 @@ export function ProgressBar() {
 	const { player } = useAppContext()
 	const colors = useColors()
 	const icons = useIcons()
-	const { progress, playState } = usePlaybackData()
+	const progress = usePlayProgress()
+	const playState = usePlayState()
 	const currentTrack = useCurrentTrack()
 
 	const duration = currentTrack?.duration ?? 0

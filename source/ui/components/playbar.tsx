@@ -5,7 +5,8 @@ import { useColors } from "#/ui/hooks/useColors"
 import {
 	useAppState,
 	useCurrentTrack,
-	usePlaybackData
+	usePlayState,
+	useShuffleMap
 } from "#/ui/hooks/useSelectors"
 import type { BaseTrack } from "#/ports/database"
 
@@ -45,7 +46,8 @@ export function Playbar() {
 }
 
 function MediaControl() {
-	const { playState, shuffleMap } = usePlaybackData()
+	const playState = usePlayState()
+	const shuffleMap = useShuffleMap()
 	const hasPlayback = playState !== "stopped"
 	const isShuffling = !!shuffleMap
 	const colors = useColors()

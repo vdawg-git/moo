@@ -33,13 +33,12 @@ const focusedDisplayList = [
 	"applied"
 ] as const
 type Focused = (typeof focusedDisplayList)[number]
-const focusedEnum = focusedDisplayList.reduce(
-	(accumulator, label, index) => {
-		accumulator[label] = index
-		return accumulator
-	},
-	{} as Record<Focused, number>
-)
+const focusedEnum = {
+	tagType: 0,
+	input: 1,
+	suggestions: 2,
+	applied: 3
+} as const satisfies Record<Focused, number>
 
 // This is kinda ugly, but I wanted to keep it simple for once
 export function QuickEditPage({ id }: QuickEditPageProps) {
@@ -51,7 +50,7 @@ export function QuickEditPage({ id }: QuickEditPageProps) {
 				([track, suggestions]) => ({
 					track,
 					suggestions: {
-						mood: suggestions.moods.map(({ name }) => name),
+						mood: suggestions.mood.map(({ name }) => name),
 						genre: suggestions.genre.map(({ name }) => name)
 					}
 				})
@@ -195,8 +194,6 @@ function QuickEditEditor({
 							onGetFocus={() => setFocus(3)}
 							title={`┤2├ Search for ${tagType} `}
 							placeholder={`Search ${tagType}..`}
-							onGoNext={goNext}
-							onGoPrevious={goPrevious}
 						/>
 
 						<Suggestions
@@ -234,9 +231,11 @@ function QuickEditEditor({
 				<CloseDialogContent
 					onExit={async () => {
 						try {
+							const { tagsApplied } = state.get().context
 							await musicLibrary.updateTags({
 								id: track.id,
-								[tagType]: tagsActive
+								genre: tagsApplied.genre,
+								mood: tagsApplied.mood
 							})
 							appState.trigger.goBackOrHome()
 						} catch (error) {
@@ -264,8 +263,6 @@ function TagsInput({
 	onChange: (input: string) => void
 	onSubmit: (input: string) => void
 	onGetFocus: () => void
-	onGoNext: () => void
-	onGoPrevious: () => void
 	placeholder: string
 	title: string
 }): ReactNode {
@@ -353,7 +350,8 @@ function Suggestions({
 	suggestions,
 	onSelect,
 	focused: hasFocus,
-	index
+	index,
+	onIndexChange
 }: {
 	index: number
 	focused: boolean
@@ -383,6 +381,7 @@ function Suggestions({
 						value: suggestion
 					}))}
 					onSelect={(_, suggestion) => suggestion && onSelect(suggestion.name)}
+					onChange={(newIndex) => onIndexChange(newIndex)}
 					focusedTextColor={colors.fg}
 					backgroundColor={colors.bg}
 					focusedBackgroundColor={colors.bg}
@@ -419,6 +418,8 @@ function AppliedSuggestions({
 	useFocusItemsKeybings({ enabled: hasFocus, focusReturn })
 
 	useKeyboard((key) => {
+		if (!hasFocus) return
+
 		if (key.name === "x") {
 			const newItems = items.filter((_, jindex) => jindex !== index)
 			onChange(newItems)
