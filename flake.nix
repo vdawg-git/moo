@@ -22,7 +22,7 @@
       mooPackage = let
         mooBin = builtins.fetchurl {
           url = "https://github.com/vdawg-git/moo/releases/download/${version}/moo";
-          sha256 = "1r0d59llk9xhsxkkc0ch5lcwz534fhjaw2rmw59v7fipcz8h4kkd";
+          sha256 = "1d3nasncrqjb8w70x2a2s4d56xm068anfy94yyziqklb4xnnnnjf";
         };
       in
         pkgs.runCommand "moo-${version}" {
