@@ -24,7 +24,7 @@ export const APP_NAME = IS_DEV ? packageJson.name + "_dev" : packageJson.name
 // Also import.meta.dirname will be "/$bunfs/root" when the app is compiled
 export const APP_ROOT = isCompiled
 	? path.dirname(process.execPath)
-	: path.join(thisDirectoryPath, "..")
+	: path.join(thisDirectoryPath, "../..")
 
 const appPaths = envPaths(APP_NAME, { suffix: "" })
 
