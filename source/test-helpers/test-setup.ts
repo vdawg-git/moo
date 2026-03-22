@@ -1,13 +1,12 @@
 // Test setup file to mock dependencies
 
-import { vi } from "bun:test"
+import { mock } from "bun:test"
 import { createMockLogger } from "#/test-helpers/mockLogger"
 import type * as ConstantsModule from "#/shared/constants"
 import type * as LoggerModule from "#/shared/logs"
 import type { FilePath } from "#/shared/types/types"
 
-// Mock constants to prevent config loading
-await vi.module(
+await mock.module(
 	"#/shared/constants",
 	() =>
 		({
@@ -27,7 +26,7 @@ await vi.module(
 const mockLogger = createMockLogger()
 
 // Mock logs module — shape matches what consumer code imports
-await vi.module(
+await mock.module(
 	"#/shared/logs",
 	() =>
 		({

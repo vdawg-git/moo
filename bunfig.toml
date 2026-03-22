@@ -1,0 +1,3 @@
+[test]
+root = "source"
+preload = ["./source/test-helpers/test-setup.ts"]
