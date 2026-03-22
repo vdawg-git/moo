@@ -14,6 +14,6 @@ sed -i "s/sha256 = \".*\";/sha256 = \"$HASH\";/" flake.nix
 
 echo "Staging flake.nix..."
 git add flake.nix
-git commit -m "chore: update flake.nix with new binary hash"
+git diff --cached --quiet || git commit -m "chore: update flake.nix with new binary hash"
 
 echo "Release preparation complete!"
