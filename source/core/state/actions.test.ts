@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test"
+import { appStateActionsInternal as actions } from "#/core/state/actions"
 import {
 	createInitialState,
 	createMockQueue,
@@ -6,7 +7,6 @@ import {
 	trackIds,
 	trackIdsRange
 } from "#/test-helpers/testHelpers"
-import { appStateActionsInternal as actions } from "#/core/state/actions"
 import type { AlbumId, ArtistId, PlaylistId } from "#/shared/types/brandedIds"
 
 describe("stopPlayback", () => {

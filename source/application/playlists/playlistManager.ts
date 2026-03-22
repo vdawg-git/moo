@@ -4,15 +4,15 @@ import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
 import * as yaml from "yaml"
 import { fromError } from "zod-validation-error"
+import { playlistBlueprintSchema } from "#/core/playlists/schema"
 import { playlistExtension } from "#/shared/constants"
 import { logger } from "#/shared/logs"
-import { playlistBlueprintSchema } from "#/core/playlists/schema"
-import type { AppDatabase, PlaylistId } from "#/ports/database"
 import type { AppFileSystem } from "#/adapters/filesystem/filesystem"
+import type { PlaylistBlueprint } from "#/core/playlists/schema"
+import type { AppDatabase, PlaylistId } from "#/ports/database"
 import type { ErrorNotificationFn, FilePath } from "#/shared/types/types"
 import type { Subscription } from "rxjs"
 import type { AsyncResult } from "typescript-result"
-import type { PlaylistBlueprint } from "#/core/playlists/schema"
 
 export type PlaylistManager = Readonly<{
 	/** Parse all playlists and sync DB */

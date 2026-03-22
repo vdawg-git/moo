@@ -4,7 +4,7 @@ import { deepEquals } from "bun"
 import Fuse from "fuse.js"
 import { useEffect, useId, useRef } from "react"
 import { useKeybindings } from "#/application/keybinds/useKeybindings"
-import { keybinding } from "#/shared/lib/keybinds"
+import { keybinding } from "#/shared/library/keybinds"
 import { logger } from "#/shared/logs"
 import type { ScrollBoxRenderable } from "@opentui/core"
 import type { ListItem } from "./listTypes"
@@ -526,10 +526,7 @@ export function createListState<T>({
 				return { ...context, index: newIndex, scrollPosition }
 			},
 
-			centerIfNotVisible: (
-				context,
-				{ itemIndex }: { itemIndex: number }
-			) => {
+			centerIfNotVisible: (context, { itemIndex }: { itemIndex: number }) => {
 				if (context.scrollboxHeight <= 0) return context
 
 				const displayIndex = context.items.findIndex(
@@ -539,8 +536,7 @@ export function createListState<T>({
 
 				if (
 					displayIndex >= context.scrollPosition
-					&& displayIndex
-						< context.scrollPosition + context.scrollboxHeight
+					&& displayIndex < context.scrollPosition + context.scrollboxHeight
 				) {
 					return context
 				}

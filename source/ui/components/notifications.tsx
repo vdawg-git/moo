@@ -7,8 +7,8 @@ import { useColors } from "#/ui/hooks/useColors"
 import { useIcons } from "#/ui/hooks/useIcons"
 import { useAppState } from "#/ui/hooks/useSelectors"
 import { BracketButton } from "./button"
-import type { AppColors } from "#/shared/config/theme"
 import type { AppNotification } from "#/core/state/types"
+import type { AppColors } from "#/shared/config/theme"
 
 export const notificationModalId = "_notificationModalaid_"
 

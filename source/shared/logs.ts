@@ -32,7 +32,7 @@ function createAppLogger(): AppLogger {
 		handleRejections: true
 	})
 
-	const logg = createLogger({
+	const logger = createLogger({
 		transports: [transportFile],
 		exceptionHandlers: [transportConsole, transportFile],
 		rejectionHandlers: [transportConsole, transportFile],
@@ -40,10 +40,10 @@ function createAppLogger(): AppLogger {
 	})
 
 	return {
-		debug: logg.debug.bind(logg),
-		error: (message, error) => logg.error(message, enumarateError(error)),
-		info: logg.info.bind(logg),
-		warn: logg.warn.bind(logg)
+		debug: logger.debug.bind(logger),
+		error: (message, error) => logger.error(message, enumarateError(error)),
+		info: logger.info.bind(logger),
+		warn: logger.warn.bind(logger)
 	}
 }
 

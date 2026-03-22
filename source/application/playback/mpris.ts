@@ -5,9 +5,9 @@ import * as R from "remeda"
 import { filter } from "rxjs"
 import { logger } from "#/shared/logs"
 import type { MprisEventsCatalog } from "@jellybrick/mpris-service"
-import type { BaseTrack } from "#/ports/database"
 import type { AppStore } from "#/core/state/state"
 import type { AppState } from "#/core/state/types"
+import type { BaseTrack } from "#/ports/database"
 import type { Observable } from "rxjs"
 
 type MprisDeps = {

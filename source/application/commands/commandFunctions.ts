@@ -1,7 +1,7 @@
 import type { KeybindManager } from "#/application/keybinds/keybindManager"
-import type { CommandCallbackGetterFn } from "#/shared/types/types"
 import type { AppCommand, AppCommandsMap } from "#/core/commands/appCommands"
 import type { AppCommandID } from "#/core/commands/definitions"
+import type { CommandCallbackGetterFn } from "#/shared/types/types"
 
 /**
  * Registers the keybinds for the global commands

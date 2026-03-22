@@ -1,9 +1,14 @@
-import type { AppColorName } from "#/shared/config/theme"
 import type { KeybindCommandWhen } from "#/core/commands/appCommands"
+import type { AppColorName } from "#/shared/config/theme"
+import type {
+	AlbumId,
+	ArtistId,
+	PlaylistId,
+	TrackId
+} from "#/shared/types/brandedIds"
+import type { LoopState, PlayingState } from "#/shared/types/types"
 import type { ReactNode } from "react"
 import type { Except } from "type-fest"
-import type { AlbumId, ArtistId, PlaylistId, TrackId } from "#/shared/types/brandedIds"
-import type { LoopState, PlayingState } from "#/shared/types/types"
 
 export interface AppState {
 	playback: {

@@ -1,6 +1,6 @@
 import { TextAttributes } from "@opentui/core"
-import { useColors } from "#/ui/hooks/useColors"
 import { useGetNextKeySequence } from "#/application/keybinds/keybindManager"
+import { useColors } from "#/ui/hooks/useColors"
 import type { SequencePart } from "#/application/keybinds/keybindManager"
 
 type NextUpKeybind = { label: string; toPress: string; id: string }

@@ -1,8 +1,8 @@
 import { useKeyboard, useTerminalDimensions } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
 import { useCallback, useState } from "react"
-import { useColors } from "#/ui/hooks/useColors"
 import { KeybindingWhenProvider } from "#/application/keybinds/useKeybindings"
+import { useColors } from "#/ui/hooks/useColors"
 import { useAppState } from "#/ui/hooks/useSelectors"
 import type { AppModal } from "#/core/state/types"
 

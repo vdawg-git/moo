@@ -1,5 +1,5 @@
-import type { TrackData, TrackId } from "#/ports/database"
 import type { AppState, Queue } from "#/core/state/types"
+import type { TrackData, TrackId } from "#/ports/database"
 import type { LoopState, PlayingState } from "#/shared/types/types"
 
 type CreateStateOptions = {

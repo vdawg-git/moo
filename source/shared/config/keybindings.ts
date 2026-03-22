@@ -2,11 +2,11 @@ import * as R from "remeda"
 import { pipe } from "remeda"
 import { z } from "zod"
 import { appCommandsBase } from "#/core/commands/definitions"
-import { displayKeybinding, shortcutSchema } from "../lib/keybinds"
+import { displayKeybinding, shortcutSchema } from "../library/keybinds"
 import type { AppCommandsMap } from "#/core/commands/appCommands"
 import type { AppCommandData, AppCommandID } from "#/core/commands/definitions"
 import type { WritableDeep } from "type-fest"
-import type { KeyBinding, KeyInput } from "../lib/keybinds"
+import type { KeyBinding, KeyInput } from "../library/keybinds"
 
 const keybindsRawShape = pipe(
 	R.entries(appCommandsBase),

@@ -11,8 +11,8 @@ import { createAtom, createStore } from "@xstate/store"
 import { useAtom } from "@xstate/store/react"
 import { create } from "mutative"
 import { useRef } from "react"
-import type { TagType } from "#/shared/config/config"
 import type { BaseTrack } from "#/ports/database"
+import type { TagType } from "#/shared/config/config"
 
 export type SuggestionsRecord = Record<TagType, readonly string[]>
 

@@ -14,11 +14,11 @@ import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
 import { useAppContext } from "#/app/context"
 import { useConfig } from "#/shared/config/configContext"
-import type { KeybindManager } from "#/application/keybinds/keybindManager"
 import { logger } from "#/shared/logs"
 import { getSearchModes, getSearchModesList } from "./consts"
 import { openRunner } from "./runner"
 import type { AppContext } from "#/app/context"
+import type { KeybindManager } from "#/application/keybinds/keybindManager"
 import type { AppConfig } from "#/shared/config/config"
 import type { Observable } from "rxjs"
 import type { SearchMode, SearchModeType } from "./consts"
@@ -183,8 +183,9 @@ function getQueryForRunnerItems(
 	return match(mode)
 		.returnType<() => Promise<readonly RunnerItem[]>>()
 
-		.with("commands", () => () =>
-			Promise.resolve(getRunnerCommands(keybindManager))
+		.with(
+			"commands",
+			() => () => Promise.resolve(getRunnerCommands(keybindManager))
 		)
 
 		.with(

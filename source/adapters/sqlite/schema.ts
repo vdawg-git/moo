@@ -6,10 +6,10 @@ import {
 	sqliteTable,
 	text
 } from "drizzle-orm/sqlite-core"
+import type { AlbumId, ArtistId, PlaylistId, TrackId } from "#/ports/database"
 import type { FilePath } from "#/shared/types/types"
 import type { SQL } from "drizzle-orm"
 import type { ILyricsTag } from "music-metadata"
-import type { AlbumId, ArtistId, PlaylistId, TrackId } from "#/ports/database"
 
 export type TrackColumnKey = keyof (typeof tableTracks)["_"]["columns"]
 export type TrackColumn = (typeof tableTracks)["_"]["columns"][TrackColumnKey]

@@ -14,12 +14,12 @@ import {
 import * as R from "remeda"
 import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
+import { tableTracks } from "#/adapters/sqlite/schema"
 import { selectorBaseTrack } from "#/adapters/sqlite/selectors"
 import { nullsToUndefined } from "#/shared/helpers"
-import { tableTracks } from "#/adapters/sqlite/schema"
-import type { DrizzleDatabase } from "./drizzleTypes.js"
-import type { BaseTrack } from "#/ports/database"
+import type { TrackColumn } from "#/adapters/sqlite/schema"
 import type {
+	BaseTrack,
 	BooleanSchema,
 	DateSchema,
 	MetaOperator,
@@ -32,7 +32,7 @@ import type { SQL } from "drizzle-orm"
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import type { Simplify } from "type-fest"
 import type { AsyncResult } from "typescript-result"
-import type { TrackColumn } from "#/adapters/sqlite/schema"
+import type { DrizzleDatabase } from "./drizzleTypes.js"
 
 export function getSmartPlaylistTracks(
 	database: DrizzleDatabase,

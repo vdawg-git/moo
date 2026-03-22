@@ -17,9 +17,13 @@ import { Result } from "typescript-result"
 import { logger } from "#/shared/logs"
 import { writeTags as realWriteTags } from "./ffmpeg"
 import { supportedFormats } from "./formats"
-import type { TrackFileMeta } from "#/ports/database"
-import type { AppDatabase, TrackData, TrackId } from "#/ports/database"
 import type { AppFileSystem } from "#/adapters/filesystem/filesystem"
+import type {
+	AppDatabase,
+	TrackData,
+	TrackFileMeta,
+	TrackId
+} from "#/ports/database"
 import type { ErrorNotificationFn, FilePath } from "#/shared/types/types"
 import type { IAudioMetadata } from "music-metadata"
 import type { Observable } from "rxjs"

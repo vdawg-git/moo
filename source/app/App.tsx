@@ -1,14 +1,14 @@
 import { useEffect } from "react"
-import { useAppContext } from "./context"
 import { createCommandCallbacks } from "#/application/commands/callbacks"
+import { manageNotifications } from "#/application/notifications"
+import { handleAudioPlayback } from "#/application/playback/playback"
+import { useConfig } from "#/shared/config/configContext"
+import { callAll } from "#/shared/helpers"
 import { ModalManager } from "#/ui/components/modalManager"
 import { Router } from "#/ui/components/router"
 import { NextUpKeybinds } from "#/ui/components/sequenceKeybindsShower"
-import { useConfig } from "#/shared/config/configContext"
-import { callAll } from "#/shared/helpers"
 import { ThemeProvider } from "#/ui/hooks/useColors"
-import { handleAudioPlayback } from "#/application/playback/playback"
-import { manageNotifications } from "#/application/notifications"
+import { useAppContext } from "./context"
 
 export const App = () => {
 	const context = useAppContext()

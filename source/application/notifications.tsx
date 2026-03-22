@@ -4,9 +4,9 @@ import {
 	NotificationModal,
 	notificationModalId
 } from "#/ui/components/notifications"
-import type { Observable } from "rxjs"
 import type { AppStore } from "#/core/state/state"
 import type { AppState } from "#/core/state/types"
+import type { Observable } from "rxjs"
 
 /**
  * Will get refactored once its bigger

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
-import { mockTrackData } from "#/test-helpers/testHelpers"
 import { createTestContext } from "#/test-helpers/createTestContext"
+import { mockTrackData } from "#/test-helpers/testHelpers"
 
 describe("state integration", () => {
 	it("playNewPlayback populates state queue", async () => {

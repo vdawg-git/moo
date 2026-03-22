@@ -3,17 +3,17 @@ import { TextAttributes } from "@opentui/core"
 import { useRef } from "react"
 import { useAppContext } from "#/app/context"
 import { useConfig } from "#/shared/config/configContext"
+import { keybinding } from "#/shared/library/keybinds"
 import { useColors } from "#/ui/hooks/useColors"
-import { keybinding } from "#/shared/lib/keybinds"
 import { List, useList } from "./list"
-import type { AppColor } from "#/shared/config/theme"
 import type {
 	GeneralCommandArgument,
 	KeybindManager
 } from "#/application/keybinds/keybindManager"
 import type { AppStore } from "#/core/state/state"
-import type { PlayingState } from "#/shared/types/types"
 import type { BaseTrack } from "#/ports/database"
+import type { AppColor } from "#/shared/config/theme"
+import type { PlayingState } from "#/shared/types/types"
 
 type PlaylistProps = {
 	tracks: readonly BaseTrack[]

@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm"
 import { tableTracks } from "./schema"
-import type { DrizzleDatabase } from "./drizzleTypes.js"
 import type { CoOccurenceReturn, TrackId } from "#/ports/database"
+import type { DrizzleDatabase } from "./drizzleTypes.js"
 
 export async function getCoOccurenceTags(
 	trackId: TrackId,

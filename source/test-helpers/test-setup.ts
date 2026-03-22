@@ -1,9 +1,9 @@
 // Test setup file to mock dependencies
 
 import { vi } from "bun:test"
-import * as ConstantsModule from "#/shared/constants"
-import * as LoggerModule from "#/shared/logs"
 import { createMockLogger } from "#/test-helpers/mockLogger"
+import type * as ConstantsModule from "#/shared/constants"
+import type * as LoggerModule from "#/shared/logs"
 import type { FilePath } from "#/shared/types/types"
 
 // Mock constants to prevent config loading

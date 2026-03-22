@@ -1,6 +1,6 @@
-import { displayKeybinding } from "#/shared/lib/keybinds"
+import { displayKeybinding } from "#/shared/library/keybinds"
 import type { KeybindCommandWhen } from "#/core/commands/appCommands"
-import type { KeyBinding } from "#/shared/lib/keybinds"
+import type { KeyBinding } from "#/shared/library/keybinds"
 import type { Except } from "type-fest"
 
 export type { KeybindCommandWhen } from "#/core/commands/appCommands"
@@ -150,4 +150,3 @@ function createEmptyNode(): TrieNode {
 		commands: new Map()
 	}
 }
-

@@ -7,11 +7,11 @@ import {
 	switchMap
 } from "rxjs"
 import { getCurrentTrack } from "#/core/state/stateUtils"
-import type { AppDatabase, BaseTrack } from "#/ports/database"
 import type { QuerySystem } from "#/application/querySystem"
+import type { AppState } from "#/core/state/types"
+import type { AppDatabase, BaseTrack } from "#/ports/database"
 import type { ErrorNotificationFn } from "#/shared/types/types"
 import type { Observable } from "rxjs"
-import type { AppState } from "#/core/state/types"
 
 export function createDerivedState({
 	appState$,

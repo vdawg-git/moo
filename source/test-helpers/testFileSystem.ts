@@ -1,6 +1,10 @@
 import path from "node:path"
 import { filter, Subject } from "rxjs"
-import type { AppFileSystem, FileStat, WatcherData } from "#/adapters/filesystem/filesystem"
+import type {
+	AppFileSystem,
+	FileStat,
+	WatcherData
+} from "#/adapters/filesystem/filesystem"
 import type { FilePath } from "#/shared/types/types"
 import type { Observable } from "rxjs"
 
@@ -39,10 +43,7 @@ export type TestFileSystem = AppFileSystem
 			options?: { directory?: string }
 		): void
 		/** Remove a track file. Mirrors `addTrack` path resolution. */
-		removeTrack(
-			fileNameOrPath: string,
-			options?: { directory?: string }
-		): void
+		removeTrack(fileNameOrPath: string, options?: { directory?: string }): void
 		/** Remove a playlist file. Auto-appends `.yml` extension. Mirrors `addPlaylist` path resolution. */
 		removePlaylist(name: string, options?: { directory?: string }): void
 	}>

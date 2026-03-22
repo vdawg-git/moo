@@ -3,6 +3,8 @@ logs.txt
 scratch*
 *.code-workspace
 /result
+.claude
+
 
 # SQL Tools
 *.session.sql

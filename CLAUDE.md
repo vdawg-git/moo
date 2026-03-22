@@ -26,16 +26,16 @@ Bun runtime, React 19 + OpenTUI (TUI rendering), Drizzle ORM + SQLite, XState st
 
 Ports & Adapters (Hexagonal). **The one rule:** Core never imports infrastructure. Dependencies point inward.
 
-| Layer | Purpose | Can import from |
-|---|---|---|
-| `core/` | Pure state + reducers, command defs, playlist DSL schema | `core/`, `shared/` |
-| `ports/` | Interfaces (Player, AppDatabase, AppFileSystem) | `ports/`, `shared/` |
-| `adapters/` | Implementations (MPV, SQLite, filesystem) | `ports/`, `shared/` |
-| `application/` | Use cases, orchestration | `core/`, `ports/`, `application/`, `shared/` |
-| `ui/` | React components + hooks | `core/` (types), `ports/` (types), `app/` (context), `ui/`, `shared/` |
-| `app/` | Composition root, wiring | everything |
-| `shared/` | Pure utilities, config, types | `shared/`, `ports/` (types), `core/` (types), `app/` (context) |
-| `test-helpers/` | Test mocks, fixtures, helpers | everything |
+| Layer           | Purpose                                                  | Can import from                                                       |
+| --------------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
+| `core/`         | Pure state + reducers, command defs, playlist DSL schema | `core/`, `shared/`                                                    |
+| `ports/`        | Interfaces (Player, AppDatabase, AppFileSystem)          | `ports/`, `shared/`                                                   |
+| `adapters/`     | Implementations (MPV, SQLite, filesystem)                | `ports/`, `shared/`                                                   |
+| `application/`  | Use cases, orchestration                                 | `core/`, `ports/`, `application/`, `shared/`                          |
+| `ui/`           | React components + hooks                                 | `core/` (types), `ports/` (types), `app/` (context), `ui/`, `shared/` |
+| `app/`          | Composition root, wiring                                 | everything                                                            |
+| `shared/`       | Pure utilities, config, types                            | `shared/`, `ports/` (types), `core/` (types), `app/` (context)        |
+| `test-helpers/` | Test mocks, fixtures, helpers                            | everything                                                            |
 
 Enforced via oxlint `no-restricted-imports` overrides in `.oxlintrc.json`.
 

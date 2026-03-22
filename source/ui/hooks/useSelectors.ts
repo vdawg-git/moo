@@ -2,8 +2,8 @@ import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import { useAppContext } from "#/app/context"
 import { useObservable } from "#/ui/hooks/useObservable"
-import type { BaseTrack } from "#/ports/database"
 import type { AppState, PlaybackSource } from "#/core/state/types"
+import type { BaseTrack } from "#/ports/database"
 
 // /
 // Hooks for the global state.

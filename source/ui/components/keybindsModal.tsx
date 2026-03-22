@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useConfig } from "#/shared/config/configContext"
+import { displayKeybinding } from "#/shared/library/keybinds"
 import { useColors } from "#/ui/hooks/useColors"
-import { displayKeybinding } from "#/shared/lib/keybinds"
 import type { AppConfig } from "#/shared/config/config"
 import type { ReactNode } from "react"
 

@@ -1,11 +1,16 @@
 import { readdir, readFile, stat, writeFile } from "node:fs/promises"
 import { watch } from "chokidar"
 import { distinctUntilChanged, Observable, share } from "rxjs"
-import type { ChokidarOptions } from "chokidar"
-import type { FilePath } from "#/shared/types/types"
 import type { AppFileSystem, WatcherData } from "#/ports/filesystem"
+import type { FilePath } from "#/shared/types/types"
+import type { ChokidarOptions } from "chokidar"
 
-export type { AppFileSystem, FileStat, WatcherData, WatchOptions } from "#/ports/filesystem"
+export type {
+	AppFileSystem,
+	FileStat,
+	WatcherData,
+	WatchOptions
+} from "#/ports/filesystem"
 
 /** Production FileSystem backed by node:fs + chokidar */
 export function createRealFileSystem(): AppFileSystem {
@@ -80,4 +85,3 @@ export function createWatcher(
 		share()
 	)
 }
-

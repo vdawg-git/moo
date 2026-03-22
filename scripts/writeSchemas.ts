@@ -1,9 +1,9 @@
 import path from "node:path"
 import { z } from "zod"
+import { playlistBlueprintSchema } from "#/core/playlists/schema"
 import { appConfigSchema } from "#/shared/config/config"
 import { appThemeSchema } from "#/shared/config/theme"
 import { APP_ROOT } from "#/shared/constants"
-import { playlistBlueprintSchema } from "#/core/playlists/schema"
 import type { ZodType } from "zod"
 
 const schemas = [

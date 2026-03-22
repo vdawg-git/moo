@@ -1,9 +1,9 @@
 import { KeybindsModal } from "#/ui/components/keybindsModal"
 import { openRunner } from "#/ui/components/runner/runner"
-import type { Player } from "#/ports/player"
-import type { AppStore } from "#/core/state/state"
-import type { CommandCallbackGetterFn } from "#/shared/types/types"
 import type { AppCommandID } from "#/core/commands/definitions"
+import type { AppStore } from "#/core/state/state"
+import type { Player } from "#/ports/player"
+import type { CommandCallbackGetterFn } from "#/shared/types/types"
 
 export type CommandCallbacks = {
 	readonly getCommandCallback: CommandCallbackGetterFn

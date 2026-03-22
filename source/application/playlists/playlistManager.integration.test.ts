@@ -6,8 +6,8 @@ import {
 } from "#/test-helpers/testFileSystem"
 import { createPlaylistManager } from "./playlistManager"
 import type { PlaylistId } from "#/ports/database"
-import type { TestFileSystem } from "#/test-helpers/testFileSystem"
 import type { FilePath } from "#/shared/types/types"
+import type { TestFileSystem } from "#/test-helpers/testFileSystem"
 
 const validPlaylistYaml = `
 name: Test Playlist

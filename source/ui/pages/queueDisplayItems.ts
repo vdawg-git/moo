@@ -1,6 +1,6 @@
 import { getCurrentTrack } from "#/core/state/stateUtils"
-import type { TrackId } from "#/ports/database"
 import type { AppState } from "#/core/state/types"
+import type { TrackId } from "#/ports/database"
 
 export type QueueDisplayItem = {
 	readonly type: "auto" | "manual"

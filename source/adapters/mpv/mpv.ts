@@ -10,11 +10,11 @@ import { z } from "zod"
 import { TEMP_DIRECTORY } from "#/shared/constants"
 import { logger } from "#/shared/logs"
 import { createSocketClient } from "./socket"
+import type { Player, PlayerEvent } from "#/ports/player"
 import type { Observable } from "rxjs"
 import type { JsonValue } from "type-fest"
 import type { AsyncResult } from "typescript-result"
 import type { SocketWrapper } from "./socket"
-import type { Player, PlayerEvent } from "#/ports/player"
 
 const socketPath = path.join(TEMP_DIRECTORY, "mpv.sock")
 

@@ -1,11 +1,11 @@
 import { useSelector } from "@xstate/store/react"
+import { useAppState } from "#/ui/hooks/useSelectors"
 import { AlbumPage } from "#/ui/pages/albumPage"
 import { All } from "#/ui/pages/allPage"
 import { ArtistPage } from "#/ui/pages/artistPage"
 import { PlaylistPage } from "#/ui/pages/playlistPage"
 import { QueuePage } from "#/ui/pages/queuePage"
 import { QuickEditPage } from "#/ui/pages/quickEdit/quickEditPage"
-import { useAppState } from "#/ui/hooks/useSelectors"
 import type { ViewPage, ViewPages } from "#/core/state/types"
 import type { ReactNode } from "react"
 

@@ -4,8 +4,8 @@ import { makeCreator } from "mutative"
 import { IS_DEV } from "#/shared/constants"
 import { shuffleWithMap, unshuffleFromMap } from "#/shared/helpers"
 import { logger } from "#/shared/logs"
-import type { Draft } from "mutative"
 import type { TrackId } from "#/shared/types/brandedIds"
+import type { Draft } from "mutative"
 import type {
 	AppModal,
 	AppNotification,

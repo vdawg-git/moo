@@ -1,6 +1,6 @@
 import { TextAttributes } from "@opentui/core"
-import { ProgressBar } from "#/ui/components/progressBar"
 import { useConfig } from "#/shared/config/configContext"
+import { ProgressBar } from "#/ui/components/progressBar"
 import { useColors } from "#/ui/hooks/useColors"
 import {
 	useAppState,

@@ -15,13 +15,13 @@ import { Result } from "typescript-result"
 import { callAll } from "#/shared/helpers"
 import { logger } from "#/shared/logs"
 import { handleMpris } from "./mpris"
+import type { KeybindManager } from "#/application/keybinds/keybindManager"
 import type { AppCommand, AppCommandsMap } from "#/core/commands/appCommands"
 import type { AppCommandID } from "#/core/commands/definitions"
-import type { BaseTrack } from "#/ports/database"
-import type { KeybindManager } from "#/application/keybinds/keybindManager"
-import type { Player } from "#/ports/player"
 import type { AppStore } from "#/core/state/state"
 import type { AppState } from "#/core/state/types"
+import type { BaseTrack } from "#/ports/database"
+import type { Player } from "#/ports/player"
 import type {
 	CommandCallbackGetterFn,
 	ErrorNotificationFn
@@ -165,8 +165,7 @@ function handlePlayer(
 	const playSubscription = toPlay$
 		.pipe(startWith(undefined), pairwise())
 		.subscribe(async ([previous, current]) => {
-			const hasSourceChanged =
-				previous && current && previous.id !== current.id
+			const hasSourceChanged = previous && current && previous.id !== current.id
 
 			if (hasSourceChanged) {
 				await Result.fromAsync(player.clear()).onFailure((error) =>
@@ -176,9 +175,8 @@ function handlePlayer(
 
 			if (!current) {
 				if (previous) {
-					await Result.fromAsync(player.pause(previous.id)).onFailure(
-						(error) =>
-							addErrorNotification("Failed to pause track", error)
+					await Result.fromAsync(player.pause(previous.id)).onFailure((error) =>
+						addErrorNotification("Failed to pause track", error)
 					)
 				}
 

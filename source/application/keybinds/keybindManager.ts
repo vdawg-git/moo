@@ -14,12 +14,13 @@ import {
 } from "rxjs"
 import { match, P } from "ts-pattern"
 import { useAppContext } from "#/app/context"
-import { callAll } from "#/shared/helpers"
 import { getKeybindsWhen } from "#/core/state/stateUtils"
+import { callAll } from "#/shared/helpers"
+import { logger } from "#/shared/logs"
 import type { KeyEvent } from "@opentui/core"
 import type { GeneralCommand } from "#/core/commands/appCommands"
-import type { KeyBinding, KeyInput } from "#/shared/lib/keybinds"
 import type { AppState } from "#/core/state/types"
+import type { KeyBinding, KeyInput } from "#/shared/library/keybinds"
 import type { Observable } from "rxjs"
 import type {
 	KeybindCommand,
@@ -194,12 +195,8 @@ function reduceToCommandAndSequences(
 		input: KeyInput | undefined
 	}
 ): CallbacksOrSequence | undefined {
-	if (
-		// Input gets set to undefined if it is disabled
-		input === undefined
-	) {
-		return undefined
-	}
+	// Input gets set to undefined if it is disabled
+	if (input === undefined) return undefined
 
 	return (
 		match(previous)
@@ -260,6 +257,7 @@ function reduceToCommandAndSequences(
 const isLatinLetterRegex = /[a-z]/
 
 function openTuiInputToKeyInput(event: KeyEvent): KeyInput {
+	logger.debug("key event", { ...event })
 	const { ctrl, option, shift, name } = event
 
 	const shouldUppercase = shift && isLatinLetterRegex.test(name)

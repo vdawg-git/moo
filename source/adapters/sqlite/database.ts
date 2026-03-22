@@ -4,10 +4,10 @@ import { drizzle } from "drizzle-orm/bun-sqlite"
 import * as R from "remeda"
 import { Subject } from "rxjs"
 import { Result } from "typescript-result"
+import { getSmartPlaylistTracks } from "#/adapters/sqlite/playlistToSql"
 import { DATA_DIRECTORY, IS_DEV } from "#/shared/constants"
 import { nullsToUndefined } from "#/shared/helpers"
 import { logger } from "#/shared/logs"
-import { getSmartPlaylistTracks } from "#/adapters/sqlite/playlistToSql"
 // @ts-expect-error
 import setupSqlRaw from "../../../drizzle/setup.sql" with { type: "text" }
 import { getCoOccurenceTags } from "./coOccurence.js"
@@ -29,18 +29,18 @@ import {
 	selectorTrackSort
 } from "./selectors.js"
 import { upsert } from "./sqlHelper.js"
-import type { PlaylistBlueprint } from "#/ports/database"
-import type { AsyncResult } from "typescript-result"
-import type { DrizzleDatabase } from "./drizzleTypes.js"
-import type { TrackFileMeta } from "./schema.js"
 import type {
 	AlbumId,
 	AppDatabase,
 	ArtistId,
 	Playlist,
+	PlaylistBlueprint,
 	PlaylistId,
 	TrackId
 } from "#/ports/database"
+import type { AsyncResult } from "typescript-result"
+import type { DrizzleDatabase } from "./drizzleTypes.js"
+import type { TrackFileMeta } from "./schema.js"
 
 export type GetBlueprintFn = (
 	id: PlaylistId

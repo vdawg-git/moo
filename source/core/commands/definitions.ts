@@ -1,5 +1,5 @@
-import { keybinding } from "#/shared/lib/keybinds"
-import type { KeyBinding } from "#/shared/lib/keybinds"
+import { keybinding } from "#/shared/library/keybinds"
+import type { KeyBinding } from "#/shared/library/keybinds"
 
 /**
  * Used for the keybindings config schema generation

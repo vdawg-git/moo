@@ -1,7 +1,7 @@
 import * as R from "remeda"
 import { tableTracks } from "./schema"
-import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import type { BaseTrack } from "#/ports/database"
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 
 export const selectorBaseTrack = {
 	album: tableTracks.album,

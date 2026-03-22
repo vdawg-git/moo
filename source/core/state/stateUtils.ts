@@ -1,5 +1,5 @@
-import type { TrackId } from "#/shared/types/brandedIds"
 import type { KeybindCommandWhen } from "#/core/commands/appCommands"
+import type { TrackId } from "#/shared/types/brandedIds"
 import type { AppState } from "./types"
 
 export type CurrentTrack = {
@@ -26,6 +26,7 @@ export function getCurrentTrack(
 	return { trackId, source: "auto", queueIndex: index }
 }
 
+// refactor it should be keybindings zone. Rename this everywhere
 export function getKeybindsWhen(
 	whens: AppState["keybindingWhen"]
 ): KeybindCommandWhen {

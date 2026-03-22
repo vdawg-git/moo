@@ -13,14 +13,14 @@ import {
 import { createWatcher } from "#/adapters/filesystem/filesystem"
 import { appThemeSchema } from "#/shared/config/theme"
 import { CONFIG_DIRECTORY } from "#/shared/constants"
-import { stringifyCompare } from "#/shared/lib/functions"
+import { stringifyCompare } from "#/shared/library/functions"
 import type { TerminalColors } from "@opentui/core"
-import type { identity, Observable } from "rxjs"
 import type {
 	AppColors,
 	ConfigTheme,
 	TerminalPalette
 } from "#/shared/config/theme"
+import type { identity, Observable } from "rxjs"
 
 const themePath = path.join(CONFIG_DIRECTORY, "theme.json5")
 

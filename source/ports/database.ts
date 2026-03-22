@@ -1,3 +1,16 @@
+// Re-import for local use
+import type { PlaylistBlueprint } from "#/core/playlists/schema"
+import type {
+	AlbumId,
+	ArtistId,
+	PlaylistId,
+	TrackId
+} from "#/shared/types/brandedIds"
+import type { FilePath } from "#/shared/types/types"
+import type { ILyricsTag } from "music-metadata"
+import type { Observable } from "rxjs"
+import type { AsyncResult, Result } from "typescript-result"
+
 /**
  * Database port — domain types and the AppDatabase interface.
  */
@@ -18,20 +31,6 @@ export type {
 	StringSchema,
 	TrackColumnSchema
 } from "#/core/playlists/schema"
-// Re-import for local use
-import type {
-	TrackId,
-	AlbumId,
-	ArtistId,
-	PlaylistId
-} from "#/shared/types/brandedIds"
-
-import type { PlaylistBlueprint } from "#/core/playlists/schema"
-import type { FilePath } from "#/shared/types/types"
-import type { ILyricsTag } from "music-metadata"
-import type { Observable } from "rxjs"
-import type { AsyncResult } from "typescript-result"
-import type { Result } from "typescript-result"
 
 /** The interface for the moo SQLite database */
 export type AppDatabase = Readonly<{
