@@ -1,4 +1,5 @@
 import { drizzle } from "drizzle-orm/bun-sqlite"
+import { Result } from "typescript-result"
 // @ts-expect-error
 import setupSqlRaw from "../../../drizzle/setup.sql" with { type: "text" }
 import { wrapDrizzleDatabase } from "./database.js"
@@ -24,5 +25,15 @@ export async function createMemoryDatabase(): Promise<AppDatabase> {
 		tagSeperator: "|"
 	})
 
-	return wrapDrizzleDatabase({ db })
+	return wrapDrizzleDatabase({
+		db,
+		getBlueprint: () =>
+			Result.fromAsync(
+				Promise.resolve(
+					Result.error(
+						new Error("getBlueprint not provided in memory database")
+					)
+				)
+			)
+	})
 }

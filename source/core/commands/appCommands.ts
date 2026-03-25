@@ -1,30 +1,19 @@
-import type { Except, OverrideProperties, Simplify } from "type-fest"
+import type { Simplify } from "type-fest"
 import type {
 	AppCommandData as AppCommandBaseData,
 	AppCommandID
 } from "./definitions"
 
-export type KeybindCommandWhen = "default" | "modal"
-// main export ^^^
+export type KeybindZone = string & { __brand: "KeybindZone" }
+
+export const ZONE_DEFAULT = "default" as KeybindZone
+export const ZONE_MODAL = "modal" as KeybindZone
 
 /**
  * A user command without a callback yet
  */
 export type AppCommandBase = { id: AppCommandID } & AppCommandBaseData
 export type AppCommand = Simplify<AppCommandBase & { callback: () => void }>
-
-/**
- * Can be a dynamic command registered by some UI component or a global app command.
- *
- * @see {@linkcode AppCommand}
- */
-export type GeneralCommand = Except<
-	OverrideProperties<AppCommand, { id: string }>,
-	"description"
-> & {
-	/** Use a different when in for example modals, where the regular app commands should be disabled */
-	when: KeybindCommandWhen
-}
 
 /**
  * A map with user commands which can later be executed via the runner or shortcuts.

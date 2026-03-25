@@ -31,8 +31,8 @@ export function createInitialState(options?: CreateStateOptions): AppState {
 		},
 		notifications: [],
 		modals: [],
-		focusedInputs: [],
-		keybindingWhen: []
+		inputsCaptured: [],
+		activeZones: []
 	}
 }
 

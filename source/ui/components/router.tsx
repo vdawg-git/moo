@@ -1,4 +1,5 @@
 import { useSelector } from "@xstate/store/react"
+import { ZoneProvider } from "#/application/keybinds/useKeybindings"
 import { useAppState } from "#/ui/hooks/useSelectors"
 import { AlbumPage } from "#/ui/pages/albumPage"
 import { All } from "#/ui/pages/allPage"
@@ -17,7 +18,11 @@ const routes: Routes = {
 	queue: () => <QueuePage />,
 	album: ({ id }) => <AlbumPage id={id} />,
 	artist: ({ id }) => <ArtistPage id={id} />,
-	quickEdit: ({ id }) => <QuickEditPage id={id} key={id} />
+	quickEdit: ({ id }) => (
+		<ZoneProvider zone={"quickEdit"}>
+			<QuickEditPage id={id} key={id} />
+		</ZoneProvider>
+	)
 }
 
 export function Router() {

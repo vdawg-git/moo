@@ -17,7 +17,7 @@ export function createCommandCallbacks({
 	readonly appState: AppStore
 	readonly player: Player
 }): CommandCallbacks {
-	const lookupFunction: Readonly<Record<AppCommandID, () => void>> =
+	const lookupFunction: Readonly<Partial<Record<AppCommandID, () => void>>> =
 		Object.freeze({
 			"runner.openCommands": () => openRunner(appState, ">"),
 			"runner.openGoto": () => openRunner(appState),
@@ -51,7 +51,12 @@ export function createCommandCallbacks({
 		})
 
 	function getCommandCallback(id: AppCommandID): () => void {
-		return lookupFunction[id]
+		const callback = lookupFunction[id]
+		if (!callback) {
+			throw new Error(`No callback registered for command: ${id}`)
+		}
+
+		return callback
 	}
 
 	return { getCommandCallback }

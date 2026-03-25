@@ -2,7 +2,7 @@ import path from "node:path"
 import { TextAttributes } from "@opentui/core"
 import { useKeyboard } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Result } from "typescript-result"
 import { useAppContext } from "#/app/context"
 import { useConfig } from "#/shared/config/configContext"
@@ -10,7 +10,7 @@ import { createQueryKey } from "#/shared/queryKey"
 import { Dialog } from "#/ui/components/dialog"
 import { ErrorScreen } from "#/ui/components/errorScreen"
 import { useColors } from "#/ui/hooks/useColors"
-import { useFocusItems, useFocusItemsKeybings } from "#/ui/hooks/useFocusItems"
+import { useFocusZones } from "#/ui/hooks/useFocusZone"
 import { useQuery } from "#/ui/hooks/useQuery"
 import { BracketButton } from "../../components/button"
 import { Input } from "../../components/Input"
@@ -26,21 +26,6 @@ type QuickEditPageProps = {
 	id: TrackId
 }
 
-const focusedDisplayList = [
-	"tagType",
-	"input",
-	"suggestions",
-	"applied"
-] as const
-type Focused = (typeof focusedDisplayList)[number]
-const focusedEnum = {
-	tagType: 0,
-	input: 1,
-	suggestions: 2,
-	applied: 3
-} as const satisfies Record<Focused, number>
-
-// This is kinda ugly, but I wanted to keep it simple for once
 export function QuickEditPage({ id }: QuickEditPageProps) {
 	const { database } = useAppContext()
 	const quickEditQuery = useQuery<QuickEditorProps>(
@@ -81,13 +66,6 @@ function QuickEditEditor({
 	)
 	const [isCloseModalOpen, setCloseModalOpen] = useState(false)
 
-	/** 0 = tagType, 1 = input, 2 = suggestion, 3 = applied tags */
-	const { focused, goNext, goPrevious, setFocus } = useFocusItems({
-		itemsAmount: focusedDisplayList.length,
-		initialIndex: 1
-	})
-	const focusedDisplay = focusedDisplayList[focused]
-
 	const tagType = useSelector(state, ({ context }) => context.tagType)
 	const input = useSelector(state, ({ context }) => context.input)
 	const indexSuggestion = useSelector(
@@ -95,58 +73,105 @@ function QuickEditEditor({
 		({ context }) => context.indexSuggestion
 	)
 
-	const title = track.title ?? path.basename(track.id)
+	const indexApplied = useSelector(state, ({ context }) => context.indexApplied)
 
-	useKeyboard((keypress) => {
-		if (isCloseModalOpen) return
+	const suggestionsRef = useRef(suggestions)
+	suggestionsRef.current = suggestions
+	const tagsActiveRef = useRef(tagsActive)
+	tagsActiveRef.current = tagsActive
 
-		if (keypress.name === "tab") {
-			const goBack = keypress.shift
-			if (goBack) {
-				goPrevious()
-			} else {
-				goNext()
+	const { isActive } = useFocusZones({
+		zones: [
+			{
+				name: "tagType",
+				callbacks: {
+					accept: () => {
+						const current = state.get().context.tagType
+						state.trigger.switchTagType({
+							tagType: current === "mood" ? "genre" : "mood"
+						})
+					},
+					abort: () => setCloseModalOpen(true)
+				},
+				neighbors: { down: "input", right: "applied" }
+			},
+			{
+				name: "input",
+				isInput: true,
+				callbacks: {
+					accept: () => {
+						const currentInput = state.get().context.input
+						if (currentInput) {
+							state.trigger.addTagFromInput({ input: currentInput })
+						}
+					},
+					abort: ({ setZone }) => setZone("suggestions")
+				},
+				neighbors: { up: "tagType", down: "suggestions" }
+			},
+			{
+				name: "suggestions",
+				arrows: ["up", "down"],
+				callbacks: {
+					accept: () => {
+						const currentIndex = state.get().context.indexSuggestion
+						const suggestion = suggestionsRef.current[currentIndex]
+						if (suggestion) {
+							state.trigger.setActiveTags({
+								tags: [...tagsActiveRef.current, suggestion]
+							})
+						}
+					},
+					abort: () => setCloseModalOpen(true),
+					"quickEdit.nextSuggestion": () => {
+						const currentIndex = state.get().context.indexSuggestion
+						const maxIndex = suggestionsRef.current.length - 1
+						state.trigger.setSuggestionsIndex({
+							index: Math.min(currentIndex + 1, maxIndex)
+						})
+					},
+					"quickEdit.previousSuggestion": () => {
+						const currentIndex = state.get().context.indexSuggestion
+						state.trigger.setSuggestionsIndex({
+							index: Math.max(currentIndex - 1, 0)
+						})
+					}
+				},
+				neighbors: { up: "input", right: "applied" }
+			},
+			{
+				name: "applied",
+				arrows: ["left", "right"],
+				callbacks: {
+					abort: () => setCloseModalOpen(true),
+					"quickEdit.removeTag": () => {
+						const currentTags = tagsActiveRef.current
+						const currentIndex = state.get().context.indexApplied
+						const newTags = currentTags.filter(
+							(_, index) => index !== currentIndex
+						)
+						state.trigger.setActiveTags({ tags: [...newTags] })
+					},
+					"quickEdit.nextApplied": () => {
+						const maxIndex = tagsActiveRef.current.length - 1
+						const currentIndex = state.get().context.indexApplied
+						state.trigger.setAppliedIndex({
+							index: Math.min(currentIndex + 1, maxIndex)
+						})
+					},
+					"quickEdit.previousApplied": () => {
+						const currentIndex = state.get().context.indexApplied
+						state.trigger.setAppliedIndex({
+							index: Math.max(currentIndex - 1, 0)
+						})
+					}
+				},
+				neighbors: { left: "suggestions", up: "tagType" }
 			}
-		}
-
-		if (focused === focusedEnum.input) {
-			if (keypress.name === "escape" || keypress.name === "down") {
-				goNext()
-				return
-			}
-
-			if (keypress.name === "up") {
-				goPrevious()
-				return
-			}
-		}
-
-		if (focused === focusedEnum.input) return
-
-		if (focusedDisplay === "tagType" && keypress.name === "return") {
-			const current = state.get().context.tagType
-			state.trigger.switchTagType({
-				tagType: current === "mood" ? "genre" : "mood"
-			})
-			return
-		}
-
-		if (keypress.name === "escape" && !isCloseModalOpen) {
-			setCloseModalOpen(true)
-			return
-		}
-
-		const pressedNumber = keypress.number && Number(keypress.name)
-		if (
-			pressedNumber
-			&& pressedNumber !== 0
-			&& pressedNumber <= focusedDisplayList.length
-		) {
-			setFocus(pressedNumber - 1)
-			return
-		}
+		],
+		initialZone: "input"
 	})
-
+	const title = track.title ?? path.basename(track.id)
 	const colors = useColors()
 
 	return (
@@ -178,35 +203,33 @@ function QuickEditEditor({
 
 				<box flexDirection="row" height={"100%"} width={"100%"}>
 					<box maxWidth={"50%"} flexShrink={1}>
-						<TagTabs
-							focused={focusedDisplay === "tagType"}
-							activeType={tagType}
-							onChange={(type) =>
-								state.trigger.switchTagType({ tagType: type })
-							}
-						/>
+						<TagTabs focused={isActive("tagType")} activeType={tagType} />
 
 						<TagsInput
 							input={input}
 							onChange={(value) => state.trigger.setInput({ input: value })}
-							onSubmit={(input) => state.trigger.addTagFromInput({ input })}
-							focused={focusedDisplay === "input"}
-							onGetFocus={() => setFocus(3)}
+							onSubmit={(submitInput) =>
+								state.trigger.addTagFromInput({ input: submitInput })
+							}
+							focused={isActive("input")}
 							title={`┤2├ Search for ${tagType} `}
 							placeholder={`Search ${tagType}..`}
 						/>
 
 						<Suggestions
 							index={indexSuggestion}
-							focused={focusedDisplay === "suggestions"}
+							focused={isActive("suggestions")}
 							suggestions={suggestions}
-							onIndexChange={(index) =>
-								state.trigger.setSuggestionsIndex({ index })
+							onIndexChange={(newIndex) =>
+								state.trigger.setSuggestionsIndex({ index: newIndex })
 							}
-							onSelect={(suggestion) => {
-								state.trigger.setActiveTags({
-									tags: [...tagsActive, suggestion]
-								})
+							onSelect={(selectedIdx) => {
+								const suggestion = suggestions[selectedIdx]
+								if (suggestion) {
+									state.trigger.setActiveTags({
+										tags: [...tagsActiveRef.current, suggestion]
+									})
+								}
 							}}
 						/>
 					</box>
@@ -214,10 +237,8 @@ function QuickEditEditor({
 					<AppliedSuggestions
 						title={`┤4├ Applied ${tagType} `}
 						items={tagsActive}
-						focused={focusedDisplay === "applied"}
-						onChange={(tags) => {
-							state.trigger.setActiveTags({ tags })
-						}}
+						focused={isActive("applied")}
+						focusIndex={indexApplied}
 					/>
 				</box>
 			</box>
@@ -254,7 +275,6 @@ function TagsInput({
 	onChange,
 	onSubmit,
 	input,
-	onGetFocus,
 	placeholder,
 	title
 }: {
@@ -262,7 +282,6 @@ function TagsInput({
 	focused: boolean
 	onChange: (input: string) => void
 	onSubmit: (input: string) => void
-	onGetFocus: () => void
 	placeholder: string
 	title: string
 }): ReactNode {
@@ -281,7 +300,6 @@ function TagsInput({
 			<Input
 				value={input}
 				focused={hasFocus}
-				onMouseDown={onGetFocus}
 				onInput={onChange}
 				placeholder={placeholder}
 				width={"100%"}
@@ -297,25 +315,13 @@ const tagTypesList: { type: TagType; label: string }[] = [
 ]
 
 function TagTabs({
-	onChange,
 	focused,
 	activeType
 }: {
 	activeType: TagType
 	focused: boolean
-	onChange: (tagType: TagType) => void
 }) {
 	const colors = useColors()
-	const focusReturn = useFocusItems({ itemsAmount: tagTypesList.length })
-	useFocusItemsKeybings({ enabled: focused, focusReturn })
-
-	const onChangeRef = useRef(onChange)
-	onChangeRef.current = onChange
-
-	useEffect(() => {
-		const tagType = tagTypesList[focusReturn.focused]!.type
-		onChangeRef.current(tagType)
-	}, [focusReturn.focused])
 
 	return (
 		<box
@@ -327,7 +333,7 @@ function TagTabs({
 			flexDirection="row"
 			gap={1}
 		>
-			{tagTypesList.map(({ type, label }, index) => {
+			{tagTypesList.map(({ type, label }) => {
 				const isActive = activeType === type
 				const foreground = isActive ? colors.blue : colors.fg
 
@@ -335,7 +341,6 @@ function TagTabs({
 					<BracketButton
 						key={type}
 						fg={foreground}
-						onMouseDown={() => focusReturn.setFocus(index)}
 						attributes={focused || isActive ? undefined : TextAttributes.DIM}
 					>
 						{label}
@@ -348,16 +353,16 @@ function TagTabs({
 
 function Suggestions({
 	suggestions,
-	onSelect,
 	focused: hasFocus,
 	index,
-	onIndexChange
+	onIndexChange,
+	onSelect
 }: {
 	index: number
 	focused: boolean
 	suggestions: string[]
 	onIndexChange: (index: number) => void
-	onSelect: (suggestion: string) => void
+	onSelect: (index: number) => void
 }) {
 	const colors = useColors()
 
@@ -365,31 +370,30 @@ function Suggestions({
 		<box
 			title="┤3├ Suggestions "
 			width={"100%"}
-			flexGrow={0}
+			flexGrow={1}
 			flexShrink={100}
 			border
 			borderStyle="rounded"
+			overflow="hidden"
 			borderColor={hasFocus ? colors.blue : colors.brightBlack}
-			overflow="scroll"
 		>
 			{suggestions.length > 0 ? (
 				<Select
-					focused={hasFocus}
 					options={suggestions.map((suggestion) => ({
 						name: suggestion,
-						description: suggestion,
-						value: suggestion
+						description: suggestion
 					}))}
-					onSelect={(_, suggestion) => suggestion && onSelect(suggestion.name)}
-					onChange={(newIndex) => onIndexChange(newIndex)}
-					focusedTextColor={colors.fg}
-					backgroundColor={colors.bg}
-					focusedBackgroundColor={colors.bg}
-					textColor={colors.brightBlack}
 					selectedIndex={index}
+					onChange={onIndexChange}
+					onSelect={onSelect}
+					focused={hasFocus}
 					showDescription={false}
 					height={"100%"}
 					selectedTextColor={colors.yellow}
+					textColor={colors.brightBlack}
+					backgroundColor={colors.bg}
+					focusedTextColor={colors.brightBlack}
+					focusedBackgroundColor={colors.bg}
 					selectedBackgroundColor={colors.bg}
 				/>
 			) : (
@@ -404,30 +408,15 @@ function Suggestions({
 function AppliedSuggestions({
 	focused: hasFocus,
 	items,
-	onChange,
-	title
+	title,
+	focusIndex
 }: {
 	focused: boolean
 	items: readonly string[]
-	onChange: (items: string[]) => void
 	title: string
+	focusIndex: number
 }): ReactNode {
 	const colors = useColors()
-	const focusReturn = useFocusItems({ itemsAmount: items.length })
-	const index = focusReturn.focused
-	useFocusItemsKeybings({ enabled: hasFocus, focusReturn })
-
-	useKeyboard((key) => {
-		if (!hasFocus) return
-
-		if (key.name === "x") {
-			const newItems = items.filter((_, jindex) => jindex !== index)
-			onChange(newItems)
-		}
-	})
-
-	const onChangeRef = useRef(onChange)
-	onChangeRef.current = onChange
 
 	return (
 		<box
@@ -442,16 +431,10 @@ function AppliedSuggestions({
 		>
 			<box height={"100%"} width={"100%"} flexDirection="row" flexWrap="wrap">
 				{items.map((item, index) => {
-					const isFocused = index === focusReturn.focused
+					const isFocused = index === focusIndex
 
 					return (
-						<box
-							key={item}
-							onMouseDown={() => focusReturn.setFocus(index)}
-							width={"auto"}
-							flexDirection="row"
-							gap={1}
-						>
+						<box key={item} width={"auto"} flexDirection="row" gap={1}>
 							<text
 								fg={hasFocus && isFocused ? colors.blue : colors.fg}
 								width={"auto"}

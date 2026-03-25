@@ -112,8 +112,8 @@ describe("createTestFileSystem", () => {
 
 			const result = await fileSystem.stat("/test.txt" as FilePath)
 
-			expect(result.size).toBe(5)
-			expect(result.mtime).toEqual(mtime)
+			expect(result.size, "byte count matches content").toBe(5)
+			expect(result.mtime, "preserves modification time").toEqual(mtime)
 		})
 
 		it("should throw on missing file", async () => {
@@ -140,8 +140,10 @@ describe("createTestFileSystem", () => {
 			await fileSystem.writeFile("/test.txt" as FilePath, "data")
 			const event = await eventPromise
 
-			expect(event.event).toBe("add")
-			expect(event.filePath).toBe("/test.txt" as FilePath)
+			expect(event.event, "emits add event").toBe("add")
+			expect(event.filePath, "targets correct path").toBe(
+				"/test.txt" as FilePath
+			)
 		})
 
 		it("should emit 'change' event for existing file", async () => {
@@ -157,17 +159,18 @@ describe("createTestFileSystem", () => {
 	})
 
 	describe("exists", () => {
-		it("should return true for existing file", async () => {
+		it("returns true for existing and false for missing", async () => {
 			const fileSystem = createTestFileSystem()
 			fileSystem.setFile("/test.txt", "data")
 
-			expect(await fileSystem.exists("/test.txt" as FilePath)).toBe(true)
-		})
-
-		it("should return false for missing file", async () => {
-			const fileSystem = createTestFileSystem()
-
-			expect(await fileSystem.exists("/missing" as FilePath)).toBe(false)
+			expect(
+				await fileSystem.exists("/test.txt" as FilePath),
+				"should find existing file"
+			).toBe(true)
+			expect(
+				await fileSystem.exists("/missing" as FilePath),
+				"should not find missing file"
+			).toBe(false)
 		})
 	})
 
@@ -182,8 +185,10 @@ describe("createTestFileSystem", () => {
 			fileSystem.setFile("/watched/file.txt", "included")
 			const result = await events
 
-			expect(result).toHaveLength(1)
-			expect(result[0]!.filePath).toBe("/watched/file.txt" as FilePath)
+			expect(result, "only watched file emitted").toHaveLength(1)
+			expect(result[0]!.filePath, "event from watched dir").toBe(
+				"/watched/file.txt" as FilePath
+			)
 		})
 
 		it("should respect the ignored option", async () => {
@@ -200,8 +205,10 @@ describe("createTestFileSystem", () => {
 			fileSystem.setFile("/dir/keep.txt", "included")
 			const result = await events
 
-			expect(result).toHaveLength(1)
-			expect(result[0]!.filePath).toBe("/dir/keep.txt" as FilePath)
+			expect(result, "only non-ignored file emitted").toHaveLength(1)
+			expect(result[0]!.filePath, "event from non-ignored file").toBe(
+				"/dir/keep.txt" as FilePath
+			)
 		})
 	})
 
@@ -226,8 +233,8 @@ describe("createTestFileSystem", () => {
 			fileSystem.setFile("/file.txt", "second")
 			const result = await events
 
-			expect(result[0]!.event).toBe("add")
-			expect(result[1]!.event).toBe("change")
+			expect(result[0]!.event, "first write emits add").toBe("add")
+			expect(result[1]!.event, "second write emits change").toBe("change")
 		})
 	})
 
@@ -249,8 +256,10 @@ describe("createTestFileSystem", () => {
 			fileSystem.removeFile("/file.txt")
 			const event = await eventPromise
 
-			expect(event.event).toBe("unlink")
-			expect(event.filePath).toBe("/file.txt" as FilePath)
+			expect(event.event, "emits unlink event").toBe("unlink")
+			expect(event.filePath, "targets removed file").toBe(
+				"/file.txt" as FilePath
+			)
 		})
 	})
 

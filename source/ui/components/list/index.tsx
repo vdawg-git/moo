@@ -42,6 +42,7 @@ export function List<T>({
 		searchString,
 		setMode,
 		setIndex,
+		setScrollPosition,
 		setScrollboxSize,
 		onSelect
 	} = register
@@ -84,6 +85,7 @@ export function List<T>({
 			<scrollbox
 				viewportCulling
 				scrollbarOptions={{
+					onChange: (position) => setScrollPosition(position),
 					trackOptions: {
 						backgroundColor: colors.bg,
 						foregroundColor: colors.black
@@ -96,6 +98,13 @@ export function List<T>({
 				}}
 				{...scrollboxProps}
 				ref={scrollboxRef}
+				onMouseScroll={function () {
+					// oxlint-disable-next-line no-this-alias
+					const scrollbox = this
+					queueMicrotask(() => {
+						setScrollPosition(scrollbox.scrollTop)
+					})
+				}}
 				onSizeChange={function () {
 					setScrollboxSize({ scrollboxHeight: this.height })
 				}}

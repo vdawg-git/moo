@@ -110,7 +110,8 @@ Enforced via oxlint `no-restricted-imports` overrides in `.oxlintrc.json`.
 **Testing**
 
 - Prefer `it()` over `test()` in test files
-- Tests can assert multiple related behaviors in one `it()` block to avoid duplicating setup — especially in integration tests. Use assertion messages for clear failure pinpointing.
+- Tests can assert multiple related behaviors in one `it()` block to avoid duplicating setup — especially in integration tests
+- When an `it()` block tests multiple behaviors, add an assertion message string to each `expect()` for clear failure pinpointing. Messages must describe the _expected behavior_, not just restate the field name — e.g. `"should start playing"` not `"playState"`, `"queue should have 2 tracks"` not `"length"`
 
 ## Testability & Dependency Injection
 

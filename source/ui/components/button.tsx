@@ -1,4 +1,4 @@
-import { useColors } from "#/ui/hooks/useColors"
+import { useColors } from "#hooks/useColors"
 import type { TextProps } from "@opentui/react"
 
 type Props = TextProps & { children: string | readonly string[] }

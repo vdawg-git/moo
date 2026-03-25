@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react"
-import { isTruthy } from "remeda"
+import { isNonNullish, isTruthy } from "remeda"
 import {
 	distinctUntilChanged,
 	filter,
 	map,
 	merge,
 	scan,
+	share,
 	shareReplay,
 	skip,
 	startWith,
@@ -13,27 +13,32 @@ import {
 	withLatestFrom
 } from "rxjs"
 import { match, P } from "ts-pattern"
-import { useAppContext } from "#/app/context"
-import { getKeybindsWhen } from "#/core/state/stateUtils"
+import { ZONE_DEFAULT } from "#/core/commands/appCommands"
+import { getActiveZone } from "#/core/state/stateUtils"
 import { callAll } from "#/shared/helpers"
+import { toReadonlyBehaviorSubject } from "#/shared/library/readonlyBehaviorSubject"
 import { logger } from "#/shared/logs"
 import type { KeyEvent } from "@opentui/core"
-import type { GeneralCommand } from "#/core/commands/appCommands"
+import type { AppCommandsMap } from "#/core/commands/appCommands"
+import type { AppCommandID } from "#/core/commands/definitions"
 import type { AppState } from "#/core/state/types"
 import type { KeyBinding, KeyInput } from "#/shared/library/keybinds"
+import type { ReadonlyBehaviorSubject } from "#/shared/library/readonlyBehaviorSubject"
 import type { Observable } from "rxjs"
 import type {
 	KeybindCommand,
 	KeybindCommandMap,
-	KeybindCommandWhen,
-	KeybindNextUp
+	KeybindNextUp,
+	KeybindZone
 } from "./keybindsState"
 import type { KeyPressEvent, KeyTypeData } from "./keysStream"
 
-type CallbacksOrSequence =
+type KeybindingOutcome =
 	| { type: "callbacks"; callbacks: readonly KeybindCommand["callback"][] }
-	| { type: "sequence"; sequence: SequencePart }
-export type SequencePart = {
+	| { type: "sequence"; sequence: KeySequence }
+	| { type: "unhandled"; key: KeyInput }
+
+export type KeySequence = {
 	pressed: KeyBinding
 	nextUp: readonly KeybindNextUp[]
 }
@@ -58,13 +63,13 @@ type KeybindsTrie = {
 export type KeybindManager = {
 	readonly handleKeybinds: () => () => void
 	readonly registerKeybinds: (
-		toRegister: readonly GeneralCommandArgument[],
-		options?: { when: KeybindCommandWhen }
+		toRegister: readonly ResolvedCommand[],
+		options?: { zone: KeybindZone; allowDuringInput?: boolean }
 	) => () => void
-	readonly unregisterKeybinds: (
-		toUnregister: readonly GeneralCommandArgument[]
-	) => void
-	readonly keySequenceResult$: Observable<CallbacksOrSequence | undefined>
+	/** Temporarily disables a configured command by ID. Returns an enable function. */
+	readonly disableCommand: (commandId: AppCommandID) => () => void
+	readonly unhandled$: Observable<KeyInput>
+	readonly sequence$: ReadonlyBehaviorSubject<KeySequence | undefined>
 	readonly getAllCommands: () => KeybindCommandMap
 }
 
@@ -74,16 +79,19 @@ export function createKeybindManager({
 	keybindsState,
 	keys$
 }: KeybindManagerDeps): KeybindManager {
-	const areKeybindingsDisabled$: Observable<boolean> = appState$.pipe(
-		map((state) => state.focusedInputs.length > 0),
+	let nextInlineId = 0
+	const disabledCommands = new Set<AppCommandID>()
+
+	const isInputCaptured$: Observable<boolean> = appState$.pipe(
+		map((state) => state.inputsCaptured.length > 0),
 		startWith(false),
 		distinctUntilChanged(),
 		shareReplay({ refCount: false, bufferSize: 1 })
 	)
 
-	const keybindingWhen$: Observable<KeybindCommandWhen> = appState$.pipe(
-		map((state) => getKeybindsWhen(state.keybindingWhen)),
-		startWith("default" satisfies KeybindCommandWhen as KeybindCommandWhen),
+	const activeZone$: Observable<KeybindZone> = appState$.pipe(
+		map((state) => getActiveZone(state.activeZones)),
+		startWith(ZONE_DEFAULT as KeybindZone),
 		distinctUntilChanged(),
 		shareReplay({ refCount: false, bufferSize: 1 })
 	)
@@ -92,28 +100,38 @@ export function createKeybindManager({
 		filter((event): event is KeyPressEvent => event.type === "keypress")
 	)
 
-	const keySequenceResult$: Observable<CallbacksOrSequence | undefined> =
+	const keySequenceResult$: Observable<KeybindingOutcome | undefined> =
 		pressed$.pipe(
-			withLatestFrom(areKeybindingsDisabled$),
-			filter(([_, isDisabled]) => !isDisabled),
-			map(([keypress]) => openTuiInputToKeyInput(keypress.event)),
-			withLatestFrom(keybindingWhen$),
-			switchMap(([input, when]) => {
+			withLatestFrom(isInputCaptured$),
+			map(([keypress, inputCaptured]) => ({
+				keyInput: openTuiInputToKeyInput(keypress.event),
+				inputCaptured
+			})),
+			withLatestFrom(activeZone$),
+			switchMap(([{ keyInput, inputCaptured }, zone]) => {
 				const sequenceReset$ = merge(
 					// TODO figure out why this is not working properly.
 					// If we use any number smaller than 3 sequenced keybinds stop working after opening and closing the runner
-					keybindingWhen$.pipe(skip(5), distinctUntilChanged()),
-					areKeybindingsDisabled$.pipe(skip(5), distinctUntilChanged())
-				).pipe(map(() => ({ input: undefined, when })))
+					activeZone$.pipe(skip(5), distinctUntilChanged()),
+					isInputCaptured$.pipe(skip(5), distinctUntilChanged())
+				).pipe(map(() => ({ input: undefined, zone, inputCaptured: false })))
 
-				return sequenceReset$.pipe(startWith({ input, when }))
+				return sequenceReset$.pipe(
+					startWith({ input: keyInput, zone, inputCaptured })
+				)
 			}),
 			scan(
 				(previous, current) =>
-					reduceToCommandAndSequences(keybindsState, previous, current),
-				undefined as CallbacksOrSequence | undefined
+					reduceToCommandAndSequences(
+						keybindsState,
+						disabledCommands,
+						previous,
+						current
+					),
+				undefined as KeybindingOutcome | undefined
 			),
-			distinctUntilChanged()
+			distinctUntilChanged(),
+			share()
 		)
 
 	function handleKeybinds() {
@@ -127,124 +145,189 @@ export function createKeybindManager({
 	}
 
 	function registerKeybinds(
-		toRegister: readonly GeneralCommandArgument[],
-		options?: { when: KeybindCommandWhen }
+		toRegister: readonly ResolvedCommand[],
+		options?: { zone: KeybindZone; allowDuringInput?: boolean }
 	) {
-		toRegister.forEach(({ keybindings, label, callback, id }) =>
+		const registrations: { id: string; keybindings: readonly KeyBinding[] }[] =
+			[]
+
+		toRegister.forEach(({ keybindings, label, callback, commandId }) => {
+			const id = commandId ?? `inline_${nextInlineId++}_${label}`
+			registrations.push({ id, keybindings })
+
 			keybindings.forEach((sequence) => {
 				keybindsState.addSequence(sequence, {
 					callback,
 					id,
+					commandId,
 					label,
-					when: options?.when ?? "default"
+					zone: options?.zone ?? ZONE_DEFAULT,
+					allowDuringInput: options?.allowDuringInput
 				})
 			})
-		)
+		})
 
-		return () => unregisterKeybinds(toRegister)
-	}
-
-	function unregisterKeybinds(toUnregister: readonly GeneralCommandArgument[]) {
-		toUnregister.forEach(({ keybindings, id }) =>
-			keybindings.forEach((sequence) =>
-				keybindsState.removeSequence(sequence, id)
+		return () => {
+			registrations.forEach(({ id, keybindings }) =>
+				keybindings.forEach((sequence) =>
+					keybindsState.removeSequence(sequence, id)
+				)
 			)
-		)
+		}
 	}
+
+	function disableCommand(commandId: AppCommandID): () => void {
+		disabledCommands.add(commandId)
+
+		return () => {
+			disabledCommands.delete(commandId)
+		}
+	}
+
+	const unhandled$ = keySequenceResult$.pipe(
+		map((outcome) => (outcome?.type === "unhandled" ? outcome.key : undefined)),
+		filter(isNonNullish),
+		share()
+	)
+
+	const sequence$ = toReadonlyBehaviorSubject(
+		keySequenceResult$.pipe(
+			map((outcome) =>
+				outcome?.type === "sequence" ? outcome.sequence : undefined
+			),
+			share()
+		),
+		undefined
+	).subject
 
 	return {
 		handleKeybinds,
 		registerKeybinds,
-		unregisterKeybinds,
-		keySequenceResult$,
+		disableCommand,
+		unhandled$,
+		sequence$,
 		getAllCommands: () => keybindsState.getAllCommands()
 	}
 }
 
-/** Hook that subscribes to the key sequence result and returns the current sequence part */
-export function useGetNextKeySequence(): SequencePart | undefined {
-	const { keybindManager } = useAppContext()
-	const [nextUpCommands, setKeySequence] = useState<SequencePart | undefined>(
-		undefined
+/** Returns true if `commandZone` is a prefix of (or equal to) `activeZone` */
+function zoneMatches(commandZone: string, activeZone: string): boolean {
+	if (commandZone === activeZone) return true
+
+	return activeZone.startsWith(commandZone + ".")
+}
+
+/**
+ * Filters commands by zone match and input-captured state.
+ * When inputCaptured is true, only commands with `allowDuringInput` pass.
+ * Among matching commands, the most specific zone wins (longest zone string).
+ */
+function filterCommandsByZone(
+	commands: readonly KeybindCommand[],
+	activeZone: string,
+	inputCaptured: boolean,
+	disabled: ReadonlySet<AppCommandID>
+): readonly (() => void)[] {
+	const matching = commands.filter(
+		(command) =>
+			zoneMatches(command.zone, activeZone)
+			&& (!inputCaptured || command.allowDuringInput)
+			&& !(command.commandId && disabled.has(command.commandId))
 	)
 
-	useEffect(() => {
-		const subscription = keybindManager.keySequenceResult$.subscribe(
-			(inputResult) => {
-				const sequenceMaybe =
-					inputResult?.type === "sequence" ? inputResult.sequence : undefined
+	if (matching.length === 0) return []
 
-				setKeySequence(sequenceMaybe)
-			}
-		)
+	// Specificity: only fire the most specific zone
+	const maxSpecificity = Math.max(...matching.map(({ zone }) => zone.length))
 
-		return () => subscription.unsubscribe()
-	}, [keybindManager.keySequenceResult$])
-
-	return nextUpCommands
+	return matching
+		.filter((c) => c.zone.length === maxSpecificity)
+		.map((c) => c.callback)
 }
 
 function reduceToCommandAndSequences(
 	keybindsState: KeybindsTrie,
-	previous: CallbacksOrSequence | undefined,
+	disabled: ReadonlySet<AppCommandID>,
+	previous: KeybindingOutcome | undefined,
 	{
 		input,
-		when
+		zone,
+		inputCaptured
 	}: {
-		when: KeybindCommandWhen
+		zone: KeybindZone
 		input: KeyInput | undefined
+		inputCaptured: boolean
 	}
-): CallbacksOrSequence | undefined {
+): KeybindingOutcome | undefined {
 	// Input gets set to undefined if it is disabled
 	if (input === undefined) return undefined
 
 	return (
 		match(previous)
-			.returnType<CallbacksOrSequence | undefined>()
+			.returnType<KeybindingOutcome | undefined>()
 
 			// If "callbacks" are returned, those will be called.
 			// The next scan will receive those, but that just means that
 			// the reducer should start from scratch again as the previous sequence completed
-			.with(P.union(undefined, { type: "callbacks" }), () => {
-				const callbacks = keybindsState
-					.getCommandsForKeys([input])
-					.flatMap(({ callback, when: thisWhen }) =>
-						thisWhen === when ? callback : []
+			.with(
+				P.union({ type: P.union("callbacks", "unhandled") }, undefined),
+				() => {
+					const callbacks = filterCommandsByZone(
+						keybindsState.getCommandsForKeys([input]),
+						zone,
+						inputCaptured,
+						disabled
 					)
 
-				return callbacks.length > 0
-					? { type: "callbacks", callbacks }
-					: ({
-							type: "sequence",
-							sequence: {
-								pressed: [input],
-								nextUp: keybindsState.getNextUp([input])
-							}
-						} satisfies CallbacksOrSequence)
-			})
+					if (callbacks.length > 0) return { type: "callbacks", callbacks }
+
+					const nextUp = keybindsState
+						.getNextUp([input])
+						.filter(
+							({ command }) =>
+								zoneMatches(command.zone, zone)
+								&& (!inputCaptured || command.allowDuringInput)
+								&& !(command.commandId && disabled.has(command.commandId))
+						)
+
+					return nextUp.length > 0
+						? ({
+								type: "sequence",
+								sequence: { pressed: [input], nextUp }
+							} satisfies KeybindingOutcome)
+						: { type: "unhandled", key: input }
+				}
+			)
 
 			.with(
 				{ type: "sequence" },
 				({ sequence: { pressed: previousPressed } }) => {
 					const pressed = [...previousPressed, input]
-					const callbacks = keybindsState
-						.getCommandsForKeys(pressed)
-						.map(({ callback }) => callback)
+					const callbacks = filterCommandsByZone(
+						keybindsState.getCommandsForKeys(pressed),
+						zone,
+						inputCaptured,
+						disabled
+					)
 
 					if (callbacks.length > 0) {
 						return { type: "callbacks", callbacks } as const
 					}
 
-					const nextUp = keybindsState.getNextUp(pressed)
+					const nextUp = keybindsState
+						.getNextUp(pressed)
+						.filter(
+							({ command }) =>
+								zoneMatches(command.zone, zone)
+								&& (!inputCaptured || command.allowDuringInput)
+								&& !(command.commandId && disabled.has(command.commandId))
+						)
 
 					if (nextUp.length > 0) {
 						return {
 							type: "sequence",
-							sequence: {
-								pressed,
-								nextUp: keybindsState.getNextUp(pressed)
-							}
-						} as const satisfies CallbacksOrSequence
+							sequence: { pressed, nextUp }
+						} as const satisfies KeybindingOutcome
 					}
 
 					return undefined
@@ -272,4 +355,41 @@ function openTuiInputToKeyInput(event: KeyEvent): KeyInput {
 	return { key, modifiers }
 }
 
-export type GeneralCommandArgument = Omit<GeneralCommand, "when">
+/** Reference to a configured command — keybindings resolved from config */
+export type CommandReference = {
+	readonly commandId: AppCommandID
+	readonly callback: () => void
+}
+
+/** Dynamic command with inline keybindings */
+export type CommandInline = {
+	readonly label: string
+	readonly keybindings: readonly KeyBinding[]
+	readonly callback: () => void
+}
+
+export type CommandArgument = CommandReference | CommandInline
+
+/** Resolved command ready for registration — what `registerKeybinds` accepts */
+export type ResolvedCommand = CommandInline & {
+	/** Present when resolved from a {@link CommandReference} */
+	readonly commandId?: AppCommandID
+}
+
+/** Resolves a {@link CommandReference} to a {@link ResolvedCommand} using the config */
+export function resolveCommand(
+	command: CommandArgument,
+	config: AppCommandsMap
+): ResolvedCommand | undefined {
+	if (!("commandId" in command)) return command
+
+	const data = config.get(command.commandId)
+	if (!data) return undefined
+
+	return {
+		commandId: command.commandId,
+		label: data.label,
+		keybindings: data.keybindings,
+		callback: command.callback
+	}
+}

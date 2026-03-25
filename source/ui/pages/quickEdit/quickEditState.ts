@@ -12,6 +12,7 @@ type QuickEditStateStore = {
 	tagsApplied: SuggestionsRecord
 	tagsSuggested: SuggestionsRecord
 	indexSuggestion: number
+	indexApplied: number
 	tagType: TagType
 }
 
@@ -57,6 +58,7 @@ export function createQuickEditState({
 		tagsSuggested: { genre: [], mood: [] },
 		tagsApplied: { genre: [], mood: [] },
 		indexSuggestion: 0,
+		indexApplied: 0,
 		tagType: defaultTagType
 	}
 	const state = createStore({
@@ -70,7 +72,8 @@ export function createQuickEditState({
 				...context,
 				tagType,
 				input: "",
-				indexSuggestion: 0
+				indexSuggestion: 0,
+				indexApplied: 0
 			}),
 
 			setInput: (context, { input }: { input: string }) => ({
@@ -96,11 +99,20 @@ export function createQuickEditState({
 			setActiveTags: (context, { tags }: { tags: string[] }) =>
 				create(context, (draft) => {
 					draft.tagsApplied[draft.tagType] = tags
+					draft.indexApplied = Math.min(
+						draft.indexApplied,
+						Math.max(tags.length - 1, 0)
+					)
 				}),
 
 			setSuggestionsIndex: (context, { index }: { index: number }) => ({
 				...context,
 				indexSuggestion: index
+			}),
+
+			setAppliedIndex: (context, { index }: { index: number }) => ({
+				...context,
+				indexApplied: index
 			})
 		}
 	})

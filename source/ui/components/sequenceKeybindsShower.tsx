@@ -1,7 +1,7 @@
 import { TextAttributes } from "@opentui/core"
-import { useGetNextKeySequence } from "#/application/keybinds/keybindManager"
 import { useColors } from "#/ui/hooks/useColors"
-import type { SequencePart } from "#/application/keybinds/keybindManager"
+import { useNextKeySequence } from "#/ui/hooks/useKeySequence"
+import type { KeySequence } from "#/application/keybinds/keybindManager"
 
 type NextUpKeybind = { label: string; toPress: string; id: string }
 
@@ -9,7 +9,7 @@ type NextUpKeybind = { label: string; toPress: string; id: string }
  * Shows which keybinds can be pressed next.
  */
 export function NextUpKeybinds() {
-	const sequencePartMaybe = useGetNextKeySequence()
+	const sequencePartMaybe = useNextKeySequence()
 
 	const toDisplay = sequencePartMaybe && sequencePartToNextUp(sequencePartMaybe)
 	const colors = useColors()
@@ -60,7 +60,7 @@ export function NextUpKeybinds() {
 function sequencePartToNextUp({
 	nextUp: nextPossible,
 	pressed: { length: pressedAmount }
-}: SequencePart): readonly NextUpKeybind[] {
+}: KeySequence): readonly NextUpKeybind[] {
 	return nextPossible.map(({ command: { id, label }, keys }) => ({
 		id,
 		label,

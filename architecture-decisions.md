@@ -2,47 +2,57 @@
 
 ## Ports & Adapters (Hexagonal Architecture)
 
-Codebase restructured into `core/`, `ports/`, `adapters/`, `application/`, `ui/`, `app/`, `shared/`. Import boundaries enforced via oxlint `no-restricted-imports` overrides.
+`core/`, `ports/`, `adapters/`, `application/`, `ui/`, `app/`, `shared/`. Import boundaries enforced via oxlint.
 
-- **Why Hexagonal**: Was already ~80% in place (Player, AppDatabase, AppFileSystem interfaces). Made implicit boundaries explicit.
-- **Why not Clean Architecture layers**: Hexagonal is simpler, fewer layers. No use-case interactors — `application/` handles that.
-- **Rejected**: Feature-folder (by domain). Moo is a single-domain app; feature folders would just scatter infrastructure.
+- **Why not feature-folders**: Moo is single-domain; feature folders would scatter infrastructure without benefit.
+- **Why not Clean Architecture**: Simpler — fewer layers, no use-case interactors.
 
 ## Track as plain type (not class)
 
-`Track` is a plain `type`, not an abstract class. Playback operations (`play`, `pause`, `seek`) live on the `Player` port, called directly with a `TrackId`.
+`Track` is a plain `type`. Playback operations live on the `Player` port, called with a `TrackId`.
 
-- **Why**: The class coupled domain data to infrastructure (Player). `BaseTrack = Pick<Track, ...>` was a workaround. `LocalTrack` subclass existed just to set `sourceProvider = "local"`.
-- **Rejected**: Keep class but inject player — still couples data shape to behavior.
+- **Why**: A class couples domain data to infrastructure. Subclasses (`LocalTrack`) existed only to set a discriminant.
+- **Rejected**: Class with injected player — still couples data shape to behavior.
 
 ## DI via AppContext
 
-All dependencies flow through `createAppContext()` → React's `AppContextProvider` → `useAppContext()`. No module-level singletons.
+All dependencies flow through `createAppContext()` → React `AppContextProvider` → `useAppContext()`. Non-React systems use constructor injection via function parameters.
 
-- **React components**: `useAppContext()` or `useAppState()` convenience hook
-- **Non-React systems**: Constructor injection via function parameters (`handleMpris(deps)`, `updateDatabase(deps)`, etc.)
-- **Command callbacks**: `createCommandCallbacks({ appState, player })` — created in both `start.tsx` (for global commands) and `App.tsx` (for playback commands). Not on AppContext to avoid circular dep with `runner.tsx`.
+- **Why**: No module-level singletons; every system is testable and destroyable.
 
-**Why not on AppContext**: `callbacks.ts` imports `openRunner` from `runner.tsx`, which imports `useAppContext` from `context.tsx`. Putting command callbacks on AppContext would create: `context → callbacks → runner → context`.
+## Playlist DSL imports Drizzle schema (allowed exception)
 
-## FileSystem abstraction for testable file watching
+`core/playlists/schema.ts` imports `tableTracks` and `TrackColumnKey` from `adapters/sqlite/schema`. Violates "core never imports adapters" — explicitly allowed via oxlint `allowImportNames`.
 
-`AppFileSystem` type (`source/ports/filesystem.ts`) abstracts `node:fs` + chokidar. `createMusicLibrary` and `createPlaylistManager` take it as a dep.
+- **Why**: Abstracting 80+ column definitions into shared/ just to avoid the import creates duplication that must stay in sync.
+- **Scope**: Only `tableTracks` and `TrackColumnKey` — no other adapter imports in core.
 
-- **Why not just inject chokidar**: Need to test the full pipeline (file → parse → DB), not just watching. `FileSystem` covers reads, stats, and writes too.
-- **Why `parsing.ts` still exists**: `database.ts` needs `getPlaylistBlueprintFromId` for on-demand playlist resolution at query time. Moving it to `playlistManager` would create `database → playlistManager → database` circular dep. So `parsing.ts` keeps the query-time functions (real fs), while `playlistManager.ts` owns the watch/scan lifecycle (injected fs).
-- **Rejected**: Passing `FileSystem` as extra param to existing loose functions — doesn't give us the `createFoo(deps)` → system object pattern the codebase uses.
+## Zone-based keybinding system
 
-## Playlist DSL imports Drizzle schema directly (allowed exception)
+Dot-separated zone strings (`"default"`, `"default.quickEdit.suggestions"`, `"modal"`). Commands register to a zone; prefix matching fires parent-zone commands unless shadowed by a more specific zone.
 
-`core/playlists/schema.ts` imports `tableTracks` and `TrackColumnKey` from `adapters/sqlite/schema`. This violates the "core never imports adapters" rule but is explicitly allowed via oxlint `allowImportNames`.
+- **Why zones over flat enum**: Sub-regions need different bindings for the same keys (e.g., `j`/`k` in suggestions vs. applied tags).
+- **Why prefix matching**: Global keys (e.g., `space` for playback) should pass through to child zones, but zone-specific binds shadow them.
+- **Rejected**: Separate keybinding managers per page — duplicates infrastructure, no global command passthrough.
 
-- **Why allow it**: The alternative (static column metadata in shared/) duplicates 80+ column definitions that must stay in sync with the Drizzle schema. Not worth the maintenance cost.
-- **Scope**: Only `tableTracks` and `TrackColumnKey` are allowed — no other adapter imports in core.
+## Command types (CommandReference | CommandInline)
+
+`useKeybindings` accepts `CommandArgument = CommandReference | CommandInline`. `CommandReference` has `commandId: AppCommandID`, `CommandInline` has `label + keybindings`. Discriminant: `"commandId" in command`. Resolution to `ResolvedCommand` happens in `useKeybindings`.
+
+- **Why `commandId` not `id`**: `AppCommand.id` stays as a domain type. `commandId` only exists in keybind-specific types to avoid overlap with auto-generated trie keys.
+- **Why auto-generated trie keys**: Inline commands don't need caller-supplied IDs. Registration returns a cleanup fn; unregistration is handled via captured closures.
+- **Why `disableCommand` over `unregisterKeybinds`**: Callers (e.g., runner) that need to suppress someone else's command shouldn't fabricate registration objects. A disabled-set check in `filterCommandsByZone` is simpler and doesn't require re-registration on re-enable.
+
+## Abort command with allowDuringInput
+
+`abort` is a generic `AppCommandID` (bound to `esc`). In `useFocusZones`, abort callbacks are registered with `allowDuringInput: true` so escape works even when an input field captures keys.
+
+- **Why not a per-page escape handler**: Zone-specific abort (input→blur vs. suggestions→close dialog) requires per-zone callbacks. A single top-level handler can't know the intent.
+- **Why split in useFocusZones**: Abort is the only command that must pierce input capture. Splitting it from regular zone commands keeps the `allowDuringInput` concern localized.
 
 ## Theme stream in app/ layer
 
-`themeStream$` lives in `app/theme.ts`, not `shared/`. It does IO (file watching, renderer palette access) which violates shared's purity constraint. Types and schema stay in `shared/config/theme.ts`.
+`themeStream$` lives in `app/theme.ts`. It does IO (file watching, renderer palette) so it can't live in `shared/`. Types stay in `shared/config/theme.ts`.
 
-- **Why not application/**: Application can't import from adapters or app. Theme creation needs `createWatcher` (adapter) and `renderer` (app).
-- **Why not inject via context**: `themeStream$` is a hot observable created once at startup — overkill for DI. UI imports it directly.
+- **Why app/ not application/**: Needs `createWatcher` (adapter) and `renderer` (app) — application/ can't import those.
+- **Why not DI**: Hot observable created once at startup; DI adds complexity for no testing benefit.

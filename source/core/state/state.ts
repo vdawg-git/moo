@@ -34,10 +34,10 @@ export function createAppState() {
 			addModal: a.addModal,
 			closeModal: a.closeModal,
 
-			addFocusedInput: a.addFocusedInput,
-			removeFocusedInput: a.removeFocusedInput,
-			registerKeybindingWhen: a.registerKeybindingWhen,
-			unregisterKeybindWhen: a.unregisterKeybindWhen
+			addCapturedInput: a.addCapturedInput,
+			removeCapturedInput: a.removeCapturedInput,
+			registerZone: a.registerZone,
+			unregisterZone: a.unregisterZone
 		} satisfies { [K in keyof typeof a]: (typeof a)[K] }
 	})
 
@@ -71,7 +71,7 @@ function createInitalState(): AppState {
 		},
 		notifications: [],
 		modals: [],
-		focusedInputs: [],
-		keybindingWhen: []
+		inputsCaptured: [],
+		activeZones: []
 	}
 }

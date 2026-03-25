@@ -25,7 +25,14 @@ export type AppCommandData = {
 	 * Might not be unique .
 	 */
 	label: string
+	/** Zone this command belongs to, for grouping in the keybinds modal */
+	zone?: string
 }
+
+const zones = {
+	quickEdit: "quickEdit",
+	runner: "runner"
+} as const
 
 export const appCommandsBase = Object.freeze({
 	"runner.openCommands": {
@@ -83,6 +90,63 @@ export const appCommandsBase = Object.freeze({
 		label: "Show keybindings",
 		keybindings: keybinding("?"),
 		description: "Show all keybinds"
+	},
+
+	abort: {
+		keybindings: keybinding("esc"),
+		label: "Abort",
+		description: "Context-dependent escape: blur input or go back"
+	},
+
+	accept: {
+		keybindings: keybinding("return"),
+		label: "Accept",
+		description: "Usually a regular 'enter' action"
+	},
+
+	// QuickEdit zone commands
+	"quickEdit.removeTag": {
+		keybindings: keybinding("x"),
+		label: "Remove tag",
+		description: "Remove the focused applied tag",
+		zone: zones.quickEdit
+	},
+	"quickEdit.nextSuggestion": {
+		keybindings: keybinding(["j", "down"]),
+		label: "Next suggestion",
+		description: "Move to the next suggestion",
+		zone: zones.quickEdit
+	},
+	"quickEdit.previousSuggestion": {
+		keybindings: keybinding(["k", "up"]),
+		label: "Previous suggestion",
+		description: "Move to the previous suggestion",
+		zone: zones.quickEdit
+	},
+	"quickEdit.nextApplied": {
+		keybindings: keybinding(["l", "right"]),
+		label: "Next applied tag",
+		description: "Move to the next applied tag",
+		zone: zones.quickEdit
+	},
+	"quickEdit.previousApplied": {
+		keybindings: keybinding(["h", "left"]),
+		label: "Previous applied tag",
+		description: "Move to the previous applied tag",
+		zone: zones.quickEdit
+	},
+	// Runner zone commands
+	"runner.nextItem": {
+		keybindings: keybinding(["j", "down"]),
+		label: "Next item",
+		description: "Move to the next runner item",
+		zone: zones.runner
+	},
+	"runner.previousItem": {
+		keybindings: keybinding(["k", "up"]),
+		label: "Previous item",
+		description: "Move to the previous runner item",
+		zone: zones.runner
 	}
 } as const satisfies AppCommandBase)
 

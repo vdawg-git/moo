@@ -21,8 +21,8 @@ describe("goNext", () => {
 
 		state.trigger.goNext()
 
-		expect(context(state).index).toBe(1)
-		expect(context(state).scrollPosition).toBe(0)
+		expect(context(state).index, "should advance cursor by one").toBe(1)
+		expect(context(state).scrollPosition, "should not scroll yet").toBe(0)
 	})
 
 	it("scrolls when cursor reaches viewport bottom", () => {
@@ -33,8 +33,8 @@ describe("goNext", () => {
 		}
 
 		// scrollboxHeight is 5, so cursor at 4 is last visible row → next triggers scroll
-		expect(context(state).index).toBe(5)
-		expect(context(state).scrollPosition).toBe(1)
+		expect(context(state).index, "should advance past visible area").toBe(5)
+		expect(context(state).scrollPosition, "should scroll down by one").toBe(1)
 	})
 
 	it("no-ops when scrollboxHeight is 0", () => {
@@ -64,8 +64,8 @@ describe("goPrevious", () => {
 
 		state.trigger.goPrevious()
 
-		expect(context(state).index).toBe(0)
-		expect(context(state).scrollPosition).toBe(0)
+		expect(context(state).index, "should move to first item").toBe(0)
+		expect(context(state).scrollPosition, "should scroll to top").toBe(0)
 	})
 
 	it("does not scroll when mid-viewport", () => {
@@ -74,8 +74,11 @@ describe("goPrevious", () => {
 
 		state.trigger.goPrevious()
 
-		expect(context(state).index).toBe(2)
-		expect(context(state).scrollPosition).toBe(0)
+		expect(context(state).index, "should decrement cursor by one").toBe(2)
+		expect(
+			context(state).scrollPosition,
+			"should stay at same scroll position"
+		).toBe(0)
 	})
 
 	it("clamps at first item", () => {
@@ -94,8 +97,11 @@ describe("centerIfNotVisible", () => {
 		state.trigger.centerIfNotVisible({ itemIndex: 8 })
 
 		// item 8 centered in viewport of 5 → scroll to max(0, 8 - floor(5/2)) = 6
-		expect(context(state).scrollPosition).toBe(6)
-		expect(context(state).index).toBe(0)
+		expect(
+			context(state).scrollPosition,
+			"should center item 8 in viewport"
+		).toBe(6)
+		expect(context(state).index, "should not move cursor").toBe(0)
 	})
 
 	it("no-ops when item is already visible", () => {
@@ -130,8 +136,11 @@ describe("scrollDown / scrollUp", () => {
 		state.trigger.scrollDown()
 
 		// scrollboxHeight is 5
-		expect(context(state).scrollPosition).toBe(5)
-		expect(context(state).index).toBeGreaterThan(0)
+		expect(context(state).scrollPosition, "should jump one page down").toBe(5)
+		expect(
+			context(state).index,
+			"should move cursor into view"
+		).toBeGreaterThan(0)
 	})
 
 	it("scrollUp jumps by scrollbox height", () => {
@@ -149,10 +158,10 @@ describe("scrollDown / scrollUp", () => {
 		const { state } = createListState({ items })
 
 		state.trigger.scrollDown()
-		expect(context(state).scrollPosition).toBe(0)
+		expect(context(state).scrollPosition, "scrollDown should not move").toBe(0)
 
 		state.trigger.scrollUp()
-		expect(context(state).scrollPosition).toBe(0)
+		expect(context(state).scrollPosition, "scrollUp should not move").toBe(0)
 	})
 })
 
@@ -164,13 +173,19 @@ describe("scroll snaps back after centerIfNotVisible", () => {
 
 		// centerIfNotVisible scrolls viewport to item 8 (centered), cursor stays at 2
 		state.trigger.centerIfNotVisible({ itemIndex: 8 })
-		expect(context(state).scrollPosition).toBe(6)
-		expect(context(state).index).toBe(2)
+		expect(
+			context(state).scrollPosition,
+			"should scroll viewport to item 8"
+		).toBe(6)
+		expect(context(state).index, "should keep cursor at 2").toBe(2)
 
 		// pressing j should snap viewport back to show cursor (at top of viewport)
 		state.trigger.goNext()
-		expect(context(state).index).toBe(3)
-		expect(context(state).scrollPosition).toBe(3)
+		expect(context(state).index, "should advance cursor to 3").toBe(3)
+		expect(
+			context(state).scrollPosition,
+			"should snap viewport back to cursor"
+		).toBe(3)
 	})
 
 	it("goPrevious snaps viewport back to cursor when centerIfNotVisible scrolled far away", () => {
@@ -180,13 +195,19 @@ describe("scroll snaps back after centerIfNotVisible", () => {
 
 		// centerIfNotVisible scrolls viewport to item 1 (centered), cursor stays at 7
 		state.trigger.centerIfNotVisible({ itemIndex: 1 })
-		expect(context(state).scrollPosition).toBe(0)
-		expect(context(state).index).toBe(7)
+		expect(
+			context(state).scrollPosition,
+			"should scroll viewport to item 1"
+		).toBe(0)
+		expect(context(state).index, "should keep cursor at 7").toBe(7)
 
 		// pressing k should snap viewport back to show cursor
 		state.trigger.goPrevious()
-		expect(context(state).index).toBe(6)
-		expect(context(state).scrollPosition).toBe(2)
+		expect(context(state).index, "should decrement cursor to 6").toBe(6)
+		expect(
+			context(state).scrollPosition,
+			"should snap viewport back to cursor"
+		).toBe(2)
 	})
 })
 
@@ -198,8 +219,8 @@ describe("goFirst / goLast", () => {
 
 		state.trigger.goFirst()
 
-		expect(context(state).index).toBe(0)
-		expect(context(state).scrollPosition).toBe(0)
+		expect(context(state).index, "should move cursor to first item").toBe(0)
+		expect(context(state).scrollPosition, "should scroll to top").toBe(0)
 	})
 
 	it("goLast jumps to end", () => {
@@ -207,7 +228,10 @@ describe("goFirst / goLast", () => {
 
 		state.trigger.goLast()
 
-		expect(context(state).index).toBe(9)
-		expect(context(state).scrollPosition).toBe(5)
+		expect(context(state).index, "should move cursor to last item").toBe(9)
+		expect(
+			context(state).scrollPosition,
+			"should scroll to show last item"
+		).toBe(5)
 	})
 })

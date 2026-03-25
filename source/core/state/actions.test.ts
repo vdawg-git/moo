@@ -270,34 +270,30 @@ describe("previousTrack", () => {
 })
 
 describe("togglePlayback", () => {
-	it("should pause when playing", () => {
-		const state = createInitialState({
+	it("pauses when playing, plays when paused, no-ops without queue", () => {
+		const playingState = createInitialState({
 			tracks: trackIdsRange(5),
 			playState: "playing"
 		})
+		expect(
+			actions.togglePlayback(playingState).playback.playState,
+			"pause when playing"
+		).toBe("paused")
 
-		const newState = actions.togglePlayback(state)
-
-		expect(newState.playback.playState).toBe("paused")
-	})
-
-	it("should play when paused", () => {
-		const state = createInitialState({
+		const pausedState = createInitialState({
 			tracks: trackIdsRange(5),
 			playState: "paused"
 		})
+		expect(
+			actions.togglePlayback(pausedState).playback.playState,
+			"play when paused"
+		).toBe("playing")
 
-		const newState = actions.togglePlayback(state)
-
-		expect(newState.playback.playState).toBe("playing")
-	})
-
-	it("should not change state when no queue", () => {
-		const state = createInitialState()
-
-		const newState = actions.togglePlayback(state)
-
-		expect(newState.playback.playState).toBe("stopped")
+		const noQueueState = createInitialState()
+		expect(
+			actions.togglePlayback(noQueueState).playback.playState,
+			"no-op without queue"
+		).toBe("stopped")
 	})
 })
 
@@ -310,8 +306,14 @@ describe("toggleShuffle", () => {
 
 		const newState = actions.toggleShuffle(state)
 
-		expect(newState.playback.shuffleMap).toBeDefined()
-		expect(newState.playback.shuffleMap).toHaveLength(4)
+		expect(
+			newState.playback.shuffleMap,
+			"should create a shuffle map"
+		).toBeDefined()
+		expect(
+			newState.playback.shuffleMap,
+			"should have one entry per track"
+		).toHaveLength(4)
 	})
 
 	it("should disable shuffle when enabled", () => {
@@ -323,8 +325,11 @@ describe("toggleShuffle", () => {
 
 		const newState = actions.toggleShuffle(state)
 
-		expect(newState.playback.shuffleMap).toBeUndefined()
-		expect(newState.playback.index).toBe(3)
+		expect(
+			newState.playback.shuffleMap,
+			"should remove the shuffle map"
+		).toBeUndefined()
+		expect(newState.playback.index, "index restored to original").toBe(3)
 	})
 
 	it("should handle no queue with shuffle toggle", () => {
@@ -406,9 +411,9 @@ describe("navigateTo", () => {
 
 		const newState = actions.navigateTo(state, { goTo: newPage })
 
-		expect(newState.view.history).toHaveLength(2)
-		expect(newState.view.history[1]).toEqual(newPage)
-		expect(newState.view.historyIndex).toBe(1)
+		expect(newState.view.history, "page appended to history").toHaveLength(2)
+		expect(newState.view.history[1], "new page at end").toEqual(newPage)
+		expect(newState.view.historyIndex, "index points to new page").toBe(1)
 	})
 
 	it("should not navigate to same page", () => {
@@ -417,8 +422,8 @@ describe("navigateTo", () => {
 
 		const newState = actions.navigateTo(state, { goTo: currentPage })
 
-		expect(newState.view.history).toHaveLength(1)
-		expect(newState.view.historyIndex).toBe(0)
+		expect(newState.view.history, "history unchanged").toHaveLength(1)
+		expect(newState.view.historyIndex, "index unchanged").toBe(0)
 	})
 
 	it("should replace forward history when navigating from middle", () => {
@@ -436,14 +441,16 @@ describe("navigateTo", () => {
 		}
 		const newState = actions.navigateTo(state, { goTo: newPage })
 
-		expect(newState.view.history).toHaveLength(3)
-		expect(newState.view.history[2]).toEqual(newPage)
-		expect(newState.view.historyIndex).toBe(2)
+		expect(newState.view.history, "forward entries replaced").toHaveLength(3)
+		expect(newState.view.history[2], "new page replaced artist").toEqual(
+			newPage
+		)
+		expect(newState.view.historyIndex, "should point to newest page").toBe(2)
 	})
 })
 
 describe("navigateBack", () => {
-	it("should go back in history", () => {
+	it("goes back in history and clamps at beginning", () => {
 		const state = createInitialState()
 		state.view.history = [
 			{ route: "home" },
@@ -451,22 +458,19 @@ describe("navigateBack", () => {
 		]
 		state.view.historyIndex = 1
 
-		const newState = actions.navigateBack(state)
+		const afterBack = actions.navigateBack(state)
+		expect(afterBack.view.historyIndex, "goes back").toBe(0)
 
-		expect(newState.view.historyIndex).toBe(0)
-	})
-
-	it("should not go back when at beginning", () => {
-		const state = createInitialState()
-
-		const newState = actions.navigateBack(state)
-
-		expect(newState.view.historyIndex).toBe(0)
+		const atBeginning = createInitialState()
+		expect(
+			actions.navigateBack(atBeginning).view.historyIndex,
+			"clamps at beginning"
+		).toBe(0)
 	})
 })
 
 describe("navigateForward", () => {
-	it("should go forward in history", () => {
+	it("goes forward in history and clamps at end", () => {
 		const state = createInitialState()
 		state.view.history = [
 			{ route: "home" },
@@ -474,17 +478,14 @@ describe("navigateForward", () => {
 		]
 		state.view.historyIndex = 0
 
-		const newState = actions.navigateForward(state)
+		const afterForward = actions.navigateForward(state)
+		expect(afterForward.view.historyIndex, "goes forward").toBe(1)
 
-		expect(newState.view.historyIndex).toBe(1)
-	})
-
-	it("should not go forward when at end", () => {
-		const state = createInitialState()
-
-		const newState = actions.navigateForward(state)
-
-		expect(newState.view.historyIndex).toBe(0)
+		const atEnd = createInitialState()
+		expect(
+			actions.navigateForward(atEnd).view.historyIndex,
+			"clamps at end"
+		).toBe(0)
 	})
 })
 
@@ -499,8 +500,13 @@ describe("addNotification", () => {
 
 		const newState = actions.addNotification(state, { notification })
 
-		expect(newState.notifications).toHaveLength(1)
-		expect(newState.notifications[0]).toEqual(notification)
+		expect(newState.notifications, "should have one notification").toHaveLength(
+			1
+		)
+		expect(
+			newState.notifications[0],
+			"should store the provided notification"
+		).toEqual(notification)
 	})
 })
 
@@ -552,8 +558,8 @@ describe("closeModal", () => {
 
 		const newState = actions.closeModal(state, { id: "test-modal" })
 
-		expect(newState.modals).toHaveLength(1)
-		expect(newState.modals[0]?.id).toBe("modal-2")
+		expect(newState.modals, "one modal remains").toHaveLength(1)
+		expect(newState.modals[0]?.id, "remaining modal is modal-2").toBe("modal-2")
 	})
 
 	it("should handle non-existent modal id", () => {

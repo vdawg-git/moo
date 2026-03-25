@@ -7,7 +7,7 @@ import { keybinding } from "#/shared/library/keybinds"
 import { useColors } from "#/ui/hooks/useColors"
 import { List, useList } from "./list"
 import type {
-	GeneralCommandArgument,
+	CommandInline,
 	KeybindManager
 } from "#/application/keybinds/keybindManager"
 import type { AppStore } from "#/core/state/state"
@@ -163,10 +163,9 @@ function registerTrackCommands(
 ): () => void {
 	const { id } = track
 
-	const commands: GeneralCommandArgument[] = [
+	const commands: CommandInline[] = [
 		{
 			label: "Play next",
-			id: "play_next" + id,
 			callback: () =>
 				appState.send({
 					type: "addToManualQueueFirst",
@@ -176,7 +175,6 @@ function registerTrackCommands(
 		},
 		{
 			label: "Play last",
-			id: "play_last" + id,
 			callback: () =>
 				appState.send({
 					type: "addToManualQueueLast",
@@ -186,7 +184,6 @@ function registerTrackCommands(
 		},
 		{
 			label: "Quick tag",
-			id: "quick_tag" + id,
 			keybindings: keybinding("t e"),
 			callback: () =>
 				appState.send({

@@ -10,9 +10,9 @@ import type {
 	AppModal,
 	AppNotification,
 	AppState,
-	KeybindWhenRegistered,
 	Queue,
-	ViewPage
+	ViewPage,
+	ZoneRegistered
 } from "./types"
 
 const create = makeCreator({ strict: IS_DEV, enableAutoFreeze: IS_DEV })
@@ -307,24 +307,24 @@ const closeModal = createAction<{ id: AppModal["id"] }>((context, { id }) => {
 	context.modals = context.modals.filter(({ id: toClose }) => id !== toClose)
 })
 
-const addFocusedInput = createAction<{ id: string }>((context, { id }) => {
-	context.focusedInputs.push(id)
+const addCapturedInput = createAction<{ id: string }>((context, { id }) => {
+	context.inputsCaptured.push(id)
 })
-const removeFocusedInput = createAction<{ id: string }>((context, { id }) => {
-	context.focusedInputs = context.focusedInputs.filter(
+const removeCapturedInput = createAction<{ id: string }>((context, { id }) => {
+	context.inputsCaptured = context.inputsCaptured.filter(
 		(someId) => someId !== id
 	)
 })
 
-const registerKeybindingWhen = createAction<{
-	toRegister: KeybindWhenRegistered
+const registerZone = createAction<{
+	toRegister: ZoneRegistered
 }>((context, { toRegister }) => {
-	context.keybindingWhen.push(toRegister)
+	context.activeZones.push(toRegister)
 })
 
-const unregisterKeybindWhen = createAction<{ id: string }>(
+const unregisterZone = createAction<{ id: string }>(
 	(context, { id: toRemove }) => {
-		context.keybindingWhen = context.keybindingWhen.filter(
+		context.activeZones = context.activeZones.filter(
 			({ id }) => id !== toRemove
 		)
 	}
@@ -338,7 +338,7 @@ function createErrorNotification(message: string): AppNotification {
 // Lets export the actions like that to avoid polluting LSP imports.
 // Hopefully one day Typescript improves that..
 export const appStateActionsInternal = {
-	addFocusedInput,
+	addCapturedInput,
 	addModal,
 	addNotification,
 	addToManualQueueFirst,
@@ -355,13 +355,13 @@ export const appStateActionsInternal = {
 	playIndex,
 	playNewPlayback,
 	previousTrack,
-	registerKeybindingWhen,
-	removeFocusedInput,
+	registerZone,
+	removeCapturedInput,
 	removeFromManualQueue,
 	removeFromQueue,
 	resumePlayback,
 	stopPlayback,
 	togglePlayback,
 	toggleShuffle,
-	unregisterKeybindWhen
+	unregisterZone
 }

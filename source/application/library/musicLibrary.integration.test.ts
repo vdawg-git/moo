@@ -76,7 +76,6 @@ describe("musicLibrary integration", () => {
 		const tracks = await database.getTracks()
 		expect(tracks.getOrThrow()).toHaveLength(2)
 	})
-
 	it("should ignore unsupported file extensions", async () => {
 		const { library, fileSystem, database } = await createTestLibrary()
 
@@ -89,23 +88,29 @@ describe("musicLibrary integration", () => {
 		const tracks = await database.getTracks()
 		expect(tracks.getOrThrow()).toHaveLength(1)
 	})
-
 	it("should remove tracks from DB when files are deleted", async () => {
 		const { library, fileSystem, database } = await createTestLibrary()
 
 		fileSystem.addTrack("song1.flac")
 		fileSystem.addTrack("song2.flac")
 		await library.scan()
-		expect((await database.getTracks()).getOrThrow()).toHaveLength(2)
+		expect(
+			(await database.getTracks()).getOrThrow(),
+			"should have both tracks before deletion"
+		).toHaveLength(2)
 
 		fileSystem.removeTrack("song2.flac")
 		await library.scan()
 
 		const tracks = await database.getTracks()
-		expect(tracks.getOrThrow()).toHaveLength(1)
-		expect(tracks.getOrThrow()[0]!.id).toBe(
-			"/music/song1.flac" as unknown as TrackId
-		)
+		expect(
+			tracks.getOrThrow(),
+			"should have one track after deletion"
+		).toHaveLength(1)
+		expect(
+			tracks.getOrThrow()[0]!.id,
+			"should keep the non-deleted track"
+		).toBe("/music/song1.flac" as unknown as TrackId)
 	})
 
 	it("should skip re-parse when mtime and size are unchanged", async () => {
@@ -117,11 +122,14 @@ describe("musicLibrary integration", () => {
 		fileSystem.addTrack("song.flac", { mtime: new Date("2025-01-01") })
 
 		await library.scan()
-		expect(parseMetadata).toHaveBeenCalledTimes(1)
+		expect(parseMetadata, "should parse on first scan").toHaveBeenCalledTimes(1)
 
 		// Second scan — same mtime/size, should skip parse
 		await library.scan()
-		expect(parseMetadata).toHaveBeenCalledTimes(1)
+		expect(
+			parseMetadata,
+			"should not re-parse unchanged file"
+		).toHaveBeenCalledTimes(1)
 	})
 
 	it("should re-parse when mtime changes", async () => {
@@ -132,11 +140,14 @@ describe("musicLibrary integration", () => {
 
 		fileSystem.addTrack("song.flac", { mtime: new Date("2025-01-01") })
 		await library.scan()
-		expect(parseMetadata).toHaveBeenCalledTimes(1)
+		expect(parseMetadata, "should parse on first scan").toHaveBeenCalledTimes(1)
 
 		fileSystem.addTrack("song.flac", { mtime: new Date("2025-06-01") })
 		await library.scan()
-		expect(parseMetadata).toHaveBeenCalledTimes(2)
+		expect(
+			parseMetadata,
+			"should re-parse after mtime change"
+		).toHaveBeenCalledTimes(2)
 	})
 
 	it("should call writeTags and re-parse on updateTags", async () => {
@@ -152,8 +163,11 @@ describe("musicLibrary integration", () => {
 			genre: ["Rock", "Metal"]
 		})
 
-		expect(writeTags).toHaveBeenCalledTimes(1)
-		expect(writeTags).toHaveBeenCalledWith({
+		expect(writeTags, "should call writeTags once").toHaveBeenCalledTimes(1)
+		expect(
+			writeTags,
+			"should pass merged tag data with separator"
+		).toHaveBeenCalledWith({
 			id: trackPath,
 			genre: ["Rock", "Metal"],
 			mood: undefined,

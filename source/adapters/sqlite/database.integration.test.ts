@@ -14,9 +14,13 @@ describe("database integration", () => {
 		const result = await database.getTracks()
 		const tracks = result.getOrThrow()
 
-		expect(tracks).toHaveLength(1)
-		expect(tracks[0]!.id).toBe("track-1" as TrackId)
-		expect(tracks[0]!.title).toBe("Track track-1")
+		expect(tracks, "should return exactly one track").toHaveLength(1)
+		expect(tracks[0]!.id, "should preserve the track id").toBe(
+			"track-1" as TrackId
+		)
+		expect(tracks[0]!.title, "should store the title from input").toBe(
+			"Track track-1"
+		)
 	})
 
 	it("upsert triggers changed$", async () => {
@@ -29,7 +33,7 @@ describe("database integration", () => {
 		expect(changed).toBeDefined()
 	})
 
-	it("getTrack returns specific track", async () => {
+	it("getTrack returns specific track or error for missing", async () => {
 		const database = await createMemoryDatabase()
 		await database.upsertTracks([
 			mockTrackData("track-1"),
@@ -38,17 +42,13 @@ describe("database integration", () => {
 
 		const result = await database.getTrack("track-1" as TrackId)
 		const track = result.getOrThrow()
+		expect(track.id, "should return the requested track").toBe(
+			"track-1" as TrackId
+		)
+		expect(track.title, "should have the correct title").toBe("Track track-1")
 
-		expect(track.id).toBe("track-1" as TrackId)
-		expect(track.title).toBe("Track track-1")
-	})
-
-	it("getTrack returns error for missing track", async () => {
-		const database = await createMemoryDatabase()
-
-		const result = await database.getTrack("nonexistent" as TrackId)
-
-		expect(result.isError()).toBe(true)
+		const missing = await database.getTrack("nonexistent" as TrackId)
+		expect(missing.isError(), "missing track returns error").toBe(true)
 	})
 
 	it("deleteTracksInverted removes tracks not in the list", async () => {
@@ -67,9 +67,15 @@ describe("database integration", () => {
 		const result = await database.getTracks()
 		const tracks = result.getOrThrow()
 
-		expect(tracks).toHaveLength(2)
-		expect(tracks.map((track) => track.id)).toContain("keep-1" as TrackId)
-		expect(tracks.map((track) => track.id)).toContain("keep-2" as TrackId)
+		expect(tracks, "should only contain the kept tracks").toHaveLength(2)
+		expect(
+			tracks.map((track) => track.id),
+			"should retain keep-1"
+		).toContain("keep-1" as TrackId)
+		expect(
+			tracks.map((track) => track.id),
+			"should retain keep-2"
+		).toContain("keep-2" as TrackId)
 	})
 
 	it("upsert updates existing track data", async () => {

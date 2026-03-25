@@ -1,7 +1,8 @@
 import { useKeyboard, useTerminalDimensions } from "@opentui/react"
 import { useSelector } from "@xstate/store/react"
 import { useCallback, useState } from "react"
-import { KeybindingWhenProvider } from "#/application/keybinds/useKeybindings"
+import { ZoneProvider } from "#/application/keybinds/useKeybindings"
+import { ZONE_MODAL } from "#/core/commands/appCommands"
 import { useColors } from "#/ui/hooks/useColors"
 import { useAppState } from "#/ui/hooks/useSelectors"
 import type { AppModal } from "#/core/state/types"
@@ -37,7 +38,7 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 	})
 
 	return (
-		<KeybindingWhenProvider when="modal">
+		<ZoneProvider zone={ZONE_MODAL} root>
 			<box
 				zIndex={800}
 				flexDirection="column"
@@ -64,6 +65,6 @@ function ModalWrapper({ Content, id, title }: AppModal) {
 					/>
 				</box>
 			</box>
-		</KeybindingWhenProvider>
+		</ZoneProvider>
 	)
 }

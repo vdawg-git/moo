@@ -2,7 +2,7 @@ import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store/react"
 import { deepEquals } from "bun"
 import Fuse from "fuse.js"
-import { useEffect, useId, useLayoutEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import { useKeybindings } from "#/application/keybinds/useKeybindings"
 import { keybinding } from "#/shared/library/keybinds"
 import { logger } from "#/shared/logs"
@@ -21,6 +21,7 @@ export type ListRegister<T> = {
 	readonly setSearchString: (searchString: string) => void
 	readonly setMode: (mode: ListMode) => void
 	readonly setIndex: (index: number) => void
+	readonly setScrollPosition: (scrollPosition: number) => void
 	readonly setScrollboxSize: (size: { scrollboxHeight: number }) => void
 	readonly onSelect: (item: ListItem<T>) => void
 }
@@ -78,7 +79,6 @@ export type UseListArgument<T> = {
  */
 export function useList<T>({
 	items: itemsUnfiltered,
-	name,
 	searchKeys,
 	searchThreshold = 0.1,
 	focused = true,
@@ -89,7 +89,6 @@ export function useList<T>({
 	onSelect
 }: UseListArgument<T>): UseListResult<T> {
 	const scrollboxRef = useRef<ScrollBoxRenderable>(null)
-	const id = (name ?? "") + useId()
 
 	const stateRef = useRef(
 		null as unknown as ReturnType<typeof createListState<T>>
@@ -183,43 +182,36 @@ export function useList<T>({
 	useKeybindings(
 		() => [
 			{
-				id: "next" + id,
 				callback: stateRef.current.state.trigger.goNext,
 				label: "List: Focus next",
 				keybindings: keybinding(["j", "down"])
 			},
 			{
-				id: "previous" + id,
 				callback: stateRef.current.state.trigger.goPrevious,
 				label: "List: Focus previous",
 				keybindings: keybinding(["k", "up"])
 			},
 			{
-				id: "last" + id,
 				callback: stateRef.current.state.trigger.goLast,
 				label: "List: Scroll to last",
 				keybindings: keybinding("G")
 			},
 			{
-				id: "first" + id,
 				callback: stateRef.current.state.trigger.goFirst,
 				label: "List: Scroll to first",
 				keybindings: keybinding("g g")
 			},
 			{
-				id: "scrollDown" + id,
 				callback: stateRef.current.state.trigger.scrollDown,
 				label: "List: Scroll down",
 				keybindings: keybinding("ctrl+d")
 			},
 			{
-				id: "scrollUp" + id,
 				callback: stateRef.current.state.trigger.scrollUp,
 				label: "List: Scroll up",
 				keybindings: keybinding("ctrl+u")
 			},
 			{
-				id: "select" + id,
 				callback: () => {
 					const { context } = stateRef.current.state.get()
 					const item = context.items[context.index]
@@ -242,7 +234,6 @@ export function useList<T>({
 	useKeybindings(
 		() => [
 			{
-				id: "list_search_" + id,
 				callback: () =>
 					stateRef.current.state.trigger.setMode({ mode: "searchInput" }),
 				keybindings: keybinding("/"),
@@ -254,7 +245,6 @@ export function useList<T>({
 	useKeybindings(
 		() => [
 			{
-				id: "list_exit_search_" + id,
 				callback: () =>
 					stateRef.current.state.trigger.setMode({ mode: "default" }),
 				keybindings: [[{ key: "escape", modifiers: [] }]],
@@ -283,6 +273,8 @@ export function useList<T>({
 		setMode: (mode) => stateRef.current.state.trigger.setMode({ mode }),
 		setSearchString: (searchString) =>
 			stateRef.current.state.trigger.setSearchString({ searchString }),
+		setScrollPosition: (scrollPosition) =>
+			stateRef.current.state.trigger.setScrollPosition({ scrollPosition }),
 		setScrollboxSize: (size) =>
 			stateRef.current.state.trigger.setScrollboxSize(size),
 		onSelect

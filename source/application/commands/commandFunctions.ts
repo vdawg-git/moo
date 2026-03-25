@@ -1,5 +1,8 @@
-import type { KeybindManager } from "#/application/keybinds/keybindManager"
-import type { AppCommand, AppCommandsMap } from "#/core/commands/appCommands"
+import type {
+	KeybindManager,
+	ResolvedCommand
+} from "#/application/keybinds/keybindManager"
+import type { AppCommandsMap } from "#/core/commands/appCommands"
 import type { AppCommandID } from "#/core/commands/definitions"
 import type { CommandCallbackGetterFn } from "#/shared/types/types"
 
@@ -26,7 +29,7 @@ export function registerGlobalCommands({
 		keybindings
 	)
 
-	return registerKeybinds(toRegister, { when: "default" })
+	return registerKeybinds(toRegister)
 }
 
 /**
@@ -36,8 +39,15 @@ function pickCommands(
 	ids: readonly AppCommandID[],
 	getCommandCallback: CommandCallbackGetterFn,
 	keybindings: AppCommandsMap
-): readonly AppCommand[] {
-	return ids
-		.map((id) => [id, keybindings.get(id)!] as const)
-		.map(([id, data]) => ({ id, ...data, callback: getCommandCallback(id) }))
+): readonly ResolvedCommand[] {
+	return ids.map((commandId) => {
+		const data = keybindings.get(commandId)!
+
+		return {
+			commandId,
+			label: data.label,
+			keybindings: data.keybindings,
+			callback: getCommandCallback(commandId)
+		}
+	})
 }

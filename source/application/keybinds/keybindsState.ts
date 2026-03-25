@@ -1,9 +1,10 @@
 import { displayKeybinding } from "#/shared/library/keybinds"
-import type { KeybindCommandWhen } from "#/core/commands/appCommands"
+import type { KeybindZone } from "#/core/commands/appCommands"
+import type { AppCommandID } from "#/core/commands/definitions"
 import type { KeyBinding } from "#/shared/library/keybinds"
 import type { Except } from "type-fest"
 
-export type { KeybindCommandWhen } from "#/core/commands/appCommands"
+export type { KeybindZone } from "#/core/commands/appCommands"
 
 type TrieNode = {
 	children: Map<string, TrieNode>
@@ -13,10 +14,13 @@ type TrieNode = {
 export type KeybindCommandMap = Map<string, CommandData>
 
 export type KeybindCommand = {
-	id: string
-	label: string
-	callback: () => void
-	when: KeybindCommandWhen
+	readonly id: string
+	/** Present when resolved from a configured command reference */
+	readonly commandId?: AppCommandID
+	readonly label: string
+	readonly callback: () => void
+	readonly zone: KeybindZone
+	readonly allowDuringInput?: boolean
 }
 export type KeybindNextUp = { command: KeybindCommand; keys: string }
 export type KeybindMatches = Map<string, CommandData>

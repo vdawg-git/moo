@@ -1,4 +1,4 @@
-import type { KeybindCommandWhen } from "#/core/commands/appCommands"
+import type { KeybindZone } from "#/core/commands/appCommands"
 import type { AppColorName } from "#/shared/config/theme"
 import type {
 	AlbumId,
@@ -44,14 +44,14 @@ export interface AppState {
 	notifications: readonly AppNotification[]
 	modals: readonly AppModal[]
 
-	focusedInputs: readonly string[]
+	inputsCaptured: readonly string[]
 	/**
-	 * By default it is `type: default`.
+	 * By default the active zone is `"default"`.
 	 * If for example the modal manager shows a component it should
-	 * become `type: modal` to prevent all the global keybindings to infer with
+	 * become `"modal"` to prevent all the global keybindings to interfere with
 	 * the keybinds within the modal component.
 	 */
-	keybindingWhen: readonly KeybindWhenRegistered[]
+	activeZones: readonly ZoneRegistered[]
 }
 
 /**
@@ -128,4 +128,4 @@ export type ViewPage = {
 		: { route: Route; parameter: ViewPages[Route] }
 }[keyof ViewPages]
 
-export type KeybindWhenRegistered = { type: KeybindCommandWhen; id: string }
+export type ZoneRegistered = { zone: KeybindZone; id: string }

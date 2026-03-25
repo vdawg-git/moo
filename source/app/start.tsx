@@ -24,7 +24,6 @@ import { AppContextProvider, createAppContext } from "./context"
 import { renderer } from "./renderer"
 
 export async function startApp() {
-	// refactor those should take in a filesystem dep so that they become testable
 	const _ = await ensureDirectoryExists(DATA_DIRECTORY).getOrThrow()
 	const playlistsDirExists =
 		await ensureDirectoryExists(playlistsDirectory).getOrThrow()

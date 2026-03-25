@@ -96,20 +96,10 @@ function QueueView({ items }: QueueViewProps) {
 						index: queueIndex
 					}),
 
-		onFocusItem: ({ data: { type, track, queueIndex } }) =>
+		onFocusItem: ({ data: { type, queueIndex } }) =>
 			type === "auto"
-				? registerAutoQueueCommands(
-						queueIndex,
-						"auto_queue_" + queueIndex + track.id,
-						appState,
-						keybindManager
-					)
-				: registerManualQueueCommands(
-						queueIndex,
-						"manual_" + queueIndex + track.id,
-						appState,
-						keybindManager
-					),
+				? registerAutoQueueCommands(queueIndex, appState, keybindManager)
+				: registerManualQueueCommands(queueIndex, appState, keybindManager),
 
 		searchKeys: [
 			{ name: "Title", getFunction: ({ track }) => track.title ?? track.id }
@@ -142,7 +132,6 @@ function QueueView({ items }: QueueViewProps) {
 
 function registerManualQueueCommands(
 	index: number,
-	uid: string,
 	appState: AppStore,
 	keybindManager: KeybindManager
 ): () => void {
@@ -150,15 +139,13 @@ function registerManualQueueCommands(
 		{
 			label: "Remove from queue",
 			callback: () => appState.send({ type: "removeFromManualQueue", index }),
-			keybindings: keybinding("d"),
-			id: uid
+			keybindings: keybinding("d")
 		}
 	])
 }
 
 function registerAutoQueueCommands(
 	index: number,
-	uid: string,
 	appState: AppStore,
 	keybindManager: KeybindManager
 ): () => void {
@@ -166,8 +153,7 @@ function registerAutoQueueCommands(
 		{
 			label: "Remove from queue",
 			callback: () => appState.send({ type: "removeFromQueue", index }),
-			keybindings: keybinding("d"),
-			id: uid
+			keybindings: keybinding("d")
 		}
 	])
 }

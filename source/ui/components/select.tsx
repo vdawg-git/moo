@@ -10,13 +10,13 @@ export function Select(props: SelectProps): ReactNode {
 	const id = useId()
 	const appState = useAppState()
 	const currentlyFocused = useSelector(appState, ({ context }) =>
-		context.focusedInputs.at(-1)
+		context.inputsCaptured.at(-1)
 	)
 
 	useEffect(() => {
 		if (focused) {
-			appState.trigger.addFocusedInput({ id })
-			return () => appState.trigger.removeFocusedInput({ id })
+			appState.trigger.addCapturedInput({ id })
+			return () => appState.trigger.removeCapturedInput({ id })
 		}
 	}, [focused, id, appState])
 

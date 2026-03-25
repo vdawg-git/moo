@@ -1,4 +1,5 @@
-import type { KeybindCommandWhen } from "#/core/commands/appCommands"
+import { ZONE_DEFAULT } from "#/core/commands/appCommands"
+import type { KeybindZone } from "#/core/commands/appCommands"
 import type { TrackId } from "#/shared/types/brandedIds"
 import type { AppState } from "./types"
 
@@ -26,9 +27,6 @@ export function getCurrentTrack(
 	return { trackId, source: "auto", queueIndex: index }
 }
 
-// refactor it should be keybindings zone. Rename this everywhere
-export function getKeybindsWhen(
-	whens: AppState["keybindingWhen"]
-): KeybindCommandWhen {
-	return whens.at(-1)?.type ?? "default"
+export function getActiveZone(zones: AppState["activeZones"]): KeybindZone {
+	return zones.at(-1)?.zone ?? ZONE_DEFAULT
 }

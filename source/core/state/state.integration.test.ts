@@ -14,9 +14,12 @@ describe("state integration", () => {
 		await context.playNewPlayback({ source: { type: "all" } })
 
 		const state = context.appState.getSnapshot().context
-		expect(state.playback.playState).toBe("playing")
-		expect(state.playback.queue).toBeDefined()
-		expect(state.playback.queue!.tracks.length).toBeGreaterThan(0)
+		expect(state.playback.playState, "started playing").toBe("playing")
+		expect(state.playback.queue, "queue was created").toBeDefined()
+		expect(
+			state.playback.queue!.tracks.length,
+			"queue has tracks"
+		).toBeGreaterThan(0)
 	})
 
 	it("nextTrack advances the index", async () => {
@@ -31,12 +34,12 @@ describe("state integration", () => {
 		await context.playNewPlayback({ source: { type: "all" } })
 
 		const stateBefore = context.appState.getSnapshot().context
-		expect(stateBefore.playback.index).toBe(0)
+		expect(stateBefore.playback.index, "starts at first track").toBe(0)
 
 		context.appState.send({ type: "nextTrack" })
 
 		const stateAfter = context.appState.getSnapshot().context
-		expect(stateAfter.playback.index).toBe(1)
+		expect(stateAfter.playback.index, "advanced to second track").toBe(1)
 	})
 
 	it("togglePlayback pauses and resumes", async () => {
@@ -45,19 +48,22 @@ describe("state integration", () => {
 		await context.database.upsertTracks([mockTrackData("track-1")])
 		await context.playNewPlayback({ source: { type: "all" } })
 
-		expect(context.appState.getSnapshot().context.playback.playState).toBe(
-			"playing"
-		)
+		expect(
+			context.appState.getSnapshot().context.playback.playState,
+			"should be playing after playNewPlayback"
+		).toBe("playing")
 
 		context.appState.send({ type: "togglePlayback" })
-		expect(context.appState.getSnapshot().context.playback.playState).toBe(
-			"paused"
-		)
+		expect(
+			context.appState.getSnapshot().context.playback.playState,
+			"should pause after first toggle"
+		).toBe("paused")
 
 		context.appState.send({ type: "togglePlayback" })
-		expect(context.appState.getSnapshot().context.playback.playState).toBe(
-			"playing"
-		)
+		expect(
+			context.appState.getSnapshot().context.playback.playState,
+			"should resume after second toggle"
+		).toBe("playing")
 	})
 
 	it("addErrorNotification creates a notification", async () => {
@@ -66,8 +72,10 @@ describe("state integration", () => {
 		context.notifications.addError("Something went wrong", new Error("test"))
 
 		const state = context.appState.getSnapshot().context
-		expect(state.notifications).toHaveLength(1)
-		expect(state.notifications[0]!.type).toBe("error")
-		expect(state.notifications[0]!.message).toBe("Something went wrong")
+		expect(state.notifications, "notification was added").toHaveLength(1)
+		expect(state.notifications[0]!.type, "should be error type").toBe("error")
+		expect(state.notifications[0]!.message, "should have correct message").toBe(
+			"Something went wrong"
+		)
 	})
 })

@@ -1,8 +1,8 @@
-import { useKeyboard } from "@opentui/react"
 import { useEffect, useRef, useState } from "react"
 import { useAppContext } from "#/app/context"
 import { useConfig } from "#/shared/config/configContext"
 import { useColors } from "#/ui/hooks/useColors"
+import { useFocusZones } from "#/ui/hooks/useFocusZone"
 import { Input } from "../Input"
 import { Select } from "../select"
 import { useRunnerItems } from "./useRunnerItems"
@@ -54,12 +54,19 @@ type RunnerProps = {
 
 function Runner({ modal, initialValue }: RunnerProps) {
 	const { keybindManager } = useAppContext()
-	const config = useConfig()
 	const { items, setInput, mode, input } = useRunnerItems({ initialValue })
 	const [selectedIndex, setSelectedIndex] = useState(0)
-	const [focused, setFocused] = useState<"input" | "list">("input")
 	const activeItem = items[selectedIndex]
 	const inputRef = useRef<InputRenderable>(null)
+
+	// refactor-later useRef needed because callbacks captured in trie go stale; system could lazily resolve
+	const itemsRef = useRef(items)
+	itemsRef.current = items
+	const inputValueRef = useRef(input)
+	inputValueRef.current = input
+	const selectedIndexRef = useRef(selectedIndex)
+	selectedIndexRef.current = selectedIndex
+	const setZoneRef = useRef<(name: "input" | "list") => void>(() => {})
 
 	const onSubmit = () => {
 		if (!activeItem) return
@@ -67,49 +74,55 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		activeItem.onSelect()
 	}
 
-	const onInput = (newText: string) => {
-		setInput(newText)
-	}
+	const { isActive, setZone } = useFocusZones({
+		zones: [
+			{
+				name: "input",
+				isInput: true,
+				callbacks: {
+					accept: onSubmit
+				},
+				neighbors: { down: "list" }
+			},
+			{
+				name: "list",
+				arrows: ["up", "down"],
+				callbacks: {
+					"runner.nextItem": () => {
+						setSelectedIndex((previous) =>
+							Math.min(previous + 1, itemsRef.current.length - 1)
+						)
+					},
+					"runner.previousItem": () => {
+						if (selectedIndexRef.current === 0) {
+							setZone("input")
+							return
+						}
+						setSelectedIndex((previous) => Math.max(previous - 1, 0))
+					},
+					accept: onSubmit
+				},
+				neighbors: { up: "input" }
+			}
+		],
+		initialZone: "input",
+		onUnmatchedKey: (key) => {
+			if (key.key.length !== 1 || key.modifiers.length > 0) return
 
-	useKeyboard((event) => {
-		const name = event.name
-		if (name === "tab") {
-			setFocused((previous) => (previous === "input" ? "list" : "input"))
-			return
-		}
-		if (name === "down") {
-			setFocused("list")
-			return
-		}
-
-		if (focused === "list" && name === "up" && selectedIndex === 0) {
-			setFocused("input")
-			setSelectedIndex(0)
-			return
-		}
-
-		if (focused === "input" && name === "up") {
-			setFocused("list")
-			setSelectedIndex(items.length - 1)
-			return
-		}
-
-		if (focused === "list" && event.name.length === 1) {
-			const newInput = (input ?? "") + event.name
-			setFocused("input")
+			const newInput = (inputValueRef.current ?? "") + key.key
+			setZoneRef.current("input")
 			setInput(newInput)
 
 			// The input gets set in the new render.
-			// But the cursor position gets set outside of the React lifecyle, so we delay a bit
+			// But the cursor position gets set outside of the React lifecycle, so we delay a bit
 			setTimeout(() => {
 				if (inputRef.current) {
 					inputRef.current.cursorOffset = newInput.length
 				}
 			}, 5)
-
-			return
 		}
 	})
+	setZoneRef.current = setZone
 
 	useEffect(() => {
 		if (!mode) {
@@ -120,44 +133,25 @@ function Runner({ modal, initialValue }: RunnerProps) {
 		modal.changeTitle(mode.icon + " " + mode.type)
 		modal.changeColor(mode.color)
 
-		// TODO the command still shows, even though it is removed from the keybindingsState
-		// but maybe there is another registration with different keybindings in my config
-		// Need to check later
-		const openCommandsData = config.keybindings.get("runner.openCommands")
-		const toUnregister = mode.type === "commands"
-			&& openCommandsData && [
-				{
-					id: "runner.openCommands",
-					...openCommandsData,
-					callback: () => {}
-				}
-			]
-
-		if (toUnregister) {
-			keybindManager.unregisterKeybinds(toUnregister)
+		if (mode.type === "commands") {
+			return keybindManager.disableCommand("runner.openCommands")
 		}
-
-		return () => {
-			if (toUnregister) {
-				keybindManager.registerKeybinds(toUnregister, { when: "default" })
-			}
-		}
-	}, [mode, modal, keybindManager, config.keybindings])
+	}, [mode, modal, keybindManager])
 
 	return (
 		<box flexDirection="column" minWidth={"50%"} width={"50%"} maxWidth={50}>
 			<RunnerInput
 				value={input}
-				focused={focused === "input"}
-				onInput={onInput}
+				focused={isActive("input")}
+				onInput={setInput}
 				onSubmit={onSubmit}
-				onGetFocus={() => setFocused("input")}
+				onGetFocus={() => setZone("input")}
 				ref={inputRef}
 				color={mode?.color ?? "blue"}
 			/>
 
 			<RunnerList
-				focused={focused === "list"}
+				focused={isActive("list")}
 				items={items}
 				selectedIndex={selectedIndex}
 				onIndexChange={setSelectedIndex}
@@ -238,14 +232,6 @@ export function RunnerList({
 	onIndexChange,
 	focused
 }: RunnerListProps) {
-	// const list = useList({
-	// 	name: "runner",
-	// 	index: selectedIndex,
-	// 	items,
-	// 	onSelect: ({ index }) => onSelect(index),
-	// 	onFocusItem: ({ index }) => onIndexChange(index),
-	// 	focused
-	// })
 	const colors = useColors()
 
 	return (

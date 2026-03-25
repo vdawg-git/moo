@@ -13,8 +13,11 @@ import { Result } from "typescript-result"
 import { callAll } from "#/shared/helpers"
 import { logger } from "#/shared/logs"
 import { handleMpris } from "./mpris"
-import type { KeybindManager } from "#/application/keybinds/keybindManager"
-import type { AppCommand, AppCommandsMap } from "#/core/commands/appCommands"
+import type {
+	KeybindManager,
+	ResolvedCommand
+} from "#/application/keybinds/keybindManager"
+import type { AppCommandsMap } from "#/core/commands/appCommands"
 import type { AppCommandID } from "#/core/commands/definitions"
 import type { AppStore } from "#/core/state/state"
 import type { AppState } from "#/core/state/types"
@@ -74,18 +77,23 @@ function buildPlaybackCommands({
 }: {
 	readonly getCommandCallback: CommandCallbackGetterFn
 	readonly keybindings: AppCommandsMap
-}): readonly AppCommand[] {
+}): readonly ResolvedCommand[] {
 	const ids: readonly AppCommandID[] = [
 		"player.togglePlayback",
 		"player.next",
 		"player.playPrevious"
 	]
 
-	return ids.map((id) => ({
-		id,
-		...keybindings.get(id)!,
-		callback: getCommandCallback(id)
-	}))
+	return ids.map((commandId) => {
+		const data = keybindings.get(commandId)!
+
+		return {
+			commandId,
+			label: data.label,
+			keybindings: data.keybindings,
+			callback: getCommandCallback(commandId)
+		}
+	})
 }
 
 /**  Registers playback commands reactively */
@@ -103,20 +111,26 @@ function registeringPlaybackCommands({
 		keybindings
 	})
 
+	let cleanupKeybinds: (() => void) | undefined
+
 	const subscription = appState$
 		.pipe(
 			map((state) => !!state.playback.queue),
 			distinctUntilChanged()
 		)
 		.subscribe((hasQueue) => {
+			cleanupKeybinds?.()
+			cleanupKeybinds = undefined
+
 			if (hasQueue) {
-				keybindManager.registerKeybinds(playbackCommands)
-			} else {
-				keybindManager.unregisterKeybinds(playbackCommands)
+				cleanupKeybinds = keybindManager.registerKeybinds(playbackCommands)
 			}
 		})
 
-	return () => subscription.unsubscribe()
+	return () => {
+		cleanupKeybinds?.()
+		subscription.unsubscribe()
+	}
 }
 
 function handlePlayer(

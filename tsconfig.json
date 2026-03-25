@@ -29,7 +29,10 @@
 
 		"paths": {
 			"#/*": ["./source/*"],
-			"#components/*": ["./source/ui/components/*"]
+			"#components/*": ["./source/ui/components/*"],
+			"#hooks/*": ["./source/ui/hooks/*"],
+			"#library/*": ["./source/shared/library/*"],
+			"#types/*": ["./source/shared/types/*"]
 		}
 	}
 }
