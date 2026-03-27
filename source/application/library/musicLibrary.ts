@@ -77,6 +77,10 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 		return !!extension && supportedFormats.includes(extension)
 	}
 
+	function isHiddenPath(relativePath: string): boolean {
+		return relativePath.split("/").some((segment) => segment.startsWith("."))
+	}
+
 	async function isSameAsInDatabase(
 		filepath: FilePath,
 		metadata: TrackFileMeta
@@ -100,6 +104,7 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 		).map((paths) =>
 			(paths as FilePath[])
 				.filter(isSupportedFile)
+				.filter((relativePath) => !isHiddenPath(relativePath))
 				.map((relativePath) => path.join(directory, relativePath) as FilePath)
 		)
 	}
@@ -345,7 +350,10 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 	): Observable<FilePath> {
 		return merge(
 			...directories.map((directory) =>
-				fileSystem.watch(directory, { depth: undefined })
+				fileSystem.watch(directory, {
+					depth: undefined,
+					ignored: (filePath) => path.basename(filePath).startsWith(".")
+				})
 			)
 		).pipe(
 			map(({ filePath }) => filePath),

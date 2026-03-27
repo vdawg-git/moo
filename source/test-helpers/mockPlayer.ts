@@ -3,7 +3,9 @@ import { Result } from "typescript-result"
 import type { Player, PlayerEvent } from "#/ports/player"
 
 /** Creates a mock player with controllable events for testing */
-export function createMockPlayer(): Player & {
+export function createMockPlayer(
+	overrides?: Partial<Omit<Player, "events$">>
+): Player & {
 	readonly emitEvent: (event: PlayerEvent) => void
 } {
 	const events$ = new Subject<PlayerEvent>()
@@ -14,6 +16,7 @@ export function createMockPlayer(): Player & {
 		clear: async () => Result.ok(undefined),
 		seek: async () => Result.ok(undefined),
 		seekTo: async () => Result.ok(undefined),
+		...overrides,
 		events$,
 		emitEvent: (event) => events$.next(event)
 	}

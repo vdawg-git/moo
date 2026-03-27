@@ -175,6 +175,45 @@ describe("musicLibrary integration", () => {
 		})
 	})
 
+	it("should skip files in hidden directories", async () => {
+		const { library, fileSystem, database } = await createTestLibrary()
+
+		fileSystem.addTrack("song.flac")
+		fileSystem.addTrack(".debris/2024-01-01/song.flac")
+		fileSystem.addTrack("album/.hidden/track.mp3")
+
+		await library.scan()
+
+		const tracks = await database.getTracks()
+		expect(
+			tracks.getOrThrow(),
+			"should only include visible files"
+		).toHaveLength(1)
+	})
+
+	it("should not process watch events from hidden directories", async () => {
+		const parseMetadata = mock(mockParseMetadata)
+		const { library, fileSystem } = await createTestLibrary({ parseMetadata })
+
+		fileSystem.addTrack("song.flac")
+		await library.scan()
+		expect(parseMetadata, "initial scan parse").toHaveBeenCalledTimes(1)
+
+		const cleanup = library.watch()
+
+		// Trigger change in hidden directory — should be ignored by watcher
+		fileSystem.addTrack(".debris/2024-01-01/song.flac")
+
+		// Give watcher time to potentially process the event
+		await new Promise((resolve) => setTimeout(resolve, 20))
+
+		expect(
+			parseMetadata,
+			"should not re-parse hidden file"
+		).toHaveBeenCalledTimes(1)
+		cleanup()
+	})
+
 	it("should handle multiple music directories", async () => {
 		const { library, fileSystem, database } = await createTestLibrary({
 			musicDirectories: ["/music1", "/music2"]
