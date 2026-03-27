@@ -17,8 +17,15 @@ function createTestDeps() {
 	const keybindsState = new KeybindTrie()
 
 	const manager = createKeybindManager({ appState$, keybindsState, keys$ })
+	const cleanupKeybinds = manager.handleKeybinds()
 
-	return { appState$, keys$, keybindsState, manager }
+	return {
+		appState$,
+		keys$,
+		keybindsState,
+		manager,
+		[Symbol.dispose]: () => cleanupKeybinds()
+	}
 }
 
 function pressKey(
@@ -77,119 +84,101 @@ function makeResolvedCommand(
 describe("createKeybindManager", () => {
 	describe("registerKeybinds and handleKeybinds", () => {
 		it("should fire callback when registered key is pressed", () => {
-			// TODO this is too much boilerplate per test. Merge "handleKeybinds"
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				makeResolvedCommand("down", keybinding("j"), callback)
 			])
 
-			//todo wrap and use the "using" keyword to auto-cleanup
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
-			pressKey(keys$, "j")
+			emitState(deps.appState$)
+			pressKey(deps.keys$, "j")
 
 			expect(callback).toHaveBeenCalledTimes(1)
-
-			cleanup()
 		})
 
 		it("should not fire callback for unregistered keys", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				makeResolvedCommand("down", keybinding("j"), callback)
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
-			pressKey(keys$, "k")
+			emitState(deps.appState$)
+			pressKey(deps.keys$, "k")
 
 			expect(callback, "should not fire for 'k'").toHaveBeenCalledTimes(0)
-
-			cleanup()
 		})
 
 		it("should emit unhandled keys for non-matching presses", async () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 
-			const cleanup = manager.handleKeybinds()
-			const unhandledPromise = firstValueFrom(manager.unhandled$)
+			const unhandledPromise = firstValueFrom(deps.manager.unhandled$)
 
-			emitState(appState$)
-			pressKey(keys$, "x")
+			emitState(deps.appState$)
+			pressKey(deps.keys$, "x")
 
 			const unhandled = await unhandledPromise
 			expect(unhandled.key, "should emit the unhandled key").toBe("x")
-
-			cleanup()
 		})
 
 		it("should cleanup registrations when unregister function is called", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			const unregister = manager.registerKeybinds([
+			const unregister = deps.manager.registerKeybinds([
 				makeResolvedCommand("down", keybinding("j"), callback)
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
+			emitState(deps.appState$)
 
 			unregister()
-			pressKey(keys$, "j")
+			pressKey(deps.keys$, "j")
 
 			expect(
 				callback,
 				"should not fire after unregister"
 			).toHaveBeenCalledTimes(0)
-
-			cleanup()
 		})
 	})
 
 	describe("zone matching", () => {
 		it("should fire commands whose zone is a prefix of the active zone", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds(
+			deps.manager.registerKeybinds(
 				[makeResolvedCommand("select", keybinding("j"), callback)],
 				{ zone: "queue" as KeybindZone }
 			)
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$, {
+			emitState(deps.appState$, {
 				activeZones: [{ zone: "queue.list" as KeybindZone, id: "1" }]
 			})
-			pressKey(keys$, "j")
+			pressKey(deps.keys$, "j")
 
 			expect(
 				callback,
 				"should fire for zone prefix match"
 			).toHaveBeenCalledTimes(1)
-
-			cleanup()
 		})
 
 		it("should not fire commands from a non-matching zone", async () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds(
+			deps.manager.registerKeybinds(
 				[makeResolvedCommand("select", keybinding("j"), callback)],
 				{ zone: "settings" as KeybindZone }
 			)
 
-			const cleanup = manager.handleKeybinds()
-			const unhandledPromise = firstValueFrom(manager.unhandled$)
+			const unhandledPromise = firstValueFrom(deps.manager.unhandled$)
 
-			emitState(appState$, {
+			emitState(deps.appState$, {
 				activeZones: [{ zone: "queue.list" as KeybindZone, id: "1" }]
 			})
-			pressKey(keys$, "j")
+			pressKey(deps.keys$, "j")
 
 			const unhandled = await unhandledPromise
 			expect(
@@ -197,29 +186,26 @@ describe("createKeybindManager", () => {
 				"should not fire for non-matching zone"
 			).toHaveBeenCalledTimes(0)
 			expect(unhandled.key).toBe("j")
-
-			cleanup()
 		})
 
 		it("should prefer the most specific zone when multiple match", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callbackGeneral = mock(() => {})
 			const callbackSpecific = mock(() => {})
 
-			manager.registerKeybinds(
+			deps.manager.registerKeybinds(
 				[makeResolvedCommand("general", keybinding("j"), callbackGeneral)],
 				{ zone: "queue" as KeybindZone }
 			)
-			manager.registerKeybinds(
+			deps.manager.registerKeybinds(
 				[makeResolvedCommand("specific", keybinding("j"), callbackSpecific)],
 				{ zone: "queue.list" as KeybindZone }
 			)
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$, {
+			emitState(deps.appState$, {
 				activeZones: [{ zone: "queue.list" as KeybindZone, id: "1" }]
 			})
-			pressKey(keys$, "j")
+			pressKey(deps.keys$, "j")
 
 			expect(
 				callbackSpecific,
@@ -229,65 +215,56 @@ describe("createKeybindManager", () => {
 				callbackGeneral,
 				"general zone should not fire"
 			).toHaveBeenCalledTimes(0)
-
-			cleanup()
 		})
 	})
 
 	describe("input capture filtering", () => {
 		it("should suppress keybinds when input is captured", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				makeResolvedCommand("down", keybinding("j"), callback)
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$, { inputsCaptured: ["search"] })
-			pressKey(keys$, "j")
+			emitState(deps.appState$, { inputsCaptured: ["search"] })
+			pressKey(deps.keys$, "j")
 
 			expect(
 				callback,
 				"should not fire when input captured"
 			).toHaveBeenCalledTimes(0)
-
-			cleanup()
 		})
 
 		it("should allow commands with allowDuringInput when input is captured", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds(
+			deps.manager.registerKeybinds(
 				[makeResolvedCommand("escape", keybinding("esc"), callback)],
 				{ zone: ZONE_DEFAULT, allowDuringInput: true }
 			)
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$, { inputsCaptured: ["search"] })
-			pressKey(keys$, "esc")
+			emitState(deps.appState$, { inputsCaptured: ["search"] })
+			pressKey(deps.keys$, "esc")
 
 			expect(callback, "allowDuringInput should fire").toHaveBeenCalledTimes(1)
-
-			cleanup()
 		})
 	})
 
 	describe("multi-key sequences", () => {
 		it("should build up a sequence and fire on completion", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				makeResolvedCommand("go-top", keybinding("g g"), callback)
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
+			emitState(deps.appState$)
 
-			pressKey(keys$, "g")
-			const sequenceAfterFirst = manager.sequence$.getValue()
+			pressKey(deps.keys$, "g")
+			const sequenceAfterFirst = deps.manager.sequence$.getValue()
 			expect(
 				sequenceAfterFirst,
 				"should have partial sequence after first key"
@@ -300,43 +277,38 @@ describe("createKeybindManager", () => {
 				0
 			)
 
-			pressKey(keys$, "g")
+			pressKey(deps.keys$, "g")
 			expect(callback, "should fire after full sequence").toHaveBeenCalledTimes(
 				1
 			)
-
-			cleanup()
 		})
 
 		it("should reset sequence on non-matching second key", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				makeResolvedCommand("go-top", keybinding("g g"), callback)
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
+			emitState(deps.appState$)
 
-			pressKey(keys$, "g")
-			pressKey(keys$, "x")
+			pressKey(deps.keys$, "g")
+			pressKey(deps.keys$, "x")
 
 			expect(
 				callback,
 				"should not fire on non-matching second key"
 			).toHaveBeenCalledTimes(0)
-
-			cleanup()
 		})
 	})
 
 	describe("disableCommand", () => {
 		it("should prevent disabled commands from firing", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				{
 					label: "next",
 					keybindings: keybinding("l"),
@@ -345,25 +317,22 @@ describe("createKeybindManager", () => {
 				}
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
+			emitState(deps.appState$)
 
-			manager.disableCommand("player.next")
-			pressKey(keys$, "l")
+			deps.manager.disableCommand("player.next")
+			pressKey(deps.keys$, "l")
 
 			expect(
 				callback,
 				"disabled command should not fire"
 			).toHaveBeenCalledTimes(0)
-
-			cleanup()
 		})
 
 		it("should re-enable when the returned function is called", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				{
 					label: "next",
 					keybindings: keybinding("l"),
@@ -372,40 +341,34 @@ describe("createKeybindManager", () => {
 				}
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
+			emitState(deps.appState$)
 
-			const enable = manager.disableCommand("player.next")
+			const enable = deps.manager.disableCommand("player.next")
 			enable()
-			pressKey(keys$, "l")
+			pressKey(deps.keys$, "l")
 
 			expect(callback, "re-enabled command should fire").toHaveBeenCalledTimes(
 				1
 			)
-
-			cleanup()
 		})
 	})
 
 	describe("key normalization", () => {
 		it("should convert shift+letter to uppercase key without shift modifier", () => {
-			const { manager, keys$, appState$ } = createTestDeps()
+			using deps = createTestDeps()
 			const callback = mock(() => {})
 
-			manager.registerKeybinds([
+			deps.manager.registerKeybinds([
 				makeResolvedCommand("go-bottom", keybinding("G"), callback)
 			])
 
-			const cleanup = manager.handleKeybinds()
-			emitState(appState$)
-			pressKey(keys$, "g", { shift: true })
+			emitState(deps.appState$)
+			pressKey(deps.keys$, "g", { shift: true })
 
 			expect(
 				callback,
 				"shift+g should match 'G' binding"
 			).toHaveBeenCalledTimes(1)
-
-			cleanup()
 		})
 	})
 })

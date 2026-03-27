@@ -125,16 +125,11 @@ const trackColumnSchema = pipe(
 				P.union("SQLiteInteger", "SQLiteNumericNumber"),
 				() => ({ columnName, schema: numberSchema, isArray: false }) as const
 			)
-			.with(
-				// TODO startsWith wont work with our naive implementation.
-				// We need to match this for every item in the array
-				P.union("SQLiteText", "SQLiteTextJson"),
-				() => ({
-					columnName,
-					schema: stringSchema,
-					isArray: columnType === "SQLiteTextJson"
-				})
-			)
+			.with(P.union("SQLiteText", "SQLiteTextJson"), () => ({
+				columnName,
+				schema: stringSchema,
+				isArray: columnType === "SQLiteTextJson"
+			}))
 			.with(
 				"SQLiteTimestamp",
 				() => ({ columnName, schema: dateSchema, isArray: false }) as const
@@ -244,8 +239,3 @@ function orArray<T extends z.ZodTypeAny>(
 ): z.ZodUnion<[T, z.ZodArray<T>]> {
 	return type.or(z.array(type).nonempty())
 }
-
-// TODO support PLAYLIST field to include/exclude playlists from other playlists
-// this is useful if you for example want to filter all skits, podcasts etc
-// and then base your other playlists on that.
-// Also allow for a "hidden" field in the yml to not show those meta playlists in the app

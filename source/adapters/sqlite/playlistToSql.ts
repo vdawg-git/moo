@@ -52,13 +52,10 @@ export function getSmartPlaylistTracks(
 }
 
 function transformRule(rule: MetaOperator | TrackColumnSchema): SQL {
-	return (
-		match(rule)
-			.with({ _type: P.union("all", "any") }, transfromRuleGroup)
-			.with({ _type: "column" }, transformRuleColumn)
-			// TODO add other playlist referencing
-			.exhaustive()
-	)
+	return match(rule)
+		.with({ _type: P.union("all", "any") }, transfromRuleGroup)
+		.with({ _type: "column" }, transformRuleColumn)
+		.exhaustive()
 }
 
 function transfromRuleGroup(groupRule: MetaOperator): SQL {
@@ -80,7 +77,18 @@ function transformRuleColumn(schema: TrackColumnSchema): SQL {
 		.with({ _type: "string" }, rulesString)
 		.exhaustive()
 
+	if (schema.columnType === "list") {
+		return wrapArrayFilter(tableTracks[schema.column], applyFilter)
+	}
+
 	return applyFilter(tableTracks[schema.column]) ?? sql`1=1`
+}
+
+/** Wraps a column filter in a json_each EXISTS subquery for JSON array columns */
+function wrapArrayFilter(column: TrackColumn, filter: ColumnFilter): SQL {
+	const valueFilter = filter(sql`je.value` as unknown as TrackColumn)
+
+	return sql`EXISTS (SELECT 1 FROM json_each(${column}) je WHERE ${valueFilter})`
 }
 
 function rulesBoolean(schema: BooleanSchema): ColumnFilter {

@@ -7,9 +7,10 @@ import {
 	scan,
 	share,
 	shareReplay,
-	skip,
+	skipUntil,
 	startWith,
 	switchMap,
+	timer,
 	withLatestFrom
 } from "rxjs"
 import { match, P } from "ts-pattern"
@@ -110,10 +111,8 @@ export function createKeybindManager({
 			withLatestFrom(activeZone$),
 			switchMap(([{ keyInput, inputCaptured }, zone]) => {
 				const sequenceReset$ = merge(
-					// TODO figure out why this is not working properly.
-					// If we use any number smaller than 3 sequenced keybinds stop working after opening and closing the runner
-					activeZone$.pipe(skip(5), distinctUntilChanged()),
-					isInputCaptured$.pipe(skip(5), distinctUntilChanged())
+					activeZone$.pipe(skipUntil(timer(0)), distinctUntilChanged()),
+					isInputCaptured$.pipe(skipUntil(timer(0)), distinctUntilChanged())
 				).pipe(map(() => ({ input: undefined, zone, inputCaptured: false })))
 
 				return sequenceReset$.pipe(
