@@ -1,17 +1,14 @@
 import parser from "any-date-parser"
-import { getTableColumns } from "drizzle-orm"
 import * as R from "remeda"
 import { pipe } from "remeda"
-import { match, P } from "ts-pattern"
+import { match } from "ts-pattern"
 import { z } from "zod"
-import { tableTracks } from "#/adapters/sqlite/schema"
+import { trackFieldTypes } from "#/core/playlists/trackFields"
 import { stripIndent } from "#/shared/helpers"
-import type { TrackColumnKey } from "#/adapters/sqlite/schema"
+import type { TrackFieldName } from "#/core/playlists/trackFields"
 
 const allDateFormatsLink =
 	"https://www.npmjs.com/package/any-date-parser#exhaustive-list-of-date-formats"
-
-const columns = getTableColumns(tableTracks)
 const dateRaw = z
 	.string()
 	.transform((input) => parser.fromString(input))
@@ -112,38 +109,40 @@ export type DateSchema = z.infer<typeof dateSchema>
 
 /** The schema to validate all fields like 'artist', 'title' etc */
 const trackColumnSchema = pipe(
-	R.entries(columns),
-	R.filter(([columnName]) => columnName !== "id"),
-	R.map(([columnName, { columnType }]) => [columnName, columnType] as const),
-	R.map(([columnName, columnType]) =>
-		match(columnType)
+	R.entries(trackFieldTypes),
+	R.map(([columnName, fieldType]) =>
+		match(fieldType)
 			.with(
-				"SQLiteBoolean",
+				"boolean",
 				() => ({ columnName, schema: booleanSchema, isArray: false }) as const
 			)
 			.with(
-				P.union("SQLiteInteger", "SQLiteNumericNumber"),
+				"number",
 				() => ({ columnName, schema: numberSchema, isArray: false }) as const
 			)
-			.with(P.union("SQLiteText", "SQLiteTextJson"), () => ({
+			.with("string", () => ({
 				columnName,
 				schema: stringSchema,
-				isArray: columnType === "SQLiteTextJson"
+				isArray: false
+			}))
+			.with("list", () => ({
+				columnName,
+				schema: stringSchema,
+				isArray: true
 			}))
 			.with(
-				"SQLiteTimestamp",
+				"date",
 				() => ({ columnName, schema: dateSchema, isArray: false }) as const
 			)
 			.exhaustive()
 	),
-	R.filter(R.isNonNullish),
 	R.map(({ columnName, schema, isArray }) =>
 		z.object({ [columnName]: schema }).transform((parsed) => {
 			const [trackColumn, rules] = Object.entries(parsed)[0]!
 			return {
 				_type: "column" as const,
 				columnType: isArray ? ("list" as const) : ("single" as const),
-				column: trackColumn as TrackColumnKey,
+				column: trackColumn as TrackFieldName,
 				rules
 			}
 		})

@@ -160,8 +160,7 @@
 							},
 							{
 								"group": ["#/adapters/**"],
-								"allowImportNames": ["tableTracks", "TrackColumnKey"],
-								"message": "core/ cannot import from adapters — exception: tableTracks/TrackColumnKey from schema for playlist DSL"
+								"message": "core/ cannot import from adapters"
 							}
 						]
 					}
@@ -219,6 +218,18 @@
 						]
 					}
 				]
+			}
+		},
+		{
+			"files": [
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/*.spec.ts",
+				"**/*.spec.tsx",
+				"source/test-helpers/**/*"
+			],
+			"rules": {
+				"no-restricted-imports": "off"
 			}
 		}
 	]

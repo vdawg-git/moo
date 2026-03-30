@@ -15,6 +15,7 @@ export function createAppState() {
 			togglePlayback: a.togglePlayback,
 			resumePlayback: a.resumePlayback,
 			pausePlayback: a.pausePlayback,
+			cycleLoop: a.cycleLoop,
 			toggleShuffle: a.toggleShuffle,
 			removeFromQueue: a.removeFromQueue,
 

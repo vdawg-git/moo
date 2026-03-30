@@ -36,7 +36,10 @@ export function createInitialState(options?: CreateStateOptions): AppState {
 	}
 }
 
-export function mockTrackData(id: string): TrackData {
+export function mockTrackData(
+	id: string,
+	overrides?: Partial<TrackData>
+): TrackData {
 	return {
 		id: id as TrackId,
 		sourceProvider: "local",
@@ -45,7 +48,8 @@ export function mockTrackData(id: string): TrackData {
 		artist: "Test Artist",
 		album: "Test Album",
 		mtime: Date.now(),
-		size: 1024
+		size: 1024,
+		...overrides
 	} as TrackData
 }
 

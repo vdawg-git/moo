@@ -241,12 +241,12 @@ describe("createKeybindManager", () => {
 			const callback = mock(() => {})
 
 			deps.manager.registerKeybinds(
-				[makeResolvedCommand("escape", keybinding("esc"), callback)],
+				[makeResolvedCommand("escape", keybinding("escape"), callback)],
 				{ zone: ZONE_DEFAULT, allowDuringInput: true }
 			)
 
 			emitState(deps.appState$, { inputsCaptured: ["search"] })
-			pressKey(deps.keys$, "esc")
+			pressKey(deps.keys$, "escape")
 
 			expect(callback, "allowDuringInput should fire").toHaveBeenCalledTimes(1)
 		})

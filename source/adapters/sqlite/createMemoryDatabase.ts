@@ -6,11 +6,13 @@ import { wrapDrizzleDatabase } from "./database.js"
 import * as schema from "./schema.js"
 import { DATABASE_VERSION, metaTable } from "./schema.js"
 import type { AppDatabase } from "#/ports/database"
+import type { DrizzleDatabase } from "./drizzleTypes.js"
 
-/** Creates an in-memory SQLite database for testing */
-export async function createMemoryDatabase(): Promise<AppDatabase> {
+/** Creates a raw in-memory Drizzle database with schema applied */
+export async function createTestDrizzleDb(): Promise<DrizzleDatabase> {
 	const db = drizzle(":memory:", { schema })
 
+	// todo isnt this duplicated witht the regular setup?
 	const setupCalls = (setupSqlRaw as string)
 		.split("--> statement-breakpoint")
 		.map((statement) => statement.trim())
@@ -24,6 +26,13 @@ export async function createMemoryDatabase(): Promise<AppDatabase> {
 		version: DATABASE_VERSION,
 		tagSeperator: "|"
 	})
+
+	return db
+}
+
+/** Creates an in-memory SQLite database for testing */
+export async function createMemoryDatabase(): Promise<AppDatabase> {
+	const db = await createTestDrizzleDb()
 
 	return wrapDrizzleDatabase({
 		db,

@@ -78,6 +78,51 @@ describe("database integration", () => {
 		).toContain("keep-2" as TrackId)
 	})
 
+	it("deleteTracks removes specific tracks by id", async () => {
+		// todo save one line and make it so that you can pass tracks directly to createMemoryDatabase via an object argument
+		const database = await createMemoryDatabase()
+		await database.upsertTracks([
+			mockTrackData("keep-1"),
+			mockTrackData("remove-1"),
+			mockTrackData("remove-2")
+		])
+
+		const deleteResult = await database.deleteTracks([
+			"remove-1" as TrackId,
+			"remove-2" as TrackId
+		])
+		expect(deleteResult.isOk(), "should succeed").toBe(true)
+
+		const tracks = (await database.getTracks()).getOrThrow()
+		expect(tracks, "should have one track remaining").toHaveLength(1)
+		expect(tracks[0]!.id, "should keep the non-deleted track").toBe(
+			"keep-1" as TrackId
+		)
+	})
+
+	// todo merge this test with the others
+	it("deleteTracks triggers changed$", async () => {
+		const database = await createMemoryDatabase()
+		await database.upsertTracks([mockTrackData("track-1")])
+
+		const changedPromise = firstValueFrom(database.changed$)
+		await database.deleteTracks(["track-1" as TrackId])
+
+		const changed = await changedPromise
+		expect(changed).toBeDefined()
+	})
+
+	it("deleteTracks with empty array is a no-op", async () => {
+		const database = await createMemoryDatabase()
+		await database.upsertTracks([mockTrackData("track-1")])
+
+		const result = await database.deleteTracks([])
+		expect(result.isOk(), "should succeed").toBe(true)
+
+		const tracks = (await database.getTracks()).getOrThrow()
+		expect(tracks, "should still have the track").toHaveLength(1)
+	})
+
 	it("upsert updates existing track data", async () => {
 		const database = await createMemoryDatabase()
 

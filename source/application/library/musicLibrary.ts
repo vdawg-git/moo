@@ -3,21 +3,15 @@ import parseDate from "any-date-parser"
 import { parseBuffer, selectCover } from "music-metadata"
 import * as R from "remeda"
 import { pipe } from "remeda"
-import {
-	buffer,
-	concatMap,
-	debounceTime,
-	distinctUntilChanged,
-	filter,
-	map,
-	merge,
-	share
-} from "rxjs"
+import { buffer, concatMap, debounceTime, filter, merge, share } from "rxjs"
 import { Result } from "typescript-result"
 import { logger } from "#/shared/logs"
 import { writeTags as realWriteTags } from "./ffmpeg"
 import { supportedFormats } from "./formats"
-import type { AppFileSystem } from "#/adapters/filesystem/filesystem"
+import type {
+	AppFileSystem,
+	WatcherData
+} from "#/adapters/filesystem/filesystem"
 import type {
 	AppDatabase,
 	TrackData,
@@ -55,6 +49,8 @@ export type MusicLibraryDeps = Readonly<{
 	) => Promise<IAudioMetadata>
 	/** Override for testing — defaults to real ffmpeg writeTags */
 	writeTags?: typeof realWriteTags
+	/** Debounce time for file watcher buffer (ms). Defaults to 6000. */
+	watchDebounceMs?: number
 }>
 
 export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
@@ -66,7 +62,8 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 		tagSeparator,
 		dataDirectory,
 		parseMetadata = parseBuffer,
-		writeTags: writeTagsFn = realWriteTags
+		writeTags: writeTagsFn = realWriteTags,
+		watchDebounceMs = 6_000
 	} = deps
 
 	// -- Private helpers --
@@ -347,7 +344,7 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 
 	function createMusicDirectoriesWatcher(
 		directories: readonly FilePath[]
-	): Observable<FilePath> {
+	): Observable<WatcherData> {
 		return merge(
 			...directories.map((directory) =>
 				fileSystem.watch(directory, {
@@ -356,15 +353,10 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 				})
 			)
 		).pipe(
-			map(({ filePath }) => filePath),
-			distinctUntilChanged(),
-			filter(isSupportedFile),
+			filter(({ filePath }) => isSupportedFile(filePath)),
 			share()
 		)
 	}
-
-	/** Debounce time for buffering file watcher events */
-	const bufferWatcherTime = 6_000
 
 	// -- Public API --
 
@@ -407,12 +399,34 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 
 		watch() {
 			const watcher$ = createMusicDirectoriesWatcher(musicDirectories)
-			const watcherRelease$ = watcher$.pipe(debounceTime(bufferWatcherTime))
+			const watcherRelease$ = watcher$.pipe(debounceTime(watchDebounceMs))
 
 			const subscription = watcher$
 				.pipe(
 					buffer(watcherRelease$),
 					concatMap(async (changes) => {
+						const lastEventByPath = pipe(
+							[...changes].reverse(),
+							R.uniqueBy(({ filePath }) => filePath)
+						)
+
+						const unlinked = lastEventByPath
+							.filter(({ event }) => event === "unlink")
+							.map(({ filePath }) => filePath as unknown as TrackId)
+
+						const changed = lastEventByPath
+							.filter(({ event }) => event !== "unlink")
+							.map(({ filePath }) => filePath)
+
+						if (unlinked.length > 0) {
+							const deleteResult = await database.deleteTracks(unlinked)
+							deleteResult.onFailure((error) =>
+								addErrorNotification("Failed to remove deleted tracks", error)
+							)
+						}
+
+						if (changed.length === 0) return undefined
+
 						const filesMetadata = await Result.fromAsync(
 							database.getTracksFileMetadata()
 						)
@@ -426,10 +440,10 @@ export function createMusicLibrary(deps: MusicLibraryDeps): MusicLibrary {
 							)
 							.getOrNull()
 
-						if (!filesMetadata) return
+						if (!filesMetadata) return undefined
 
 						const parsed: TrackData[] = []
-						for (const file of new Set(changes)) {
+						for (const file of changed) {
 							const databaseMetadata = filesMetadata[file as unknown as TrackId]
 
 							const shouldSkip =

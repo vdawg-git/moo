@@ -106,12 +106,14 @@ function rulesDate(schema: DateSchema): ColumnFilter {
 
 			.with(["in_the_last", P.select()], (durationMs) => (column) => {
 				const now = Date.now()
-				const offset = now - durationMs
-				return and(gt(column, offset), lt(column, now))
+				const offset = new Date(now - durationMs)
+
+				return and(gt(column, offset), lt(column, new Date(now)))
 			})
 
 			.with(["not_in_the_last", P.select()], (durationMs) => (column) => {
-				const offset = Date.now() - durationMs
+				const offset = new Date(Date.now() - durationMs)
+
 				return lt(column, offset)
 			})
 

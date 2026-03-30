@@ -81,6 +81,6 @@ export function ZoneProvider({
 }
 
 /** Just reads out the context of the nearest {@linkcode ZoneContext} */
-function useZoneContext(): KeybindZone {
+export function useZoneContext(): KeybindZone {
 	return useContext(ZoneContext)
 }

@@ -47,6 +47,9 @@ export type AppDatabase = Readonly<{
 		ids: readonly TrackId[]
 	) => Promise<Result<void, Error>>
 
+	/** Deletes specific tracks by their IDs. */
+	deleteTracks: (ids: readonly TrackId[]) => Promise<Result<void, Error>>
+
 	getTracksFileMetadata: (
 		ids?: readonly TrackId[]
 	) => Promise<Result<Record<TrackId, TrackFileMeta>, Error>>

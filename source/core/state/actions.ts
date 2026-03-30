@@ -186,6 +186,17 @@ const pausePlayback = createAction((context) => {
 	context.playback.playState = "paused"
 })
 
+/** Cycles: none → loop_queue → loop_track → none */
+const cycleLoop = createAction((context) => {
+	const next = {
+		none: "loop_queue",
+		loop_queue: "loop_track",
+		loop_track: "none"
+	} as const
+
+	context.playback.loopState = next[context.playback.loopState]
+})
+
 const toggleShuffle = createAction((context) => {
 	const { shuffleMap } = context.playback
 	logger.debug("toggleShuffle", {
@@ -345,6 +356,7 @@ export const appStateActionsInternal = {
 	addToManualQueueLast,
 	clearNotifications,
 	closeModal,
+	cycleLoop,
 	goBackOrHome,
 	navigateBack,
 	navigateForward,

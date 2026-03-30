@@ -93,7 +93,7 @@ export const appCommandsBase = Object.freeze({
 	},
 
 	abort: {
-		keybindings: keybinding("esc"),
+		keybindings: keybinding("escape"),
 		label: "Abort",
 		description: "Context-dependent escape: blur input or go back"
 	},

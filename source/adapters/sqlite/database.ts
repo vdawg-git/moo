@@ -199,6 +199,14 @@ export function wrapDrizzleDatabase({
 					.where(notInArray(tableTracks.id, ids as TrackId[]))
 			),
 
+		deleteTracks: async (ids) => {
+			if (ids.length === 0) return Result.ok()
+
+			return Result.fromAsyncCatching(
+				db.delete(tableTracks).where(inArray(tableTracks.id, ids as TrackId[]))
+			).onSuccess(() => changed$.next(""))
+		},
+
 		getAlbum: (id: AlbumId) =>
 			Result.fromAsyncCatching(
 				db.query.tableAlbums.findFirst({

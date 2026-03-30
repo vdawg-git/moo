@@ -20,12 +20,6 @@ All dependencies flow through `createAppContext()` → React `AppContextProvider
 
 - **Why**: No module-level singletons; every system is testable and destroyable.
 
-## Playlist DSL imports Drizzle schema (allowed exception)
-
-`core/playlists/schema.ts` imports `tableTracks` and `TrackColumnKey` from `adapters/sqlite/schema`. Violates "core never imports adapters" — explicitly allowed via oxlint `allowImportNames`.
-
-- **Why**: Abstracting 80+ column definitions into shared/ just to avoid the import creates duplication that must stay in sync.
-- **Scope**: Only `tableTracks` and `TrackColumnKey` — no other adapter imports in core.
 
 ## Zone-based keybinding system
 

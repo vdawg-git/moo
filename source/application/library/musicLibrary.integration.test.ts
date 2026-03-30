@@ -43,6 +43,7 @@ async function createTestLibrary(overrides?: {
 	musicDirectories?: readonly string[]
 	parseMetadata?: typeof mockParseMetadata
 	writeTags?: () => Promise<void>
+	watchDebounceMs?: number
 }) {
 	const fileSystem = createTestFileSystem()
 	const database = await createMemoryDatabase()
@@ -58,7 +59,8 @@ async function createTestLibrary(overrides?: {
 		tagSeparator: "|",
 		dataDirectory: "/data" as FilePath,
 		parseMetadata: overrides?.parseMetadata ?? mockParseMetadata,
-		writeTags: overrides?.writeTags
+		writeTags: overrides?.writeTags,
+		watchDebounceMs: overrides?.watchDebounceMs
 	})
 
 	return { library, fileSystem, database, addErrorNotification }
@@ -211,6 +213,35 @@ describe("musicLibrary integration", () => {
 			parseMetadata,
 			"should not re-parse hidden file"
 		).toHaveBeenCalledTimes(1)
+		cleanup()
+	})
+
+	it("should remove track from DB when file is deleted during watch", async () => {
+		const { library, fileSystem, database, addErrorNotification } =
+			await createTestLibrary({ watchDebounceMs: 50 })
+
+		fileSystem.addTrack("song1.flac")
+		fileSystem.addTrack("song2.flac")
+		await library.scan()
+		expect(
+			(await database.getTracks()).getOrThrow(),
+			"should have both tracks before deletion"
+		).toHaveLength(2)
+
+		const cleanup = library.watch()
+		fileSystem.removeTrack("song2.flac")
+
+		await new Promise((resolve) => setTimeout(resolve, 150))
+
+		const tracks = (await database.getTracks()).getOrThrow()
+		expect(tracks, "should have one track after deletion").toHaveLength(1)
+		expect(tracks[0]!.id, "should keep the non-deleted track").toBe(
+			"/music/song1.flac" as unknown as TrackId
+		)
+		expect(
+			addErrorNotification,
+			"should not show error for deleted file"
+		).not.toHaveBeenCalled()
 		cleanup()
 	})
 
