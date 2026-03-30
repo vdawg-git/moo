@@ -1,23 +1,19 @@
 import { drizzle } from "drizzle-orm/bun-sqlite"
 import { Result } from "typescript-result"
-// @ts-expect-error
-import setupSqlRaw from "../../../drizzle/setup.sql" with { type: "text" }
 import { wrapDrizzleDatabase } from "./database.js"
+import { parseSetupSql, setupSqlRaw } from "./parseSetupSql.js"
 import * as schema from "./schema.js"
-import { DATABASE_VERSION, metaTable } from "./schema.js"
-import type { AppDatabase } from "#/ports/database"
+import { DATABASE_VERSION, metaTable, tableTracks } from "./schema.js"
+import type { AppDatabase, TrackData } from "#/ports/database"
 import type { DrizzleDatabase } from "./drizzleTypes.js"
 
 /** Creates a raw in-memory Drizzle database with schema applied */
-export async function createTestDrizzleDb(): Promise<DrizzleDatabase> {
+export async function createTestDrizzleDb(options?: {
+	readonly tracks?: readonly TrackData[]
+}): Promise<DrizzleDatabase> {
 	const db = drizzle(":memory:", { schema })
 
-	// todo isnt this duplicated witht the regular setup?
-	const setupCalls = (setupSqlRaw as string)
-		.split("--> statement-breakpoint")
-		.map((statement) => statement.trim())
-		.filter((statement) => statement.length > 0)
-
+	const setupCalls = parseSetupSql(setupSqlRaw as string)
 	for (const statement of setupCalls) {
 		db.run(statement)
 	}
@@ -27,12 +23,21 @@ export async function createTestDrizzleDb(): Promise<DrizzleDatabase> {
 		tagSeperator: "|"
 	})
 
+	if (options?.tracks?.length) {
+		await db
+			.insert(tableTracks)
+			.values(options.tracks as TrackData[])
+			.onConflictDoNothing()
+	}
+
 	return db
 }
 
 /** Creates an in-memory SQLite database for testing */
-export async function createMemoryDatabase(): Promise<AppDatabase> {
-	const db = await createTestDrizzleDb()
+export async function createMemoryDatabase(options?: {
+	readonly tracks?: readonly TrackData[]
+}): Promise<AppDatabase> {
+	const db = await createTestDrizzleDb({ tracks: options?.tracks })
 
 	return wrapDrizzleDatabase({
 		db,

@@ -3,7 +3,16 @@ import { mkdir } from "node:fs/promises"
 import path from "node:path"
 import { deepEquals, sleep } from "bun"
 import { isNonNullish, isPromise } from "remeda"
-import { concatMap, distinctUntilChanged, filter, from, of, take } from "rxjs"
+import {
+	concatMap,
+	distinctUntilChanged,
+	filter,
+	from,
+	map,
+	of,
+	scan,
+	take
+} from "rxjs"
 import { match, P } from "ts-pattern"
 import { Result } from "typescript-result"
 import { z } from "zod"
@@ -11,6 +20,7 @@ import { TEMP_DIRECTORY } from "#/shared/constants"
 import { logger } from "#/shared/logs"
 import { createSocketClient } from "./socket"
 import type { Player, PlayerEvent } from "#/ports/player"
+import type { TrackId } from "#/shared/types/brandedIds"
 import type { Observable } from "rxjs"
 import type { JsonValue } from "type-fest"
 import type { AsyncResult } from "typescript-result"
@@ -41,17 +51,15 @@ const otherEvents = z.object({
 
 const mpvEvent = z.union([otherEvents, endFileEvent])
 
-// TODO restart on mpv crash
-// and better error handling
-
 /** Creates an mpv player child process and controls it via IPC */
 export function createMpvPlayer(): Player {
 	const socket = spawnMpv()
 
-	// Subscribe to playback-time so mpv sends progress events
-	socket.then(() =>
-		runCommand("observe_property", [1, "playback-time"], socket)
-	)
+	// Subscribe to properties so mpv sends us change events
+	socket.then(async () => {
+		await runCommand("observe_property", [1, "playback-time"], socket)
+		await runCommand("observe_property", [2, "path"], socket)
+	})
 
 	const events$ = socketToPlayerEvents(socket)
 
@@ -89,6 +97,17 @@ export function createMpvPlayer(): Player {
 	}
 }
 
+/** Event shape before trackId enrichment */
+type RawPlayerEvent =
+	| { type: "progress"; currentTime: number }
+	| { type: "finishedTrack" }
+	| { type: "error"; error: unknown }
+
+type EventAccumulator = {
+	readonly trackId: TrackId | undefined
+	readonly event: PlayerEvent | undefined
+}
+
 /** Transforms the events MPV sends us to `PlayerEvent`s */
 function socketToPlayerEvents(
 	socket: Promise<SocketWrapper<JsonValue[]>> | SocketWrapper<JsonValue[]>
@@ -103,18 +122,52 @@ function socketToPlayerEvents(
 					data
 						.map((toParse) => mpvEvent.safeParse(toParse))
 						.filter((zod) => zod.success)
-						.map((zod) => parseEvent(zod.data))
+						.map((zod) => zod.data)
 						.filter(isNonNullish)
 				)
-				.otherwise(() => of(undefined))
+				.otherwise(() => [])
 		),
 
+		scan<z.infer<typeof mpvEvent>, EventAccumulator>(
+			(state, mpvEvt) => {
+				if (isPathChange(mpvEvt)) {
+					return { trackId: mpvEvt.data as TrackId, event: undefined }
+				}
+
+				const raw = parseRawEvent(mpvEvt)
+				if (!raw) return { ...state, event: undefined }
+
+				if (raw.type === "error") {
+					return { ...state, event: { ...raw, trackId: state.trackId } }
+				}
+
+				if (!state.trackId) return { ...state, event: undefined }
+
+				return { ...state, event: { ...raw, trackId: state.trackId } }
+			},
+			{ trackId: undefined, event: undefined }
+		),
+
+		map((state) => state.event),
 		filter(isNonNullish),
 		distinctUntilChanged(deepEquals)
 	)
 }
 
-function parseEvent(event: z.infer<typeof mpvEvent>): PlayerEvent | undefined {
+function isPathChange(
+	event: z.infer<typeof mpvEvent>
+): event is z.infer<typeof otherEvents> & { data: string } {
+	return (
+		event.event === "property-change"
+		&& "name" in event
+		&& event.name === "path"
+		&& typeof event.data === "string"
+	)
+}
+
+function parseRawEvent(
+	event: z.infer<typeof mpvEvent>
+): RawPlayerEvent | undefined {
 	return match(event)
 		.with(
 			{ event: "property-change", name: "playback-time" },
@@ -128,24 +181,22 @@ function parseEvent(event: z.infer<typeof mpvEvent>): PlayerEvent | undefined {
 			}
 		)
 
-		.with({ event: "end-file" }, ({ reason }) => {
-			return (
-				match(reason)
-					.returnType<PlayerEvent | undefined>()
-					.with("error", () => ({
-						type: "error",
-						error: "Error ending track"
-					}))
-					// reached end of the playback (end of file)
-					.with("eof", () => ({ type: "finishedTrack" }))
-					// user pressed `pause`
-					.with(P.union("stop", "quit"), () => undefined)
-					.otherwise(() => ({
-						type: "error",
-						error: `Track ended unexpected: ${reason}`
-					}))
-			)
-		})
+		.with({ event: "end-file" }, ({ reason }) =>
+			match(reason)
+				.returnType<RawPlayerEvent | undefined>()
+				.with("error", () => ({
+					type: "error",
+					error: "Error ending track"
+				}))
+				// reached end of the playback (end of file)
+				.with("eof", () => ({ type: "finishedTrack" }))
+				// user pressed `pause`
+				.with(P.union("stop", "quit"), () => undefined)
+				.otherwise(() => ({
+					type: "error",
+					error: `Track ended unexpected: ${reason}`
+				}))
+		)
 
 		.with({ event: "shutdown" }, () => ({
 			type: "error" as const,
@@ -235,7 +286,6 @@ async function spawnMpv(): Promise<SocketWrapper<JsonValue[]>> {
 		"--no-video"
 	]
 
-	// TODO handle restarting mpv on crash
 	const mpv = Bun.spawn(["mpv", ...mpvFlags], {
 		onExit: (subprocess) => subprocess.kill()
 	})
@@ -245,7 +295,6 @@ async function spawnMpv(): Promise<SocketWrapper<JsonValue[]>> {
 	})
 
 	// Socket connection wont work unless mpv has finished starting up
-	// TODO find a nice way to know when the socket is available
 	const socket = sleep(500).then(() =>
 		createSocketClient(socketPath, {
 			onData: (data) =>

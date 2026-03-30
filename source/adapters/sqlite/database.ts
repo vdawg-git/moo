@@ -10,6 +10,7 @@ import { nullsToUndefined } from "#/shared/helpers"
 import { logger } from "#/shared/logs"
 // @ts-expect-error
 import setupSqlRaw from "../../../drizzle/setup.sql" with { type: "text" }
+import { parseSetupSql } from "./parseSetupSql.js"
 import { getCoOccurenceTags } from "./coOccurence.js"
 import { sortTracks } from "./naturalSorting.js"
 import * as schema from "./schema.js"
@@ -420,9 +421,7 @@ async function initDatabase({
 		}
 	})
 
-	const setupCalls = (setupSqlRaw as string)
-		.split("--> statement-breakpoint")
-		.map((string) => string.trim())
+	const setupCalls = parseSetupSql(setupSqlRaw as string)
 
 	logger.info("running database migration")
 

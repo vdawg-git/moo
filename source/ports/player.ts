@@ -9,10 +9,6 @@ import type { Result } from "typescript-result"
  * but it might be useful if we want to support Spotify, or MPD as well.
  *
  * */
-// And because we want to support multiple player backends,
-// this also means that we have to duplicate some logic within each player
-// to handle its own state
-// (mpv's `loadfile` and `pause false` needs state, Spotify manages if for you for example)
 export interface Player {
 	/**
 	 * Plays the specified track.
@@ -58,9 +54,10 @@ export interface Player {
 }
 
 export type PlayerEvent =
-	| { type: "finishedTrack" }
+	| { type: "finishedTrack"; trackId: TrackId }
 	| {
 			type: "progress"
 			currentTime: number
+			trackId: TrackId
 	  }
-	| { type: "error"; error: unknown }
+	| { type: "error"; error: unknown; trackId?: TrackId }

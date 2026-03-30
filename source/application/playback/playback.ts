@@ -10,6 +10,7 @@ import {
 } from "rxjs"
 import { match } from "ts-pattern"
 import { Result } from "typescript-result"
+import { getCurrentTrack } from "#/core/state/stateUtils"
 import { callAll } from "#/shared/helpers"
 import { logger } from "#/shared/logs"
 import { handleMpris } from "./mpris"
@@ -148,9 +149,22 @@ function handlePlayer(
 		)
 		.subscribe((event) =>
 			match(event)
-				.with({ type: "finishedTrack" }, () =>
+				.with({ type: "finishedTrack" }, ({ trackId: finishedId }) => {
+					const playback = appState.getSnapshot().context.playback
+					const currentTrackId = getCurrentTrack(playback)?.trackId
+
+					if (finishedId !== currentTrackId) return
+
+					if (playback.loopState === "loop_track") {
+						Result.fromAsync(player.play(finishedId)).onFailure((error) =>
+							addErrorNotification("Failed to replay track", error)
+						)
+
+						return
+					}
+
 					appState.send({ type: "nextTrack" })
-				)
+				})
 
 				.with({ type: "error" }, (error) => {
 					addErrorNotification("Error when playing back", error)

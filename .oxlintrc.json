@@ -197,7 +197,8 @@
 									"#/ui/**",
 									"#/app/**"
 								],
-								"message": "adapters/ can only import from ports/ and shared/"
+								"message": "adapters/ can only import from ports/ and shared/",
+								"allowTypeImports": true,
 							}
 						]
 					}

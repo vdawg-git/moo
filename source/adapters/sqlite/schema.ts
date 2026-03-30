@@ -6,7 +6,6 @@ import {
 	sqliteTable,
 	text
 } from "drizzle-orm/sqlite-core"
-// todo Im confused, why cant an adapter import from core? Explain to me the reasoning. And how would one then tell the adapter to follow this interface from core?
 import type { TrackFieldName } from "#/core/playlists/trackFields"
 import type { AlbumId, ArtistId, PlaylistId, TrackId } from "#/ports/database"
 import type { FilePath } from "#/shared/types/types"
@@ -191,7 +190,6 @@ export const tableTracks = sqliteTable("tracks", {
 })
 
 // The columns property does not exist during runtime, so we just wrap it in a function
-// todo improve this type so that the types also match
 const _justEnsureThatTablesStayInSyncWithCore = () =>
 	tableTracks._.columns satisfies Record<TrackFieldName, unknown>
 

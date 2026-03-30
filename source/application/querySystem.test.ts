@@ -5,8 +5,7 @@ import { createQuerySystem } from "./querySystem"
 
 describe("createQuerySystem — observeQuery", () => {
 	it("should emit loading state then fetched data on cache miss", async () => {
-		const changed$ = new Subject<string>()
-		const { observeQuery } = createQuerySystem(changed$)
+		const { observeQuery } = createTestQuerySystem()
 
 		const emissions = await firstValueFrom(
 			observeQuery("key", () => Promise.resolve(Result.ok(42))).pipe(
@@ -36,8 +35,7 @@ describe("createQuerySystem — observeQuery", () => {
 	})
 
 	it("should emit cached data immediately on cache hit", async () => {
-		const changed$ = new Subject<string>()
-		const { observeQuery } = createQuerySystem(changed$)
+		const { observeQuery } = createTestQuerySystem()
 
 		// First query populates cache
 		await firstValueFrom(
@@ -58,9 +56,7 @@ describe("createQuerySystem — observeQuery", () => {
 	})
 
 	it("should refetch when changed$ emits", async () => {
-		// todo merge this boilerplate, even if its only two lines.
-		const changed$ = new Subject<string>()
-		const { observeQuery } = createQuerySystem(changed$)
+		const { observeQuery, changed$ } = createTestQuerySystem()
 
 		let counter = 0
 		const query$ = observeQuery("counter", () =>
@@ -85,8 +81,7 @@ describe("createQuerySystem — observeQuery", () => {
 	})
 
 	it("should handle query errors as Result.error", async () => {
-		const changed$ = new Subject<string>()
-		const { observeQuery } = createQuerySystem(changed$)
+		const { observeQuery } = createTestQuerySystem()
 
 		const emissions = await firstValueFrom(
 			observeQuery("fail", () => Promise.reject(new Error("db down"))).pipe(
@@ -102,8 +97,7 @@ describe("createQuerySystem — observeQuery", () => {
 	})
 
 	it("should handle non-Result return values by wrapping in Result.ok", async () => {
-		const changed$ = new Subject<string>()
-		const { observeQuery } = createQuerySystem(changed$)
+		const { observeQuery } = createTestQuerySystem()
 
 		const emissions = await firstValueFrom(
 			observeQuery("plain", () => Promise.resolve("hello" as any)).pipe(
@@ -118,3 +112,9 @@ describe("createQuerySystem — observeQuery", () => {
 		).toBe("hello")
 	})
 })
+
+function createTestQuerySystem() {
+	const changed$ = new Subject<string>()
+
+	return { ...createQuerySystem(changed$), changed$ }
+}
