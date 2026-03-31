@@ -9,6 +9,7 @@ import { useConfig } from "#/shared/config/configContext"
 import { createQueryKey } from "#/shared/queryKey"
 import { Dialog } from "#/ui/components/dialog"
 import { ErrorScreen } from "#/ui/components/errorScreen"
+import { Playbar } from "#/ui/components/playbar"
 import { useColors } from "#/ui/hooks/useColors"
 import { useFocusZones } from "#/ui/hooks/useFocusZone"
 import { useQuery } from "#/ui/hooks/useQuery"
@@ -241,6 +242,8 @@ function QuickEditEditor({
 						focusIndex={indexApplied}
 					/>
 				</box>
+
+				<Playbar />
 			</box>
 
 			<Dialog
