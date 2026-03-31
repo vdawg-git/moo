@@ -12,7 +12,9 @@ import { ErrorScreen } from "#/ui/components/errorScreen"
 import { Playbar } from "#/ui/components/playbar"
 import { useColors } from "#/ui/hooks/useColors"
 import { useFocusZones } from "#/ui/hooks/useFocusZone"
+import { useIcons } from "#/ui/hooks/useIcons"
 import { useQuery } from "#/ui/hooks/useQuery"
+import { useCurrentTrack, usePlayState } from "#/ui/hooks/useSelectors"
 import { BracketButton } from "../../components/button"
 import { Input } from "../../components/Input"
 import { Select } from "../../components/select"
@@ -172,35 +174,14 @@ function QuickEditEditor({
 		],
 		initialZone: "input"
 	})
-	const title = track.title ?? path.basename(track.id)
-	const colors = useColors()
 
 	return (
 		<>
 			<box height={"100%"} width={"100%"}>
-				<box
-					flexDirection="row"
-					width={"100%"}
-					justifyContent="space-between"
-					border={["bottom"]}
-					borderColor={colors.yellow}
-				>
-					<text fg={colors.yellow} height={1}>
-						{config.icons.edit}
-						{"  "}
-						{title}
-						{" - "}
-						{track.artist ?? track.albumartist ?? "(unknown artist)"}
-					</text>
-
-					<text
-						onMouseDown={() => setCloseModalOpen(true)}
-						fg={colors.fg}
-						attributes={TextAttributes.DIM}
-					>
-						[ESC] Go back
-					</text>
-				</box>
+				<QuickEditHeader
+					track={track}
+					onClose={() => setCloseModalOpen(true)}
+				/>
 
 				<box flexDirection="row" height={"100%"} width={"100%"}>
 					<box maxWidth={"50%"} flexShrink={1}>
@@ -496,6 +477,51 @@ function CloseDialogContent({
 			<text fg={colors.blue}>Save and go [Enter]</text>
 			<text fg={colors.yellow}>Go without saving [X]</text>
 			<text fg={colors.fg}>Cancel [ESC]</text>
+		</box>
+	)
+}
+
+function QuickEditHeader({
+	track,
+	onClose
+}: {
+	track: BaseTrack
+	onClose: () => void
+}): ReactNode {
+	const colors = useColors()
+	const icons = useIcons()
+	const title = track.title ?? path.basename(track.id)
+	const currentTrack = useCurrentTrack()
+	const playstate = usePlayState()
+
+	const isCurrent = currentTrack?.id === track.id
+	const showWarning = !isCurrent && playstate !== "stopped"
+
+	return (
+		<box
+			flexDirection="row"
+			width={"100%"}
+			justifyContent="space-between"
+			border={["bottom"]}
+			borderColor={colors.yellow}
+		>
+			<text fg={colors.yellow} height={1}>
+				{icons.edit}
+				{"  "}
+				{title}
+				{" - "}
+				{track.artist ?? track.albumartist ?? "(unknown artist)"}
+
+				{showWarning && <span fg={colors.red}> | Not playing currently</span>}
+			</text>
+
+			<text
+				onMouseDown={onClose}
+				fg={colors.fg}
+				attributes={TextAttributes.DIM}
+			>
+				[ESC] Go back
+			</text>
 		</box>
 	)
 }
