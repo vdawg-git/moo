@@ -1,6 +1,7 @@
 import path from "node:path"
 import { createRoot } from "@opentui/react"
 import { Result } from "typescript-result"
+import { isValidationError } from "zod-validation-error"
 import { createRealFileSystem } from "#/adapters/filesystem/filesystem"
 import { createLocalPlayer } from "#/adapters/mpv/player"
 import { createDatabase } from "#/adapters/sqlite/database"
@@ -44,7 +45,11 @@ export async function startApp() {
 
 	logger.info("Starting app..", { isDev: IS_DEV, dbPath: databasePath })
 
-	const appConfig = await getConfig()
+	const appConfig = await Result.fromAsync(getConfig()).getOrElse((error) => {
+		throw isValidationError(error)
+			? error.message
+			: `Failed to load config: ${error instanceof Error ? error.message : String(error)}`
+	})
 
 	const fileSystem = createRealFileSystem()
 	const database = await createDatabase({

@@ -35,6 +35,9 @@ export const iconsSchema = z
 			.default("")
 			.describe("Icon used to indicate an artist."),
 
+		genre: z.string().default("").describe("Icon used to indicate a genre."),
+		mood: z.string().default("󰓺").describe("Icon used to indicate a mood."),
+
 		command: z
 			.string()
 			.default("❯")

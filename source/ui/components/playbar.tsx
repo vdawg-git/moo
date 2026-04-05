@@ -8,6 +8,7 @@ import {
 	usePlayState,
 	useShuffleMap
 } from "#/ui/hooks/useSelectors"
+import { useIcons } from "../hooks/useIcons"
 import type { BaseTrack } from "#/ports/database"
 
 export function Playbar() {
@@ -102,11 +103,46 @@ function MediaControl() {
 function TrackDisplay({ track }: { track: BaseTrack }) {
 	const artist = track.artist ?? track.albumartist
 	const colors = useColors()
+	const icons = useIcons()
+	const { showUntaggedMoodPlaybar, showUntaggedGenrePlaybar } = useConfig()
+
+	const showUntaggedSpacer =
+		(showUntaggedMoodPlaybar || showUntaggedGenrePlaybar)
+		&& (!track.genre
+			|| track.genre.length === 0
+			|| !track.mood
+			|| track.mood.length === 0)
 
 	return (
 		<box paddingLeft={1} flexDirection="column">
-			<box>
+			<box flexDirection="row">
 				<text fg={colors.yellow}>{track.title ?? track.id}</text>
+
+				{showUntaggedSpacer && <text> </text>}
+
+				{showUntaggedGenrePlaybar
+					&& (!track.genre || track.genre.length === 0) && (
+						<text
+							fg={colors.red}
+							attributes={TextAttributes.BOLD}
+							width={1}
+							height={1}
+						>
+							{icons.genre}
+						</text>
+					)}
+
+				{showUntaggedMoodPlaybar
+					&& (!track.mood || track.mood.length === 0) && (
+						<text
+							fg={colors.red}
+							attributes={TextAttributes.BOLD}
+							width={1}
+							height={1}
+						>
+							{icons.mood}
+						</text>
+					)}
 			</box>
 			<box>
 				<text fg={colors.fg} attributes={TextAttributes.DIM}>

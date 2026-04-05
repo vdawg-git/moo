@@ -5,6 +5,7 @@ import { useAppContext } from "#/app/context"
 import { useConfig } from "#/shared/config/configContext"
 import { keybinding } from "#/shared/library/keybinds"
 import { useColors } from "#/ui/hooks/useColors"
+import { useIcons } from "../hooks/useIcons"
 import { List, useList } from "./list"
 import type {
 	CommandInline,
@@ -110,14 +111,16 @@ export function TrackItem({
 			? colors.green
 			: (color ?? colors.fg)
 
-	const config = useConfig()
+	const icons = useIcons()
+	const { showUntaggedGenreList, showUntaggedMoodList } = useConfig()
+
 	const titleDisplay = track.title ?? path.basename(track.id)
 	const artistDisplay = track.artist ?? track.albumartist ?? ""
 	const icon =
 		state === "playing"
-			? config.icons.playingIndicator
+			? icons.playingIndicator
 			: state === "paused"
-				? config.icons.pause
+				? icons.pause
 				: ""
 
 	return (
@@ -148,6 +151,28 @@ export function TrackItem({
 					{artistDisplay}
 				</text>
 			</box>
+
+			{showUntaggedGenreList && (!track.genre || track.genre.length === 0) && (
+				<text
+					fg={colors.red}
+					attributes={TextAttributes.BOLD}
+					width={1}
+					height={1}
+				>
+					{icons.genre}
+				</text>
+			)}
+
+			{showUntaggedMoodList && (!track.mood || track.mood.length === 0) && (
+				<text
+					fg={colors.red}
+					attributes={TextAttributes.BOLD}
+					width={1}
+					height={1}
+				>
+					{icons.mood}
+				</text>
+			)}
 		</box>
 	)
 }

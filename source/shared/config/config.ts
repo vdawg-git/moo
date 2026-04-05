@@ -3,9 +3,8 @@ import json5 from "json5"
 import { Result } from "typescript-result"
 import untildify from "untildify"
 import { z } from "zod"
-import { isValidationError, toValidationError } from "zod-validation-error"
+import { toValidationError } from "zod-validation-error"
 import { CONFIG_DIRECTORY } from "#/shared/constants"
-import { logger } from "#/shared/logs"
 import { iconsSchema } from "./icons"
 import { keybindingsSchema } from "./keybindings"
 import type { FilePath } from "#/shared/types/types"
@@ -61,7 +60,25 @@ export const appConfigSchema = z
 			})
 			.describe(
 				"Configuration for the 'Quick Edit' feature, which allows you to change the genre/moods of a song on the fly to improve your smart-playlists."
-			)
+			),
+
+		showUntaggedMoodList: z
+			.boolean()
+			.default(false)
+			.describe("Whether to show a marker for untagged mood in lists."),
+		showUntaggedGenreList: z
+			.boolean()
+			.default(false)
+			.describe("Whether to show a marker for untagged genre in lists."),
+
+		showUntaggedGenrePlaybar: z
+			.boolean()
+			.default(false)
+			.describe("Whether to show a marker for untagged genre in the playbar."),
+		showUntaggedMoodPlaybar: z
+			.boolean()
+			.default(false)
+			.describe("Whether to show a marker for untagged mood in the playbar.")
 	})
 	.strict()
 	.readonly()
@@ -114,16 +131,12 @@ async function writeDefaultConfig(): Promise<Result<AppConfig, Error>> {
  * Because we don't want to unwrap everything everywhere where the config is used.
  * Maybe there is a cleaner way, but idk.
  */
-export async function getConfig(): Promise<AppConfig> {
+export async function getConfig(): Promise<
+	Result<AppConfig, ValidationError | Error>
+> {
 	const configFile = Bun.file(defaultConfigPath)
 
-	return Result.fromAsync(configFile.exists())
-		.map((isExisting) =>
-			isExisting ? parseConfig(configFile) : writeDefaultConfig()
-		)
-		.getOrElse((error) => {
-			console.error(isValidationError(error) ? error.message : error)
-			logger.error("Config parse error", error)
-			process.exit(1)
-		})
+	return Result.fromAsync(configFile.exists()).map((isExisting) =>
+		isExisting ? parseConfig(configFile) : writeDefaultConfig()
+	)
 }
